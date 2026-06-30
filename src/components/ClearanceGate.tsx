@@ -34,7 +34,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
       setProgress((p) =>
         Math.min(100, p + 100 / LINES.length / 4)
       );
-    }, 100);
+    }, 250);
 
     return () => clearInterval(id);
   }, []);
