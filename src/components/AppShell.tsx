@@ -1,0 +1,133 @@
+import { Link, useRouterState } from "@tanstack/react-router";
+import { type ReactNode, useEffect, useState } from "react";
+
+const NAV = [
+  { to: "/", label: "Atrium", latin: "Atrium" },
+  { to: "/dossiers", label: "Dossiers", latin: "Tabulae" },
+  { to: "/missions", label: "Contracts", latin: "Mandata" },
+  { to: "/comms", label: "Comms", latin: "Nuntii" },
+  { to: "/atlas", label: "Atlas", latin: "Orbis" },
+  { to: "/treasury", label: "Treasury", latin: "Aerarium" },
+  { to: "/concierge", label: "Concierge", latin: "Cura" },
+  { to: "/council", label: "High Council", latin: "Concilium" },
+] as const;
+
+export function AppShell({ children, title, latin }: { children: ReactNode; title: string; latin: string }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [now, setNow] = useState("");
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      setNow(d.toISOString().replace("T", " ").slice(0, 19) + " UTC");
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="min-h-screen flex flex-col font-sans">
+      {/* Top bar */}
+      <header className="border-b border-gold-dim bg-background/80 backdrop-blur-md sticky top-0 z-40">
+        <div className="flex items-center justify-between px-4 md:px-8 h-14">
+          <div className="flex items-center gap-3">
+            <Sigil />
+            <div className="leading-none">
+              <p className="font-display text-gold text-sm tracking-[0.25em]">CONTINENTAL</p>
+              <p className="font-mono text-[10px] text-gold-dim tracking-[0.3em]">SUB · ROSA</p>
+            </div>
+          </div>
+          <div className="hidden md:flex items-center gap-6 font-mono text-[11px] text-gold-dim">
+            <span className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse-gold" />
+              SECURE CHANNEL · AES-512
+            </span>
+            <span>{now}</span>
+            <span className="text-gold">AGENT · {AGENT_ID}</span>
+          </div>
+          <button
+            className="md:hidden text-gold border border-gold-dim px-2 py-1 text-xs font-mono"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="Toggle nav"
+          >
+            {mobileOpen ? "CLOSE" : "MENU"}
+          </button>
+        </div>
+        <nav className={`${mobileOpen ? "block" : "hidden"} md:block border-t border-gold-dim`}>
+          <div className="flex flex-col md:flex-row md:items-center px-4 md:px-8 overflow-x-auto">
+            {NAV.map((item) => {
+              const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMobileOpen(false)}
+                  className={`relative font-mono text-[11px] tracking-[0.25em] uppercase py-3 md:py-2.5 md:mr-8 transition-colors ${active ? "text-gold" : "text-gold-dim hover:text-gold"}`}
+                >
+                  {item.label}
+                  <span className="ml-2 text-[9px] opacity-60 font-display">· {item.latin}</span>
+                  {active && <span className="hidden md:block absolute -bottom-px left-0 right-0 h-px bg-gold" />}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      </header>
+
+      <main className="flex-1 px-4 md:px-8 py-8 md:py-12 max-w-[1400px] w-full mx-auto">
+        <div className="mb-10 animate-fade-up">
+          <p className="font-mono text-[10px] tracking-[0.4em] text-gold-dim uppercase">{latin}</p>
+          <h1 className="font-display text-4xl md:text-5xl text-gold mt-2">{title}</h1>
+          <div className="mt-4 h-px w-24 bg-gradient-to-r from-gold to-transparent" />
+        </div>
+        {children}
+      </main>
+
+      <footer className="border-t border-gold-dim mt-16 py-6 px-4 md:px-8 font-mono text-[10px] text-gold-dim tracking-[0.25em] flex flex-col md:flex-row justify-between gap-2">
+        <span>EX UMBRA · IN SOLEM</span>
+        <span>ALL MATERIAL FICTIONAL · INSPIRED BY GENRE</span>
+        <span>© MMXXVI · CONTINENTAL HOTELS GROUP</span>
+      </footer>
+    </div>
+  );
+}
+
+const AGENT_ID = "0734·KAI";
+
+export function Sigil({ size = 28 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" className="text-gold">
+      <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" strokeWidth="1" />
+      <circle cx="32" cy="32" r="24" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.6" />
+      <path d="M32 8 L40 32 L32 56 L24 32 Z" fill="currentColor" opacity="0.85" />
+      <circle cx="32" cy="32" r="3" fill="var(--background)" />
+      <circle cx="32" cy="32" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function Panel({ children, className = "", title, latin }: { children: ReactNode; className?: string; title?: string; latin?: string }) {
+  return (
+    <section className={`noir-panel gold-corners p-6 md:p-8 ${className}`}>
+      {(title || latin) && (
+        <div className="mb-5 flex items-baseline justify-between gap-3 border-b border-gold-dim pb-3">
+          <h2 className="font-display text-xl text-gold">{title}</h2>
+          {latin && <span className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">{latin}</span>}
+        </div>
+      )}
+      {children}
+    </section>
+  );
+}
+
+export function StatBlock({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="border border-gold-dim p-4 bg-background/40">
+      <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">{label}</p>
+      <p className="font-display text-2xl text-gold mt-1">{value}</p>
+      {sub && <p className="font-mono text-[10px] text-muted-foreground mt-1">{sub}</p>}
+    </div>
+  );
+}
