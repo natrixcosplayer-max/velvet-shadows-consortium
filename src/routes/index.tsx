@@ -25,8 +25,8 @@ function Atrium() {
     <AppShell title="Comisión" latin="Bienvenido, MANDARIN">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         <StatBlock label="Autorización" value="AURUM III" sub="Autorizado por la Alta Mesa" />
-        <StatBlock label="Saldo en Monedas" value="14" sub="Marcadores en circulación: 1" />
-        <StatBlock label="Contratos Activos" value="01" sub="1 abierto · 1 sellado" />
+        <StatBlock label="Saldo en Monedas" value="1" sub="Marcadores en circulación: 1" />
+        <StatBlock label="Operación" value="EN CURSO" />
         <StatBlock label="Estatus" value="In Bonis" sub="Sin deudas pendientes" />
       </div>
 
