@@ -6,7 +6,7 @@ import { ClearanceGate } from "../components/ClearanceGate";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Atrio — Intranet Continental" },
+      { title: "EX COMMISSIO ALTAE MENSAE" },
       { name: "description", content: "Red Interna de la Comisión. Acceso restringido a operativos autorizados." },
     ],
   }),
