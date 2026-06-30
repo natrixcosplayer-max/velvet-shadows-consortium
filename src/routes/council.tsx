@@ -2,43 +2,43 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, Panel } from "../components/AppShell";
 
 export const Route = createFileRoute("/council")({
-  head: () => ({ meta: [{ title: "High Council — Continental" }, { name: "description", content: "Concilium Altum · The High Table." }] }),
+  head: () => ({ meta: [{ title: "Alto Consejo — Continental" }, { name: "description", content: "Concilium Altum · La Mesa Alta." }] }),
   component: Council,
 });
 
 const SEATS = [
-  { seat: "I", name: "Il Direttore", latin: "Sedes Primaria", chapter: "Camorra · Naples", tenure: "MMXIX—" },
-  { seat: "II", name: "Berrada", latin: "Sedes Secunda", chapter: "Maghreb · Tangier", tenure: "MMXVII—" },
-  { seat: "III", name: "The Marquis", latin: "Sedes Tertia", chapter: "Haute Table · Paris", tenure: "MMXX—MMXXII †" },
-  { seat: "IV", name: "Khun Po", latin: "Sedes Quarta", chapter: "Bangkok Syndicate", tenure: "MMXXI—" },
-  { seat: "V", name: "Mother Ruska", latin: "Sedes Quinta", chapter: "Tarasov House · Moscow", tenure: "MMXVIII—" },
-  { seat: "VI", name: "Elder of the Path", latin: "Sedes Sexta", chapter: "The Wilderness", tenure: "Without end" },
-  { seat: "VII", name: "[ REDACTED ]", latin: "Sedes Septima", chapter: "—", tenure: "Vacant" },
-  { seat: "VIII", name: "[ REDACTED ]", latin: "Sedes Octava", chapter: "—", tenure: "Sealed" },
+  { seat: "I", name: "Il Direttore", latin: "Sedes Primaria", chapter: "Camorra · Nápoles", tenure: "MMXIX—" },
+  { seat: "II", name: "Berrada", latin: "Sedes Secunda", chapter: "Magreb · Tánger", tenure: "MMXVII—" },
+  { seat: "III", name: "El Marqués", latin: "Sedes Tertia", chapter: "Haute Table · París", tenure: "MMXX—MMXXII †" },
+  { seat: "IV", name: "Khun Po", latin: "Sedes Quarta", chapter: "Sindicato de Bangkok", tenure: "MMXXI—" },
+  { seat: "V", name: "Madre Ruska", latin: "Sedes Quinta", chapter: "Casa Tarasov · Moscú", tenure: "MMXVIII—" },
+  { seat: "VI", name: "Anciano del Sendero", latin: "Sedes Sexta", chapter: "La Espesura", tenure: "Sin fin" },
+  { seat: "VII", name: "[ CENSURADO ]", latin: "Sedes Septima", chapter: "—", tenure: "Vacante" },
+  { seat: "VIII", name: "[ CENSURADO ]", latin: "Sedes Octava", chapter: "—", tenure: "Sellado" },
 ];
 
 function Council() {
   return (
-    <AppShell title="High Council" latin="Concilium Altum · The High Table">
+    <AppShell title="Alto Consejo" latin="Concilium Altum · La Mesa Alta">
       <Panel className="mb-8">
         <div className="grid md:grid-cols-[auto_1fr] gap-6 items-center">
           <Seal />
           <div>
-            <p className="font-mono text-[10px] tracking-[0.4em] text-gold-dim uppercase">Declaration</p>
+            <p className="font-mono text-[10px] tracking-[0.4em] text-gold-dim uppercase">Declaración</p>
             <p className="font-display text-2xl text-gold mt-2 leading-relaxed">
-              Sub mensa alta, omnia. Above the High Table, nothing.
+              Sub mensa alta, omnia. Sobre la Mesa Alta, nada.
             </p>
             <p className="mt-4 text-foreground/80 leading-relaxed max-w-2xl">
-              The Council sits in twelve seats. Eight are known. Four are not. Its judgments are final, its silences louder. To be summoned is honor. To be sentenced is final.
+              El Consejo se compone de doce asientos. Ocho son conocidos. Cuatro no. Sus juicios son definitivos, sus silencios más fuertes. Ser convocado es honor. Ser sentenciado es final.
             </p>
           </div>
         </div>
       </Panel>
 
-      <Panel title="The Twelve Seats" latin="Duodecim Sedes" className="mb-8">
+      <Panel title="Los Doce Asientos" latin="Duodecim Sedes" className="mb-8">
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
           {SEATS.map((s) => {
-            const redacted = s.name.includes("REDACTED");
+            const redacted = s.name.includes("CENSURADO");
             return (
               <div key={s.seat} className={`border p-4 ${redacted ? "border-destructive/40 bg-destructive/5" : "border-gold-dim"}`}>
                 <p className="font-display text-3xl text-gold">{s.seat}</p>
@@ -49,42 +49,41 @@ function Council() {
               </div>
             );
           })}
-          {/* Four hidden seats */}
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="border border-gold-dim/30 p-4 bg-background/40">
               <p className="font-display text-3xl text-gold-dim">{["IX", "X", "XI", "XII"][i]}</p>
-              <p className="font-mono text-[10px] tracking-[0.3em] text-destructive mt-2 animate-flicker uppercase">· Concealed ·</p>
-              <p className="font-mono text-[10px] text-gold-dim mt-3 tracking-[0.2em]">Identity withheld by oath.</p>
+              <p className="font-mono text-[10px] tracking-[0.3em] text-destructive mt-2 animate-flicker uppercase">· Oculto ·</p>
+              <p className="font-mono text-[10px] text-gold-dim mt-3 tracking-[0.2em]">Identidad retenida bajo juramento.</p>
             </div>
           ))}
         </div>
       </Panel>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        <Panel title="Convocation" latin="Convocatio">
+        <Panel title="Convocatoria" latin="Convocatio">
           <ul className="font-mono text-sm space-y-4">
             <li className="flex gap-4">
               <span className="text-gold-dim w-24 shrink-0 text-[10px] tracking-[0.25em] pt-1">III · MMXXVI</span>
-              <span><span className="text-gold block">Rome Chapter House</span><span className="text-foreground/70 text-xs">Plenary session. Black tie. Imperium-Seal protocol.</span></span>
+              <span><span className="text-gold block">Casa Capitular de Roma</span><span className="text-foreground/70 text-xs">Sesión plenaria. Etiqueta. Protocolo Sello Imperium.</span></span>
             </li>
             <li className="flex gap-4">
               <span className="text-gold-dim w-24 shrink-0 text-[10px] tracking-[0.25em] pt-1">XII · MMXXVI</span>
-              <span><span className="text-gold block">Casablanca · Closed</span><span className="text-foreground/70 text-xs">Adjudication, sealed. By invitation.</span></span>
+              <span><span className="text-gold block">Casablanca · Cerrada</span><span className="text-foreground/70 text-xs">Adjudicación, sellada. Solo por invitación.</span></span>
             </li>
             <li className="flex gap-4">
               <span className="text-gold-dim w-24 shrink-0 text-[10px] tracking-[0.25em] pt-1">— · —</span>
-              <span><span className="text-gold block">[ Location Withheld ]</span><span className="text-foreground/70 text-xs">Sentencing. No observers.</span></span>
+              <span><span className="text-gold block">[ Ubicación Reservada ]</span><span className="text-foreground/70 text-xs">Sentencia. Sin observadores.</span></span>
             </li>
           </ul>
         </Panel>
 
-        <Panel title="Edicts in Force" latin="Edicta Vigentia">
+        <Panel title="Edictos Vigentes" latin="Edicta Vigentia">
           <ol className="font-mono text-sm space-y-3">
-            <li><span className="text-gold-dim">I.</span> <span className="text-foreground/85">No member shall raise hand against another upon Continental ground. Excommunicado on breach.</span></li>
-            <li><span className="text-gold-dim">II.</span> <span className="text-foreground/85">Markers transcend death. Heirs inherit debt.</span></li>
-            <li><span className="text-gold-dim">III.</span> <span className="text-foreground/85">Contracts above tier IV require Council assent.</span></li>
-            <li><span className="text-gold-dim">IV.</span> <span className="text-foreground/85">The Wilderness is sovereign. Its elders, untouched.</span></li>
-            <li><span className="text-gold-dim">V.</span> <span className="text-foreground/85">Membership is by blood and oath. It is not given. It is not sold.</span></li>
+            <li><span className="text-gold-dim">I.</span> <span className="text-foreground/85">Ningún miembro alzará la mano contra otro en suelo del Continental. Excomunión al incumplir.</span></li>
+            <li><span className="text-gold-dim">II.</span> <span className="text-foreground/85">Los marcadores trascienden la muerte. Los herederos heredan la deuda.</span></li>
+            <li><span className="text-gold-dim">III.</span> <span className="text-foreground/85">Los contratos por encima del nivel IV requieren el consentimiento del Consejo.</span></li>
+            <li><span className="text-gold-dim">IV.</span> <span className="text-foreground/85">La Espesura es soberana. Sus ancianos, intocables.</span></li>
+            <li><span className="text-gold-dim">V.</span> <span className="text-foreground/85">La membresía es por sangre y juramento. No se da. No se vende.</span></li>
           </ol>
         </Panel>
       </div>

@@ -18,10 +18,10 @@ function NotFoundComponent() {
         <p className="text-gold-dim text-xs tracking-[0.3em] uppercase">Error 404</p>
         <h1 className="font-display text-5xl text-gold mt-3">Locus Ignotus</h1>
         <p className="mt-4 text-sm text-muted-foreground">
-          This location is not on any Continental ledger.
+          Esta ubicación no figura en ningún registro del Continental.
         </p>
         <a href="/" className="inline-block mt-6 text-xs tracking-[0.25em] uppercase text-gold border border-gold-dim px-5 py-2 hover:bg-gold hover:text-primary-foreground transition">
-          Return to Lobby
+          Regresar al Vestíbulo
         </a>
       </div>
     </div>
@@ -34,14 +34,14 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 font-mono">
       <div className="max-w-md text-center noir-panel gold-corners p-10">
-        <p className="text-destructive text-xs tracking-[0.3em] uppercase">Signal Lost</p>
-        <h1 className="font-display text-3xl text-gold mt-3">Transmission Failed</h1>
-        <p className="mt-3 text-sm text-muted-foreground">The line is compromised. Re-establish secure channel.</p>
+        <p className="text-destructive text-xs tracking-[0.3em] uppercase">Señal Perdida</p>
+        <h1 className="font-display text-3xl text-gold mt-3">Transmisión Fallida</h1>
+        <p className="mt-3 text-sm text-muted-foreground">La línea está comprometida. Restablezca el canal seguro.</p>
         <button
           onClick={() => { router.invalidate(); reset(); }}
           className="mt-6 text-xs tracking-[0.25em] uppercase text-gold border border-gold-dim px-5 py-2 hover:bg-gold hover:text-primary-foreground transition"
         >
-          Retry Handshake
+          Reintentar Enlace
         </button>
       </div>
     </div>
@@ -53,11 +53,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Continental Intranet — Sub Rosa" },
-      { name: "description", content: "Classified members-only portal. Authorized personnel only." },
+      { title: "Intranet Continental — Sub Rosa" },
+      { name: "description", content: "Portal clasificado para miembros. Solo personal autorizado." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "Continental Intranet" },
-      { property: "og:description", content: "Sub Rosa. By invitation only." },
+      { property: "og:title", content: "Intranet Continental" },
+      { property: "og:description", content: "Sub Rosa. Solo por invitación." },
       { property: "og:type", content: "website" },
     ],
     links: [
@@ -75,7 +75,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <head><HeadContent /></head>
       <body>{children}<Scripts /></body>
     </html>
