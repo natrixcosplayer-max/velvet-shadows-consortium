@@ -15,11 +15,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [unlocked, setUnlocked] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (sessionStorage.getItem("continental-cleared") === "1") setUnlocked(true);
-  }, []);
-  const handle = () => { setUnlocked(true); };
+    const handle = () => { setUnlocked(true); };
   if (!unlocked) return <ClearanceGate onComplete={handle} />;
   return <Atrium />;
 }
