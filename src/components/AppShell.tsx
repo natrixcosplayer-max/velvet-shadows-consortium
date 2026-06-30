@@ -2,14 +2,12 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 
 const NAV = [
-  { to: "/", label: "Atrio", latin: "Atrium" },
-  { to: "/dossiers", label: "Expedientes", latin: "Tabulae" },
-  { to: "/missions", label: "Contratos", latin: "Mandata" },
+  { to: "/", label: "Comisión", latin: "Comissio" },
+  { to: "/dossiers", label: "Activo", latin: "Objectum" },
+  { to: "/missions", label: "Operativos", latin: "Operativi" },
   { to: "/comms", label: "Comunicaciones", latin: "Nuntii" },
   { to: "/atlas", label: "Atlas", latin: "Orbis" },
   { to: "/treasury", label: "Tesorería", latin: "Aerarium" },
-  { to: "/concierge", label: "Conserjería", latin: "Cura" },
-  { to: "/council", label: "Alto Consejo", latin: "Concilium" },
 ] as const;
 
 export function AppShell({ children, title, latin }: { children: ReactNode; title: string; latin: string }) {
@@ -35,8 +33,8 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
           <div className="flex items-center gap-3">
             <Sigil />
             <div className="leading-none">
-              <p className="font-display text-gold text-sm tracking-[0.25em]">CONTINENTAL</p>
-              <p className="font-mono text-[10px] text-gold-dim tracking-[0.3em]">SUB · ROSA</p>
+              <p className="font-display text-gold text-sm tracking-[0.25em]">EX COMISSIO</p>
+              <p className="font-mono text-[10px] text-gold-dim tracking-[0.3em]">ALTAE MENSAE</p>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-6 font-mono text-[11px] text-gold-dim">
