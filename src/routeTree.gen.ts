@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TreasuryRouteImport } from './routes/treasury'
 import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as DossiersRouteImport } from './routes/dossiers'
+import { Route as ConciergeRouteImport } from './routes/concierge'
 import { Route as CommsRouteImport } from './routes/comms'
 import { Route as AtlasRouteImport } from './routes/atlas'
 import { Route as IndexRouteImport } from './routes/index'
@@ -29,6 +30,11 @@ const MissionsRoute = MissionsRouteImport.update({
 const DossiersRoute = DossiersRouteImport.update({
   id: '/dossiers',
   path: '/dossiers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConciergeRoute = ConciergeRouteImport.update({
+  id: '/concierge',
+  path: '/concierge',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommsRoute = CommsRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/atlas': typeof AtlasRoute
   '/comms': typeof CommsRoute
+  '/concierge': typeof ConciergeRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
   '/treasury': typeof TreasuryRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/atlas': typeof AtlasRoute
   '/comms': typeof CommsRoute
+  '/concierge': typeof ConciergeRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
   '/treasury': typeof TreasuryRoute
@@ -68,20 +76,36 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/atlas': typeof AtlasRoute
   '/comms': typeof CommsRoute
+  '/concierge': typeof ConciergeRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
   '/treasury': typeof TreasuryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/atlas' | '/comms' | '/dossiers' | '/missions' | '/treasury'
+  fullPaths:
+    | '/'
+    | '/atlas'
+    | '/comms'
+    | '/concierge'
+    | '/dossiers'
+    | '/missions'
+    | '/treasury'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/atlas' | '/comms' | '/dossiers' | '/missions' | '/treasury'
+  to:
+    | '/'
+    | '/atlas'
+    | '/comms'
+    | '/concierge'
+    | '/dossiers'
+    | '/missions'
+    | '/treasury'
   id:
     | '__root__'
     | '/'
     | '/atlas'
     | '/comms'
+    | '/concierge'
     | '/dossiers'
     | '/missions'
     | '/treasury'
@@ -91,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AtlasRoute: typeof AtlasRoute
   CommsRoute: typeof CommsRoute
+  ConciergeRoute: typeof ConciergeRoute
   DossiersRoute: typeof DossiersRoute
   MissionsRoute: typeof MissionsRoute
   TreasuryRoute: typeof TreasuryRoute
@@ -117,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/dossiers'
       fullPath: '/dossiers'
       preLoaderRoute: typeof DossiersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/concierge': {
+      id: '/concierge'
+      path: '/concierge'
+      fullPath: '/concierge'
+      preLoaderRoute: typeof ConciergeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comms': {
@@ -147,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AtlasRoute: AtlasRoute,
   CommsRoute: CommsRoute,
+  ConciergeRoute: ConciergeRoute,
   DossiersRoute: DossiersRoute,
   MissionsRoute: MissionsRoute,
   TreasuryRoute: TreasuryRoute,
