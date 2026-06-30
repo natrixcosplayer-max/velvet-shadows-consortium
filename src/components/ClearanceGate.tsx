@@ -37,13 +37,14 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
       <div className="relative w-full max-w-2xl px-6">
         <div className="flex flex-col items-center mb-8 animate-flicker">
           <Sigil size={64} />
-          <p className="font-display text-gold text-2xl tracking-[0.4em] mt-4">CONTINENTAL</p>
-          <p className="text-gold-dim text-[10px] tracking-[0.5em] mt-1">SUB · ROSA · MMXXVI</p>
+          <p className="font-display text-gold text-2xl tracking-[0.22em] mt-4 text-center"> EX COMMISSIO</p>
+          <p className="font-display text-gold text-4xl tracking-[0.18em]">
+  ALTAE MENSAE
         </div>
-
+<p className="text-gold-dim text-[11px] tracking-[0.45em] mt-3 uppercase"> Red Interna de la Alta Mesa</p>
         <div className="noir-panel gold-corners p-6 min-h-[280px]">
           <div className="flex items-center justify-between mb-4 text-[10px] tracking-[0.3em] text-gold-dim uppercase">
-            <span>· TERMINAL SEGURO ·</span>
+            <span>· CANAL PRIVADO DE LA COMISIÓN ·</span>
             <span className="text-gold">{Math.floor(progress)}%</span>
           </div>
           <div className="h-px bg-gold-dim mb-4" />
@@ -70,7 +71,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
         </div>
 
         <p className="text-center text-gold-dim text-[10px] tracking-[0.4em] mt-6 uppercase">
-          El acceso no autorizado infringe los Artículos de la Mesa Alta
+          La presente comunicación queda registrada conforme a los Estatutos de la Comisión.
         </p>
       </div>
     </div>
