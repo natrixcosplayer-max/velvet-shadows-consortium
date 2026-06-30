@@ -3,18 +3,18 @@ import { useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 
 export const Route = createFileRoute("/comms")({
-  head: () => ({ meta: [{ title: "Comms — Continental" }, { name: "description", content: "Encrypted communications." }] }),
+  head: () => ({ meta: [{ title: "Comunicaciones — Continental" }, { name: "description", content: "Comunicaciones cifradas." }] }),
   component: Comms,
 });
 
 type Msg = { id: string; from: string; subject: string; body: string; at: string; cipher: string; unread?: boolean };
 
 const THREADS: Msg[] = [
-  { id: "1", from: "Manager · NYC", subject: "Your usual room", body: "The Presidential is prepared. Linen as you prefer. The window faces east. Cassian will collect you from the lobby at 23:00. Discretion: absolute.", at: "03:14", cipher: "RSA-4096 / Curve25519", unread: true },
-  { id: "2", from: "Adjudicator Vex", subject: "Re: The matter", body: "The Table has reviewed your filing. The judgment stands. Markers MK-001 and MK-014 remain on the public ledger. Do not attempt private resolution.", at: "Yesterday", cipher: "AES-512-GCM", unread: true },
-  { id: "3", from: "Sommelier · Rome", subject: "Latour '47", body: "A bottle is set aside in your name. Tasting room six. Bring no companions. The cellar door closes at four.", at: "2 days", cipher: "Continental Wave" },
-  { id: "4", from: "Concierge · Osaka", subject: "Physician", body: "Doctor available between midnight and dawn. Tetanus, gunshot, lacerations. No questions, no records.", at: "3 days", cipher: "RSA-4096" },
-  { id: "5", from: "High Table · Concilium", subject: "Convocation", body: "Your presence is required. Rome chapter house. Midnight, the third of the month. Black tie. No exceptions.", at: "1 week", cipher: "Imperium-Seal" },
+  { id: "1", from: "Gerente · NYC", subject: "Su habitación de siempre", body: "La Presidencial está lista. Lino como lo prefiere. La ventana da al este. Cassian le recogerá en el vestíbulo a las 23:00. Discreción: absoluta.", at: "03:14", cipher: "RSA-4096 / Curve25519", unread: true },
+  { id: "2", from: "Adjudicador Vex", subject: "Re: El asunto", body: "La Mesa ha revisado su escrito. La sentencia se mantiene. Los marcadores MK-001 y MK-014 permanecen en el registro público. No intente resolución privada.", at: "Ayer", cipher: "AES-512-GCM", unread: true },
+  { id: "3", from: "Sommelier · Roma", subject: "Latour '47", body: "Una botella está reservada a su nombre. Sala de cata seis. No traiga acompañantes. La puerta de la bodega cierra a las cuatro.", at: "Hace 2 días", cipher: "Onda Continental" },
+  { id: "4", from: "Conserje · Osaka", subject: "Médico", body: "Médico disponible entre la medianoche y el alba. Tétanos, heridas de bala, laceraciones. Sin preguntas, sin registros.", at: "Hace 3 días", cipher: "RSA-4096" },
+  { id: "5", from: "Mesa Alta · Concilium", subject: "Convocatoria", body: "Se requiere su presencia. Casa capitular de Roma. Medianoche, el día tres del mes. Etiqueta. Sin excepciones.", at: "Hace 1 semana", cipher: "Sello Imperium" },
 ];
 
 function Comms() {
@@ -31,11 +31,11 @@ function Comms() {
   };
 
   return (
-    <AppShell title="Encrypted Comms" latin="Nuntii Cifrati">
+    <AppShell title="Comunicaciones Cifradas" latin="Nuntii Cifrati">
       <div className="grid lg:grid-cols-[320px_1fr] gap-6">
         <Panel className="!p-0">
           <div className="p-3 border-b border-gold-dim font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase flex justify-between">
-            <span>Inbox</span><span>{THREADS.filter((t) => t.unread).length} new</span>
+            <span>Bandeja</span><span>{THREADS.filter((t) => t.unread).length} nuevos</span>
           </div>
           <ul>
             {THREADS.map((t) => (
@@ -60,7 +60,7 @@ function Comms() {
           <Panel>
             <div className="flex justify-between items-start mb-4 pb-3 border-b border-gold-dim">
               <div>
-                <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">From</p>
+                <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">De</p>
                 <p className="font-display text-2xl text-gold mt-1">{open.from}</p>
                 <p className="font-mono text-xs text-foreground/80 mt-2">RE: {open.subject}</p>
               </div>
@@ -73,28 +73,28 @@ function Comms() {
               {open.body}
             </div>
             <div className="mt-6 font-mono text-[10px] text-gold-dim tracking-[0.3em] uppercase border-t border-gold-dim pt-3 flex justify-between">
-              <span>· DECRYPTED IN MEMORY ·</span>
-              <span>· DESTROYED ON CLOSE ·</span>
+              <span>· DESCIFRADO EN MEMORIA ·</span>
+              <span>· DESTRUIDO AL CERRAR ·</span>
             </div>
           </Panel>
 
-          <Panel title="Compose · Sealed Transmission" latin="Compone Nuntium">
+          <Panel title="Componer · Transmisión Sellada" latin="Compone Nuntium">
             <textarea
               value={draft}
               onChange={(e) => { setDraft(e.target.value); setEncrypted(""); }}
               rows={4}
-              placeholder="Type your transmission. It will be encrypted before sending."
+              placeholder="Escriba su transmisión. Será cifrada antes de enviarse."
               className="w-full bg-background border border-gold-dim p-3 font-mono text-sm text-gold placeholder:text-gold-dim focus:outline-none focus:border-gold resize-none"
             />
             <div className="mt-3 flex flex-wrap gap-3">
               <button onClick={encrypt} className="font-mono text-[11px] tracking-[0.3em] uppercase px-4 py-2 border border-gold text-gold hover:bg-gold hover:text-primary-foreground transition">
-                Encrypt
+                Cifrar
               </button>
               <button className="font-mono text-[11px] tracking-[0.3em] uppercase px-4 py-2 border border-gold-dim text-gold-dim hover:border-gold hover:text-gold transition">
-                Seal & Dispatch
+                Sellar y Despachar
               </button>
               <button onClick={() => { setDraft(""); setEncrypted(""); }} className="font-mono text-[11px] tracking-[0.3em] uppercase px-4 py-2 border border-destructive/60 text-destructive hover:bg-destructive hover:text-destructive-foreground transition">
-                Burn
+                Quemar
               </button>
             </div>
             {encrypted && (

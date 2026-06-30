@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { Sigil } from "./AppShell";
 
 const LINES = [
-  "> INITIATING SECURE HANDSHAKE...",
-  "> NEGOTIATING CIPHER · AES-512-GCM · OK",
-  "> SCANNING BIOMETRIC SIGNATURE...",
-  "> CROSS-REFERENCING HIGH TABLE LEDGER...",
-  "> VERIFYING BLOOD OATH · MARKER #0734",
-  "> CLEARANCE: AURUM · TIER III",
-  "> WELCOME, ADJUDICATOR.",
+  "> INICIANDO ENLACE SEGURO...",
+  "> NEGOCIANDO CIFRADO · AES-512-GCM · OK",
+  "> ESCANEANDO FIRMA BIOMÉTRICA...",
+  "> COTEJANDO REGISTRO DE LA MESA ALTA...",
+  "> VERIFICANDO JURAMENTO DE SANGRE · MARCADOR #0734",
+  "> AUTORIZACIÓN: AURUM · NIVEL III",
+  "> BIENVENIDO, ADJUDICADOR.",
 ];
 
 export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
@@ -43,7 +43,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
 
         <div className="noir-panel gold-corners p-6 min-h-[280px]">
           <div className="flex items-center justify-between mb-4 text-[10px] tracking-[0.3em] text-gold-dim uppercase">
-            <span>· SECURE TERMINAL ·</span>
+            <span>· TERMINAL SEGURO ·</span>
             <span className="text-gold">{Math.floor(progress)}%</span>
           </div>
           <div className="h-px bg-gold-dim mb-4" />
@@ -70,7 +70,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
         </div>
 
         <p className="text-center text-gold-dim text-[10px] tracking-[0.4em] mt-6 uppercase">
-          Unauthorized access is a violation of the Articles of the High Table
+          El acceso no autorizado infringe los Artículos de la Mesa Alta
         </p>
       </div>
     </div>

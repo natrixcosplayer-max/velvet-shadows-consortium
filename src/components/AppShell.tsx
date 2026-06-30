@@ -2,14 +2,14 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 
 const NAV = [
-  { to: "/", label: "Atrium", latin: "Atrium" },
-  { to: "/dossiers", label: "Dossiers", latin: "Tabulae" },
-  { to: "/missions", label: "Contracts", latin: "Mandata" },
-  { to: "/comms", label: "Comms", latin: "Nuntii" },
+  { to: "/", label: "Atrio", latin: "Atrium" },
+  { to: "/dossiers", label: "Expedientes", latin: "Tabulae" },
+  { to: "/missions", label: "Contratos", latin: "Mandata" },
+  { to: "/comms", label: "Comunicaciones", latin: "Nuntii" },
   { to: "/atlas", label: "Atlas", latin: "Orbis" },
-  { to: "/treasury", label: "Treasury", latin: "Aerarium" },
-  { to: "/concierge", label: "Concierge", latin: "Cura" },
-  { to: "/council", label: "High Council", latin: "Concilium" },
+  { to: "/treasury", label: "Tesorería", latin: "Aerarium" },
+  { to: "/concierge", label: "Conserjería", latin: "Cura" },
+  { to: "/council", label: "Alto Consejo", latin: "Concilium" },
 ] as const;
 
 export function AppShell({ children, title, latin }: { children: ReactNode; title: string; latin: string }) {
@@ -42,17 +42,17 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
           <div className="hidden md:flex items-center gap-6 font-mono text-[11px] text-gold-dim">
             <span className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse-gold" />
-              SECURE CHANNEL · AES-512
+              CANAL SEGURO · AES-512
             </span>
             <span>{now}</span>
-            <span className="text-gold">AGENT · {AGENT_ID}</span>
+            <span className="text-gold">AGENTE · {AGENT_ID}</span>
           </div>
           <button
             className="md:hidden text-gold border border-gold-dim px-2 py-1 text-xs font-mono"
             onClick={() => setMobileOpen((v) => !v)}
-            aria-label="Toggle nav"
+            aria-label="Alternar navegación"
           >
-            {mobileOpen ? "CLOSE" : "MENU"}
+            {mobileOpen ? "CERRAR" : "MENÚ"}
           </button>
         </div>
         <nav className={`${mobileOpen ? "block" : "hidden"} md:block border-t border-gold-dim`}>
@@ -87,7 +87,7 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
 
       <footer className="border-t border-gold-dim mt-16 py-6 px-4 md:px-8 font-mono text-[10px] text-gold-dim tracking-[0.25em] flex flex-col md:flex-row justify-between gap-2">
         <span>EX UMBRA · IN SOLEM</span>
-        <span>ALL MATERIAL FICTIONAL · INSPIRED BY GENRE</span>
+        <span>TODO EL MATERIAL ES FICCIÓN · INSPIRADO EN EL GÉNERO</span>
         <span>© MMXXVI · CONTINENTAL HOTELS GROUP</span>
       </footer>
     </div>

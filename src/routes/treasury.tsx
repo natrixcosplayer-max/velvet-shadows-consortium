@@ -3,55 +3,55 @@ import { useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 
 export const Route = createFileRoute("/treasury")({
-  head: () => ({ meta: [{ title: "Treasury — Continental" }, { name: "description", content: "Coin economy and markers." }] }),
+  head: () => ({ meta: [{ title: "Tesorería — Continental" }, { name: "description", content: "Economía de monedas y marcadores." }] }),
   component: Treasury,
 });
 
 function Treasury() {
   const [balance, setBalance] = useState(14);
   const [log, setLog] = useState<{ kind: "+" | "−"; amt: number; reason: string; at: string }[]>([
-    { kind: "−", amt: 1, reason: "Cellar tasting · Rome", at: "Today 04:22" },
-    { kind: "+", amt: 8, reason: "Contract M-7689 · Berlin", at: "Yesterday" },
-    { kind: "−", amt: 2, reason: "Physician · Osaka", at: "3 days ago" },
-    { kind: "+", amt: 6, reason: "Marker MK-014 issued", at: "1 week ago" },
+    { kind: "−", amt: 1, reason: "Cata en bodega · Roma", at: "Hoy 04:22" },
+    { kind: "+", amt: 8, reason: "Contrato M-7689 · Berlín", at: "Ayer" },
+    { kind: "−", amt: 2, reason: "Médico · Osaka", at: "Hace 3 días" },
+    { kind: "+", amt: 6, reason: "Marcador MK-014 emitido", at: "Hace 1 semana" },
   ]);
 
   const spend = (n: number, reason: string) => {
     if (balance < n) return;
     setBalance((b) => b - n);
-    setLog((l) => [{ kind: "−", amt: n, reason, at: "Just now" }, ...l]);
+    setLog((l) => [{ kind: "−", amt: n, reason, at: "Ahora mismo" }, ...l]);
   };
 
   return (
-    <AppShell title="Treasury" latin="Aerarium · Coin & Markers">
+    <AppShell title="Tesorería" latin="Aerarium · Monedas y Marcadores">
       <div className="grid lg:grid-cols-[1fr_1fr] gap-6">
         <Panel className="relative overflow-hidden">
           <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
           <div className="relative flex flex-col items-center text-center py-8">
             <Coin />
-            <p className="font-mono text-[10px] tracking-[0.4em] text-gold-dim uppercase mt-6">Coin Balance</p>
+            <p className="font-mono text-[10px] tracking-[0.4em] text-gold-dim uppercase mt-6">Saldo en Monedas</p>
             <p className="font-display text-7xl text-gold mt-2">{balance} ⊙</p>
             <p className="font-mono text-xs text-foreground/70 mt-3 max-w-md italic">
-              "One coin. One service. No exceptions. Value is not in metal but in oath."
+              "Una moneda. Un servicio. Sin excepciones. El valor no está en el metal sino en el juramento."
             </p>
             <div className="mt-6 flex gap-3 flex-wrap justify-center">
-              <ActionBtn onClick={() => spend(1, "Room · one night")}>Lodging · 1 ⊙</ActionBtn>
+              <ActionBtn onClick={() => spend(1, "Habitación · una noche")}>Alojamiento · 1 ⊙</ActionBtn>
               <ActionBtn onClick={() => spend(2, "Sommelier")}>Sommelier · 2 ⊙</ActionBtn>
-              <ActionBtn onClick={() => spend(3, "Physician")}>Physician · 3 ⊙</ActionBtn>
+              <ActionBtn onClick={() => spend(3, "Médico")}>Médico · 3 ⊙</ActionBtn>
             </div>
           </div>
         </Panel>
 
         <div className="space-y-6">
-          <Panel title="Conversion Table" latin="Tabula Mutationis">
+          <Panel title="Tabla de Conversión" latin="Tabula Mutationis">
             <ul className="font-mono text-sm divide-y divide-gold-dim/40">
               {[
-                ["1 ⊙", "= Sanctuary · one night"],
-                ["1 ⊙", "= Audience with Concierge"],
-                ["2 ⊙", "= Sommelier's discretion"],
-                ["3 ⊙", "= Physician · no questions"],
-                ["5 ⊙", "= Cleaner · full reset"],
-                ["1 Marker", "= Debt unbounded"],
+                ["1 ⊙", "= Santuario · una noche"],
+                ["1 ⊙", "= Audiencia con el Conserje"],
+                ["2 ⊙", "= Discreción del Sommelier"],
+                ["3 ⊙", "= Médico · sin preguntas"],
+                ["5 ⊙", "= Limpiador · reinicio total"],
+                ["1 Marcador", "= Deuda sin límite"],
               ].map(([k, v], i) => (
                 <li key={i} className="flex justify-between py-2.5">
                   <span className="text-gold">{k}</span>
@@ -61,7 +61,7 @@ function Treasury() {
             </ul>
           </Panel>
 
-          <Panel title="Ledger" latin="Codex Rationum">
+          <Panel title="Libro Mayor" latin="Codex Rationum">
             <ul className="font-mono text-xs">
               {log.map((e, i) => (
                 <li key={i} className="flex justify-between items-center py-2.5 border-b border-gold-dim/30 last:border-0">
