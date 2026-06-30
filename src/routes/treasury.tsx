@@ -1,0 +1,109 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { AppShell, Panel } from "../components/AppShell";
+
+export const Route = createFileRoute("/treasury")({
+  head: () => ({ meta: [{ title: "Treasury — Continental" }, { name: "description", content: "Coin economy and markers." }] }),
+  component: Treasury,
+});
+
+function Treasury() {
+  const [balance, setBalance] = useState(14);
+  const [log, setLog] = useState<{ kind: "+" | "−"; amt: number; reason: string; at: string }[]>([
+    { kind: "−", amt: 1, reason: "Cellar tasting · Rome", at: "Today 04:22" },
+    { kind: "+", amt: 8, reason: "Contract M-7689 · Berlin", at: "Yesterday" },
+    { kind: "−", amt: 2, reason: "Physician · Osaka", at: "3 days ago" },
+    { kind: "+", amt: 6, reason: "Marker MK-014 issued", at: "1 week ago" },
+  ]);
+
+  const spend = (n: number, reason: string) => {
+    if (balance < n) return;
+    setBalance((b) => b - n);
+    setLog((l) => [{ kind: "−", amt: n, reason, at: "Just now" }, ...l]);
+  };
+
+  return (
+    <AppShell title="Treasury" latin="Aerarium · Coin & Markers">
+      <div className="grid lg:grid-cols-[1fr_1fr] gap-6">
+        <Panel className="relative overflow-hidden">
+          <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
+          <div className="relative flex flex-col items-center text-center py-8">
+            <Coin />
+            <p className="font-mono text-[10px] tracking-[0.4em] text-gold-dim uppercase mt-6">Coin Balance</p>
+            <p className="font-display text-7xl text-gold mt-2">{balance} ⊙</p>
+            <p className="font-mono text-xs text-foreground/70 mt-3 max-w-md italic">
+              "One coin. One service. No exceptions. Value is not in metal but in oath."
+            </p>
+            <div className="mt-6 flex gap-3 flex-wrap justify-center">
+              <ActionBtn onClick={() => spend(1, "Room · one night")}>Lodging · 1 ⊙</ActionBtn>
+              <ActionBtn onClick={() => spend(2, "Sommelier")}>Sommelier · 2 ⊙</ActionBtn>
+              <ActionBtn onClick={() => spend(3, "Physician")}>Physician · 3 ⊙</ActionBtn>
+            </div>
+          </div>
+        </Panel>
+
+        <div className="space-y-6">
+          <Panel title="Conversion Table" latin="Tabula Mutationis">
+            <ul className="font-mono text-sm divide-y divide-gold-dim/40">
+              {[
+                ["1 ⊙", "= Sanctuary · one night"],
+                ["1 ⊙", "= Audience with Concierge"],
+                ["2 ⊙", "= Sommelier's discretion"],
+                ["3 ⊙", "= Physician · no questions"],
+                ["5 ⊙", "= Cleaner · full reset"],
+                ["1 Marker", "= Debt unbounded"],
+              ].map(([k, v], i) => (
+                <li key={i} className="flex justify-between py-2.5">
+                  <span className="text-gold">{k}</span>
+                  <span className="text-foreground/80">{v}</span>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+
+          <Panel title="Ledger" latin="Codex Rationum">
+            <ul className="font-mono text-xs">
+              {log.map((e, i) => (
+                <li key={i} className="flex justify-between items-center py-2.5 border-b border-gold-dim/30 last:border-0">
+                  <span className="flex items-center gap-3">
+                    <span className={`w-6 h-6 grid place-items-center border ${e.kind === "+" ? "border-gold text-gold" : "border-destructive text-destructive"}`}>{e.kind}</span>
+                    <span>
+                      <span className="text-gold block">{e.reason}</span>
+                      <span className="text-gold-dim text-[10px] tracking-[0.2em]">{e.at}</span>
+                    </span>
+                  </span>
+                  <span className={`font-display text-lg ${e.kind === "+" ? "text-gold" : "text-destructive"}`}>
+                    {e.kind}{e.amt} ⊙
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </div>
+      </div>
+    </AppShell>
+  );
+}
+
+function ActionBtn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="font-mono text-[11px] tracking-[0.3em] uppercase px-4 py-2 border border-gold-dim text-gold-dim hover:border-gold hover:text-gold transition">
+      {children}
+    </button>
+  );
+}
+
+function Coin() {
+  return (
+    <div className="relative w-40 h-40 rounded-full" style={{ background: "var(--gradient-gold)", boxShadow: "var(--shadow-gold), 0 0 80px -10px var(--gold)" }}>
+      <div className="absolute inset-2 rounded-full border-2 border-background/40 flex items-center justify-center">
+        <div className="text-center text-background">
+          <p className="font-display text-2xl leading-none">EX</p>
+          <p className="font-mono text-[8px] tracking-[0.3em] my-1">CONTINENTALIS</p>
+          <p className="font-display text-2xl leading-none">UMBRA</p>
+        </div>
+      </div>
+      <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle at 30% 30%, oklch(1 0 0 / 25%), transparent 50%)" }} />
+    </div>
+  );
+}
