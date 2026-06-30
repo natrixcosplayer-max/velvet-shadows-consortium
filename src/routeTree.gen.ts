@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TreasuryRouteImport } from './routes/treasury'
 import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as DossiersRouteImport } from './routes/dossiers'
 import { Route as CommsRouteImport } from './routes/comms'
 import { Route as AtlasRouteImport } from './routes/atlas'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TreasuryRoute = TreasuryRouteImport.update({
+  id: '/treasury',
+  path: '/treasury',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MissionsRoute = MissionsRouteImport.update({
   id: '/missions',
   path: '/missions',
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/comms': typeof CommsRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
+  '/treasury': typeof TreasuryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/comms': typeof CommsRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
+  '/treasury': typeof TreasuryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,21 @@ export interface FileRoutesById {
   '/comms': typeof CommsRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
+  '/treasury': typeof TreasuryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/atlas' | '/comms' | '/dossiers' | '/missions'
+  fullPaths: '/' | '/atlas' | '/comms' | '/dossiers' | '/missions' | '/treasury'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/atlas' | '/comms' | '/dossiers' | '/missions'
-  id: '__root__' | '/' | '/atlas' | '/comms' | '/dossiers' | '/missions'
+  to: '/' | '/atlas' | '/comms' | '/dossiers' | '/missions' | '/treasury'
+  id:
+    | '__root__'
+    | '/'
+    | '/atlas'
+    | '/comms'
+    | '/dossiers'
+    | '/missions'
+    | '/treasury'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,10 +93,18 @@ export interface RootRouteChildren {
   CommsRoute: typeof CommsRoute
   DossiersRoute: typeof DossiersRoute
   MissionsRoute: typeof MissionsRoute
+  TreasuryRoute: typeof TreasuryRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/treasury': {
+      id: '/treasury'
+      path: '/treasury'
+      fullPath: '/treasury'
+      preLoaderRoute: typeof TreasuryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/missions': {
       id: '/missions'
       path: '/missions'
@@ -125,6 +149,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommsRoute: CommsRoute,
   DossiersRoute: DossiersRoute,
   MissionsRoute: MissionsRoute,
+  TreasuryRoute: TreasuryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
