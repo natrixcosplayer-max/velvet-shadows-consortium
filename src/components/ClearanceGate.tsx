@@ -23,7 +23,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
 
     const t = setTimeout(
       () => setStep((s) => s + 1),
-      380 + Math.random() * 220
+      1200 + Math.random() * 600
     );
 
     return () => clearTimeout(t);
