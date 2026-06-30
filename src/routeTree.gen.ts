@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as DossiersRouteImport } from './routes/dossiers'
+import { Route as CommsRouteImport } from './routes/comms'
 import { Route as IndexRouteImport } from './routes/index'
 
 const MissionsRoute = MissionsRouteImport.update({
@@ -23,6 +24,11 @@ const DossiersRoute = DossiersRouteImport.update({
   path: '/dossiers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CommsRoute = CommsRouteImport.update({
+  id: '/comms',
+  path: '/comms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,30 +37,34 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/comms': typeof CommsRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/comms': typeof CommsRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/comms': typeof CommsRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dossiers' | '/missions'
+  fullPaths: '/' | '/comms' | '/dossiers' | '/missions'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dossiers' | '/missions'
-  id: '__root__' | '/' | '/dossiers' | '/missions'
+  to: '/' | '/comms' | '/dossiers' | '/missions'
+  id: '__root__' | '/' | '/comms' | '/dossiers' | '/missions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CommsRoute: typeof CommsRoute
   DossiersRoute: typeof DossiersRoute
   MissionsRoute: typeof MissionsRoute
 }
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DossiersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/comms': {
+      id: '/comms'
+      path: '/comms'
+      fullPath: '/comms'
+      preLoaderRoute: typeof CommsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CommsRoute: CommsRoute,
   DossiersRoute: DossiersRoute,
   MissionsRoute: MissionsRoute,
 }
