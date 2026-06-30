@@ -19,7 +19,7 @@ function Index() {
     if (typeof window === "undefined") return;
     if (sessionStorage.getItem("continental-cleared") === "1") setUnlocked(true);
   }, []);
-  const handle = () => { sessionStorage.setItem("continental-cleared", "1"); setUnlocked(true); };
+  const handle = () => { setUnlocked(true); };
   if (!unlocked) return <ClearanceGate onComplete={handle} />;
   return <Atrium />;
 }
