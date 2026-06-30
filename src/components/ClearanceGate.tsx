@@ -37,11 +37,19 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
       <div className="relative w-full max-w-2xl px-6">
         <div className="flex flex-col items-center mb-8 animate-flicker">
           <Sigil size={64} />
-          <p className="font-display text-gold text-2xl tracking-[0.22em] mt-4 text-center"> EX COMMISSIO</p>
-          <p className="font-display text-gold text-4xl tracking-[0.18em]">
-  ALTAE MENSAE
-        </div>
-<p className="text-gold-dim text-[11px] tracking-[0.45em] mt-3 uppercase"> Red Interna de la Alta Mesa</p>
+         <div className="mt-4 text-center">
+
+  <p className="font-display text-gold text-2xl tracking-[0.22em]">
+    EX COMMISSIO
+  </p>
+
+  <p className="font-display text-gold text-4xl tracking-[0.18em]">
+    ALTAE MENSAE
+  </p>
+
+  <p className="text-gold-dim text-[11px] tracking-[0.45em] mt-3 uppercase">
+    Red Interna de la Comisión
+  </p>
         <div className="noir-panel gold-corners p-6 min-h-[280px]">
           <div className="flex items-center justify-between mb-4 text-[10px] tracking-[0.3em] text-gold-dim uppercase">
             <span>· CANAL PRIVADO DE LA COMISIÓN ·</span>
