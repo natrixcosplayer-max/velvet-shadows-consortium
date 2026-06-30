@@ -7,7 +7,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Atrio — Intranet Continental" },
-      { name: "description", content: "Sub Rosa. Solo personal autorizado." },
+      { name: "description", content: "Red Interna de la Comisión. Acceso restringido a operativos autorizados." },
     ],
   }),
   component: Index,
@@ -22,11 +22,11 @@ function Index() {
 
 function Atrium() {
   return (
-    <AppShell title="Atrio" latin="Bienvenido, Adjudicador">
+    <AppShell title="Comisión" latin="Bienvenido, MANDARIN">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        <StatBlock label="Autorización" value="AURUM III" sub="Sancionado por la Mesa Alta" />
-        <StatBlock label="Saldo en Monedas" value="14" sub="Marcadores en circulación: 3" />
-        <StatBlock label="Contratos Activos" value="02" sub="1 abierto · 1 sellado" />
+        <StatBlock label="Autorización" value="AURUM III" sub="Autorizado por la Alta Mesa" />
+        <StatBlock label="Saldo en Monedas" value="14" sub="Marcadores en circulación: 1" />
+        <StatBlock label="Contratos Activos" value="01" sub="1 abierto · 1 sellado" />
         <StatBlock label="Estatus" value="In Bonis" sub="Sin deudas pendientes" />
       </div>
 
