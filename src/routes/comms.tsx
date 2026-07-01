@@ -2,6 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 
+import {
+  playVoice,
+} from "../audio/audiomanager";
+
 export const Route = createFileRoute("/comms")({
   head: () => ({ meta: [{ title: "Comunicaciones — Continental" }, { name: "description", content: "Comunicaciones cifradas." }] }),
   component: Comms,
@@ -10,11 +14,11 @@ export const Route = createFileRoute("/comms")({
 type Msg = { id: string; from: string; subject: string; body: string; at: string; cipher: string; unread?: boolean };
 
 const THREADS: Msg[] = [
-  { id: "1", from: "Gerente · NYC", subject: "Su habitación de siempre", body: "La Presidencial está lista. Lino como lo prefiere. La ventana da al este. Cassian le recogerá en el vestíbulo a las 23:00. Discreción: absoluta.", at: "03:14", cipher: "RSA-4096 / Curve25519", unread: true },
-  { id: "2", from: "Adjudicador Vex", subject: "Re: El asunto", body: "La Mesa ha revisado su escrito. La sentencia se mantiene. Los marcadores MK-001 y MK-014 permanecen en el registro público. No intente resolución privada.", at: "Ayer", cipher: "AES-512-GCM", unread: true },
-  { id: "3", from: "Sommelier · Roma", subject: "Latour '47", body: "Una botella está reservada a su nombre. Sala de cata seis. No traiga acompañantes. La puerta de la bodega cierra a las cuatro.", at: "Hace 2 días", cipher: "Onda Continental" },
-  { id: "4", from: "Conserje · Osaka", subject: "Médico", body: "Médico disponible entre la medianoche y el alba. Tétanos, heridas de bala, laceraciones. Sin preguntas, sin registros.", at: "Hace 3 días", cipher: "RSA-4096" },
-  { id: "5", from: "Mesa Alta · Concilium", subject: "Convocatoria", body: "Se requiere su presencia. Casa capitular de Roma. Medianoche, el día tres del mes. Etiqueta. Sin excepciones.", at: "Hace 1 semana", cipher: "Sello Imperium" },
+  { id: "1", from: "Gerente Ximo · Valencia", subject: "Su habitación de siempre", body: "La Suite Presidencial ha sido preparada conforme a las especificaciones del huésped. Sábanas excepcionalmente suaves. Dos onzas de chocolate negro esperan en la nevera. Se ha dispuesto un juego nuevo de ropa interior Calvin Klein. El sistema de climatización ha sido revisado y funciona dentro de los parámetros óptimos. Cena de caracoles disponible bajo petición. El Continental le desea una estancia tan discreta como memorable.", at: "03:14", cipher: "RSA-4096 / Curve25519", unread: true },
+  { id: "2", from: "Agente Kestrel", subject: "Re: Asunto con la Michi", body: "Mandarin, tío... ¿Es cierto que te han asignado con la Michi? No me lo puedo creer. Media Comisión va detrás de ella; ya sabes que la llaman 'La Princesa de la Comisión'. Pero entre nosotros... dicen que es de las buenas. Inteligente, leal, y siempre cuida las espaldas de su compañero. Cuídala, ¿vale? En una organización como esta, donde todo el mundo lleva una máscara, merece la pena encontrarse con alguien así. Mucha suerte, hermano... y disfruta de la misión. - Kestrel", at: "Ayer", cipher: "AES-512-GCM", unread: true },
+  { id: "3", from: "LUCIA FERRI · Oficina de Roma", subject: "Interferencias operativas en Roma", body: "Agente. Nuestros informadores confirman la presencia de operativos del Consorcio Obsidiana en Roma. Su objetivo es dificultar tu desplazamiento y retrasar la misión. Han saboteado parte de la red ferroviaria, provocando interrupciones deliberadas en los servicios, y han desplegado agitadores en las principales estaciones para generar confusión. La inteligencia recibida indica además que planean obstaculizar tu vuelo de regreso. Asume que cualquier contratiempo puede formar parte de una operación coordinada. Mantén un perfil bajo, evita rutinas predecibles y extrema las precauciones. Buena suerte, Agente. La Comisión permanece a la escucha.", at: "Hace 15 días", cipher: "Onda Continental" },
+  { id: "4", from: "Adjudicador Vex · Osaka", subject: "Entrega autorizada", body: "Las Pitas de Kevlar procedentes de Osaka ya están listas para su recogida. Último modelo homologado por la Comisión. Desconozco para quién son, pero te aconsejo mantenerlas ocultas hasta el momento oportuno. Algunos regalos solo deben descubrirse una vez. Buena suerte.", at: "Hace 23 días", cipher: "RSA-4096" },
+  { id: "5", from: "Mesa Alta · Concilium", subject: "Convocatoria", body: "Se requiere su presencia. Casa capitular de Roma. Medianoche, el día tres del mes. Etiqueta. Sin excepciones.", at: "Hace 4 semanas", cipher: "Sello Imperium" },
 ];
 
 function Comms() {
@@ -41,7 +45,18 @@ function Comms() {
             {THREADS.map((t) => (
               <li key={t.id}>
                 <button
-                  onClick={() => setOpen(t)}
+                  onClick={() => {
+
+  if (t.id === "1") {
+    playVoice("/sounds/mailhotel.wav");
+  } else if (t.id === "2") {
+    playVoice("/sounds/email.mp3");
+  }
+
+  setOpen(t);
+
+}}
+
                   className={`w-full text-left p-4 border-b border-gold-dim/40 hover:bg-secondary/40 transition ${open.id === t.id ? "bg-secondary/60 border-l-2 border-l-gold" : ""}`}
                 >
                   <div className="flex justify-between items-baseline">
@@ -51,8 +66,8 @@ function Comms() {
                   <p className="text-xs text-foreground/80 mt-1 truncate">{t.subject}</p>
                   {t.unread && <span className="inline-block mt-1.5 w-1.5 h-1.5 bg-gold rounded-full" />}
                 </button>
-              </li>
-            ))}
+                  </li>
+  ))}
           </ul>
         </Panel>
 

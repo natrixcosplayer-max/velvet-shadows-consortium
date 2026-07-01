@@ -1,120 +1,182 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 
 export const Route = createFileRoute("/missions")({
-  head: () => ({ meta: [{ title: "Contratos — Continental" }, { name: "description", content: "Contratos abiertos y sellados." }] }),
+  head: () => ({
+    meta: [
+      { title: "Operativo" },
+      {
+        name: "description",
+        content: "Operación activa de la Comisión.",
+      },
+    ],
+  }),
   component: Missions,
 });
 
-type Mission = {
-  id: string; title: string; latin: string; city: string; bounty: number;
-  tier: "I" | "II" | "III" | "IV"; status: "ABIERTO" | "TOMADO" | "SELLADO" | "CUMPLIDO";
-  brief: string; deadline: string;
-};
-
-const MISSIONS: Mission[] = [
-  { id: "M-7741", title: "La Petición del Sommelier", latin: "Petitio Sommelarii", city: "Nueva York", bounty: 6, tier: "II", status: "ABIERTO",
-    brief: "Un huésped de la casa ha solicitado una cata. La selección debe ser germánica. Discreción absoluta.", deadline: "72h" },
-  { id: "M-8120", title: "Gala Carmesí", latin: "Conventus Cruentus", city: "Roma", bounty: 14, tier: "IV", status: "ABIERTO",
-    brief: "Una invitación requiere acompañante. El anfitrión exige puntualidad. Etiqueta. Sin armas mayores al .380.", deadline: "5 días" },
-  { id: "M-8201", title: "Auditoría Silenciosa", latin: "Census Tacitus", city: "Casablanca", bounty: 4, tier: "I", status: "TOMADO",
-    brief: "Un libro mayor requiere verificación. El contable es cooperativo. Los números, menos.", deadline: "10 días" },
-  { id: "M-8244", title: "Fiesta del Jardín", latin: "Hortus Silens", city: "Osaka", bounty: 9, tier: "III", status: "SELLADO",
-    brief: "Por invitación de la Mesa Alta. Informe a la llegada.", deadline: "—" },
-  { id: "M-7689", title: "Restitución de Bienes", latin: "Restitutio", city: "Berlín", bounty: 5, tier: "II", status: "CUMPLIDO",
-    brief: "Una reliquia ha sido recuperada. La parte está agradecida.", deadline: "Cerrado" },
-];
-
-const TIER_COLOR: Record<Mission["tier"], string> = {
-  I: "text-gold-dim", II: "text-gold", III: "text-gold-bright", IV: "text-destructive",
-};
-const STATUS_BADGE: Record<Mission["status"], string> = {
-  ABIERTO: "text-gold border-gold animate-pulse-gold",
-  TOMADO: "text-gold-dim border-gold-dim",
-  SELLADO: "text-destructive border-destructive",
-  CUMPLIDO: "text-muted-foreground border-muted-foreground line-through",
+const OPERATION = {
+  objective: "Recuperar el activo",
+  location: "Consultar Coordenadas",
+  address: "Enviada ubicación encriptada",
+  status: "EN CURSO",
+  window: "22:30 - 23:59",
+  risk: "BAJO",
+  maps:
+    "https://www.google.com/maps/dir/?api=1&destination=39.469900,-0.376300",
 };
 
 function Missions() {
-  const [filter, setFilter] = useState<Mission["status"] | "TODOS">("TODOS");
-  const visible = MISSIONS.filter((m) => filter === "TODOS" || m.status === filter);
-
   return (
-    <AppShell title="Contratos" latin="Mandata · Registro abierto">
-      <div className="flex flex-wrap gap-2 mb-6 font-mono text-[11px] tracking-[0.25em] uppercase">
-        {(["TODOS", "ABIERTO", "TOMADO", "SELLADO", "CUMPLIDO"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 border transition ${filter === f ? "border-gold bg-gold text-primary-foreground" : "border-gold-dim text-gold-dim hover:border-gold hover:text-gold"}`}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
+  <AppShell title="Operativo" latin="Missio Activa">
 
-      <div className="grid md:grid-cols-2 gap-5">
-        {visible.map((m) => (
-          <article key={m.id} className="noir-panel gold-corners p-6 hover:scale-[1.01] transition group">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">{m.id} · {m.city}</p>
-                <h3 className="font-display text-2xl text-gold mt-1">{m.title}</h3>
-                <p className="font-display text-gold-dim italic text-sm">{m.latin}</p>
-              </div>
-              <span className={`font-mono text-[9px] tracking-[0.3em] px-2 py-1 border uppercase ${STATUS_BADGE[m.status]}`}>
-                {m.status}
-              </span>
-            </div>
+    <div className="grid md:grid-cols-2 gap-5">
 
-            <p className="text-sm text-foreground/85 leading-relaxed border-l-2 border-gold-dim pl-3 my-4">
-              {m.brief}
-            </p>
-
-            <div className="grid grid-cols-3 gap-3 mt-5 pt-4 border-t border-gold-dim">
-              <Stat label="Recompensa" value={`${m.bounty} ⊙`} />
-              <Stat label="Nivel" value={m.tier} className={TIER_COLOR[m.tier]} />
-              <Stat label="Plazo" value={m.deadline} />
-            </div>
-
-            {m.status === "ABIERTO" && (
-              <button className="mt-5 w-full font-mono text-[11px] tracking-[0.3em] uppercase py-2 border border-gold text-gold hover:bg-gold hover:text-primary-foreground transition">
-                Aceptar Contrato
-              </button>
-            )}
-          </article>
-        ))}
-      </div>
-
-      <Panel title="Registro de Marcadores" latin="Numerarium Mortis" className="mt-10">
-        <table className="w-full font-mono text-xs">
-          <thead className="text-gold-dim text-[10px] tracking-[0.3em] uppercase border-b border-gold-dim">
-            <tr><th className="text-left py-2">Marcador</th><th className="text-left">Portador</th><th className="text-left">Debido por</th><th className="text-right">Estatus</th></tr>
-          </thead>
-          <tbody className="text-gold">
-            {[
-              ["MK-001", "Casa Tarasov", "Usted", "Activo"],
-              ["MK-014", "Sofia al-Azwar", "Usted", "Pendiente"],
-              ["MK-027", "Usted", "Adjudicador V.", "Retenido"],
-            ].map((r, i) => (
-              <tr key={i} className="border-b border-gold-dim/30">
-                <td className="py-3">{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td>
-                <td className="text-right text-gold-dim">{r[3]}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <Panel title="Objetivo" latin="Finis Missionis">
+        <p className="font-display text-3xl text-gold">
+          {OPERATION.objective}
+        </p>
       </Panel>
-    </AppShell>
-  );
-}
 
-function Stat({ label, value, className = "" }: { label: string; value: string; className?: string }) {
-  return (
-    <div>
-      <p className="font-mono text-[9px] tracking-[0.3em] text-gold-dim uppercase">{label}</p>
-      <p className={`font-display text-lg mt-1 ${className || "text-gold"}`}>{value}</p>
+      <Panel title="Estado" latin="Status">
+        <div className="flex items-center gap-3">
+
+          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+
+          <p className="font-display text-3xl text-gold">
+            {OPERATION.status}
+          </p>
+
+        </div>
+      </Panel>
+
+      <Panel title="Destino" latin="Locus">
+        <p className="font-display text-2xl text-gold">
+          {OPERATION.location}
+        </p>
+
+        <p className="text-gold-dim mt-2">
+          {OPERATION.address}
+        </p>
+      </Panel>
+
+      <Panel title="Ventana Operativa" latin="Tempus">
+        <p className="font-display text-2xl text-gold">
+          {OPERATION.window}
+        </p>
+      </Panel>
+
+      <Panel title="Nivel de Riesgo" latin="Periculum">
+        <p className="font-display text-2xl text-red-400">
+          {OPERATION.risk}
+        </p>
+      </Panel>
+
+      <Panel title="Estado del Objetivo" latin="Objectivum">
+
+        <div className="flex items-center gap-3">
+
+          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+
+          <span className="font-display text-xl text-gold">
+            ACTIVO LOCALIZADO
+          </span>
+
+        </div>
+
+        <p className="mt-4 text-gold-dim text-sm">
+          Última posición confirmada hace menos de 2 minutos.
+        </p>
+
+      </Panel>
+
     </div>
+
+    <Panel title="Protocolo Operativo" latin="Mandatum" className="mt-8">
+
+      <div className="space-y-4 text-gold">
+
+        <p>• Analice las coordenadas proporcionadas por la Comisión.</p>
+
+        <p>• Inicie el desplazamiento hacia el punto de recuperación del activo.</p>
+
+        <p>• Desplácese junto a la Agente Minerva y mantenga vigilancia permanente durante el trayecto.</p>
+        
+        <p>•  En caso de detectar seguimiento o actividad sospechosa, interrumpa temporalmente la operación. Adopte una cobertura civil y permanezca integrado en el entorno tomando un Cocktail.</p>
+
+        <p>• Recupere el activo sin comprometer la misión.</p>
+
+        <p>• Abandone la zona utilizando el vehículo asignado y espere nuevas instrucciones a través del canal cifrado.</p>
+
+      </div>
+
+    </Panel>
+
+    <Panel title="Coordenadas" latin="Geolocatio" className="mt-8">
+
+      <div className="grid md:grid-cols-[1fr_280px] gap-8 items-center">
+
+        <div>
+
+          <p className="font-mono text-[10px] tracking-[0.3em] uppercase text-gold-dim">
+            POSICIÓN VERIFICADA
+          </p>
+
+          <p className="font-mono text-gold-dim uppercase tracking-[0.25em]">
+  LAT 39.45896
+</p>
+
+<p className="font-mono text-gold-dim uppercase tracking-[0.25em]">
+  LON -0.38198
+</p>
+
+          <p className="mt-6 text-gold-dim font-mono uppercase tracking-[0.2em]">
+            Última actualización · Hace 2 minutos
+          </p>
+
+        </div>
+
+        <div className="flex flex-col gap-4">
+
+        <div className="flex flex-col gap-4">
+
+  <a
+    href="https://maps.app.goo.gl/huh44bQw9ePxUGBx9"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="border border-gold p-4 text-center uppercase font-mono tracking-[0.25em] text-gold hover:bg-gold hover:text-primary-foreground transition"
+  >
+    📍 Ver ubicación
+  </a>
+
+  <a
+    href="https://www.google.com/maps/dir/?api=1&destination=C%2F+de+Ciril+Amor%C3%B3s%2C+62%2C+46004+Val%C3%A8ncia&travelmode=walking"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="border border-gold p-4 text-center uppercase font-mono tracking-[0.25em] text-gold hover:bg-gold hover:text-primary-foreground transition"
+  >
+    🧭 Iniciar navegación
+  </a>
+
+</div>
+
+        </div>
+
+      </div>
+
+    </Panel>
+
+    <Panel title="Observaciones de la Comisión" latin="Nota Interna" className="mt-8">
+
+      <p className="text-gold leading-8">
+
+        La operación continúa desarrollándose conforme a lo previsto.
+        No se han detectado interferencias significativas durante las últimas horas.
+        Mantenga un perfil bajo y permanezca atento a futuras comunicaciones cifradas.
+
+      </p>
+
+    </Panel>
+
+  </AppShell>
   );
-}
+  }

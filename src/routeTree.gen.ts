@@ -12,8 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TreasuryRouteImport } from './routes/treasury'
 import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as DossiersRouteImport } from './routes/dossiers'
-import { Route as CouncilRouteImport } from './routes/council'
-import { Route as ConciergeRouteImport } from './routes/concierge'
+import { Route as DebriefRouteImport } from './routes/debrief'
 import { Route as CommsRouteImport } from './routes/comms'
 import { Route as AtlasRouteImport } from './routes/atlas'
 import { Route as IndexRouteImport } from './routes/index'
@@ -33,14 +32,9 @@ const DossiersRoute = DossiersRouteImport.update({
   path: '/dossiers',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CouncilRoute = CouncilRouteImport.update({
-  id: '/council',
-  path: '/council',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConciergeRoute = ConciergeRouteImport.update({
-  id: '/concierge',
-  path: '/concierge',
+const DebriefRoute = DebriefRouteImport.update({
+  id: '/debrief',
+  path: '/debrief',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommsRoute = CommsRouteImport.update({
@@ -63,8 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/atlas': typeof AtlasRoute
   '/comms': typeof CommsRoute
-  '/concierge': typeof ConciergeRoute
-  '/council': typeof CouncilRoute
+  '/debrief': typeof DebriefRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
   '/treasury': typeof TreasuryRoute
@@ -73,8 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/atlas': typeof AtlasRoute
   '/comms': typeof CommsRoute
-  '/concierge': typeof ConciergeRoute
-  '/council': typeof CouncilRoute
+  '/debrief': typeof DebriefRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
   '/treasury': typeof TreasuryRoute
@@ -84,8 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/atlas': typeof AtlasRoute
   '/comms': typeof CommsRoute
-  '/concierge': typeof ConciergeRoute
-  '/council': typeof CouncilRoute
+  '/debrief': typeof DebriefRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
   '/treasury': typeof TreasuryRoute
@@ -96,8 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/atlas'
     | '/comms'
-    | '/concierge'
-    | '/council'
+    | '/debrief'
     | '/dossiers'
     | '/missions'
     | '/treasury'
@@ -106,8 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/atlas'
     | '/comms'
-    | '/concierge'
-    | '/council'
+    | '/debrief'
     | '/dossiers'
     | '/missions'
     | '/treasury'
@@ -116,8 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/atlas'
     | '/comms'
-    | '/concierge'
-    | '/council'
+    | '/debrief'
     | '/dossiers'
     | '/missions'
     | '/treasury'
@@ -127,8 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AtlasRoute: typeof AtlasRoute
   CommsRoute: typeof CommsRoute
-  ConciergeRoute: typeof ConciergeRoute
-  CouncilRoute: typeof CouncilRoute
+  DebriefRoute: typeof DebriefRoute
   DossiersRoute: typeof DossiersRoute
   MissionsRoute: typeof MissionsRoute
   TreasuryRoute: typeof TreasuryRoute
@@ -157,18 +144,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DossiersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/council': {
-      id: '/council'
-      path: '/council'
-      fullPath: '/council'
-      preLoaderRoute: typeof CouncilRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/concierge': {
-      id: '/concierge'
-      path: '/concierge'
-      fullPath: '/concierge'
-      preLoaderRoute: typeof ConciergeRouteImport
+    '/debrief': {
+      id: '/debrief'
+      path: '/debrief'
+      fullPath: '/debrief'
+      preLoaderRoute: typeof DebriefRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comms': {
@@ -199,8 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AtlasRoute: AtlasRoute,
   CommsRoute: CommsRoute,
-  ConciergeRoute: ConciergeRoute,
-  CouncilRoute: CouncilRoute,
+  DebriefRoute: DebriefRoute,
   DossiersRoute: DossiersRoute,
   MissionsRoute: MissionsRoute,
   TreasuryRoute: TreasuryRoute,
@@ -208,3 +187,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

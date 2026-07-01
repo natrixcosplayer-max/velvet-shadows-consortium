@@ -13,9 +13,9 @@ const HOTELS: Hotel[] = [
   { city: "Nueva York", latin: "Novum Eboracum", lat: 40.7, lng: -74.0, manager: "Caronte †", status: "ABIERTO", rooms: 142 },
   { city: "Roma", latin: "Roma", lat: 41.9, lng: 12.5, manager: "Julius", status: "ABIERTO", rooms: 88 },
   { city: "Osaka", latin: "Osaca", lat: 34.7, lng: 135.5, manager: "Akira", status: "ABIERTO", rooms: 64 },
-  { city: "Casablanca", latin: "Dar al-Baydaa", lat: 33.6, lng: -7.6, manager: "Sofia al-Azwar", status: "ABIERTO", rooms: 53 },
+  { city: "Valencia", latin: "Valentia", lat: 40.6, lng: -17.6, manager: "El Nano", status: "ABIERTO", rooms: 53 },
   { city: "Berlín", latin: "Berolinum", lat: 52.5, lng: 13.4, manager: "Klaus", status: "RESTRINGIDO", rooms: 71 },
-  { city: "Marrakech", latin: "Marrakus", lat: 31.6, lng: -8.0, manager: "Berrada", status: "ABIERTO", rooms: 44 },
+  { city: "Marrakech", latin: "Marrakus", lat: 31.6, lng: -8.0, manager: "Berrada", status: "SELLADO", rooms: 44 },
   { city: "Hong Kong", latin: "Sinus Olidus", lat: 22.3, lng: 114.2, manager: "Xian", status: "RESTRINGIDO", rooms: 96 },
   { city: "São Paulo", latin: "Sancti Pauli", lat: -23.5, lng: -46.6, manager: "Salgado", status: "ABIERTO", rooms: 68 },
   { city: "Bombay", latin: "Mumbai", lat: 19.1, lng: 72.9, manager: "Khare", status: "ABIERTO", rooms: 79 },
@@ -32,7 +32,7 @@ const STATUS_DOT: Record<Hotel["status"], string> = {
 function Atlas() {
   const [active, setActive] = useState<Hotel>(HOTELS[0]);
   return (
-    <AppShell title="Atlas Continental" latin="Orbis · Casas en todo el mundo">
+    <AppShell title="Atlas Continental" latin="Orbis · Refugios en todo el mundo">
       <Panel className="!p-0 overflow-hidden">
         <div className="relative aspect-[2/1] bg-background grid-bg">
           <svg viewBox="0 0 100 50" className="w-full h-full" preserveAspectRatio="none">

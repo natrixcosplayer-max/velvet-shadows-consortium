@@ -8,12 +8,13 @@ export const Route = createFileRoute("/treasury")({
 });
 
 function Treasury() {
-  const [balance, setBalance] = useState(14);
+  const [balance, setBalance] = useState(6);
   const [log, setLog] = useState<{ kind: "+" | "−"; amt: number; reason: string; at: string }[]>([
-    { kind: "−", amt: 1, reason: "Cata en bodega · Roma", at: "Hoy 04:22" },
-    { kind: "+", amt: 8, reason: "Contrato M-7689 · Berlín", at: "Ayer" },
-    { kind: "−", amt: 2, reason: "Médico · Osaka", at: "Hace 3 días" },
-    { kind: "+", amt: 6, reason: "Marcador MK-014 emitido", at: "Hace 1 semana" },
+        { kind: "+", amt: 1, reason: "Ayuda para la misión · Valencia", at: "Hace 3 días" },
+    { kind: "−", amt: 1, reason: "Vehículo blindado · Gijón", at: "Hace 7 días, 022:13" },
+    { kind: "+", amt: 10, reason: "Misión Cumplida · Roma", at: "Hace 13 días" },
+    { kind: "−", amt: 2, reason: "Entrenamiento físico de élite · Valencia", at: "Hace 23 días" },
+    { kind: "−", amt: 4, reason: "Compra de Pitas de KEVLAR · Osaka", at: "Hace 7 semanas" },
   ]);
 
   const spend = (n: number, reason: string) => {
@@ -46,11 +47,11 @@ function Treasury() {
           <Panel title="Tabla de Conversión" latin="Tabula Mutationis">
             <ul className="font-mono text-sm divide-y divide-gold-dim/40">
               {[
-                ["1 ⊙", "= Santuario · una noche"],
-                ["1 ⊙", "= Audiencia con el Conserje"],
-                ["2 ⊙", "= Discreción del Sommelier"],
+                ["1 ⊙", "= Continental · una noche"],
+                ["5 ⊙", "= Armas y blindaje"],
+                ["1 ⊙", "= Cuidado de mascotas"],
                 ["3 ⊙", "= Médico · sin preguntas"],
-                ["5 ⊙", "= Limpiador · reinicio total"],
+                ["5 ⊙", "= Delegar contrato u operativo"],
                 ["1 Marcador", "= Deuda sin límite"],
               ].map(([k, v], i) => (
                 <li key={i} className="flex justify-between py-2.5">

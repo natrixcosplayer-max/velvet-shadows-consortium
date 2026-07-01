@@ -1,12 +1,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
+import altaLogo from "../assets/alta.png";
+import {
+  playMusic,
+  playSfx,
+} from "../audio/audiomanager";
 
 const NAV = [
   { to: "/", label: "Comisión", latin: "Comissio" },
-  { to: "/dossiers", label: "Activo", latin: "Objectum" },
-  { to: "/missions", label: "Operativos", latin: "Operativi" },
+  { to: "/dossiers", label: "Expedientes", latin: "Expedia" },
+  { to: "/missions", label: "Operativo", latin: "Operativi" },
   { to: "/comms", label: "Comunicaciones", latin: "Nuntii" },
-  { to: "/atlas", label: "Atlas", latin: "Orbis" },
+  { to: "/atlas", label: "Continentales", latin: "Orbis" },
   { to: "/treasury", label: "Tesorería", latin: "Aerarium" },
 ] as const;
 
@@ -24,6 +29,10 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
+   
+  useEffect(() => {
+  playMusic("/sounds/john.mp3", 0.08, true, 42);
+}, []);
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
@@ -31,10 +40,14 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
       <header className="border-b border-gold-dim bg-background/80 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center justify-between px-4 md:px-8 h-14">
           <div className="flex items-center gap-3">
-            <Sigil />
+            <img
+  src={altaLogo}
+  alt="Alta Mesa"
+  className="w-8 h-8 object-contain"
+/>
             <div className="leading-none">
               <p className="font-display text-gold text-sm tracking-[0.25em]">EX COMISSIO</p>
-              <p className="font-mono text-[10px] text-gold-dim tracking-[0.3em]">ALTAE MENSAE</p>
+              <p className="font-mono text-[10px] text-gold-dim tracking-[0.3em]">ALTA MESA</p>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-6 font-mono text-[11px] text-gold-dim">
@@ -61,7 +74,35 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
                 <Link
                   key={item.to}
                   to={item.to}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() => {
+  let sound = "/sounds/luxbeep.mp3";
+
+  switch (item.to) {
+    case "/dossiers":
+      sound = "/sounds/dossier.mp3";
+      break;
+
+    case "/missions":
+      sound = "/sounds/operatives.mp3";
+      break;
+
+    case "/comms":
+      sound = "/sounds/comm.mp3";
+      break;
+
+    case "/atlas":
+      sound = "/sounds/luxbeep2.mp3";
+      break;
+
+    case "/treasury":
+      sound = "/sounds/coin.mp3";
+      break;
+  }
+
+ playSfx(sound, 0.45);
+
+  setMobileOpen(false);
+}}
                   className={`relative font-mono text-[11px] tracking-[0.25em] uppercase py-3 md:py-2.5 md:mr-8 transition-colors ${active ? "text-gold" : "text-gold-dim hover:text-gold"}`}
                 >
                   {item.label}
@@ -85,14 +126,15 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
 
       <footer className="border-t border-gold-dim mt-16 py-6 px-4 md:px-8 font-mono text-[10px] text-gold-dim tracking-[0.25em] flex flex-col md:flex-row justify-between gap-2">
         <span>EX UMBRA · IN SOLEM</span>
-        <span>TODO EL MATERIAL ES FICCIÓN · INSPIRADO EN EL GÉNERO</span>
+        <span>LA ALTA MESA TODO LO VE</span>
         <span>© MMXXVI · CONTINENTAL HOTELS GROUP</span>
       </footer>
     </div>
   );
 }
 
-const AGENT_ID = "0734·KAI";
+const AGENT_ID = "0734·MANDARIN";
+
 
 export function Sigil({ size = 28 }: { size?: number }) {
   return (

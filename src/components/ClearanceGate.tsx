@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Sigil } from "./AppShell";
-
+import altaLogo from "../assets/alta.png";
+const beep = new Audio("/sounds/beep.mp3");
 const LINES = [
   "> ESTABLECIENDO CANAL CIFRADO...",
   "> VALIDANDO CREDENCIALES DEL OPERATIVO...",
-  "> VERIFICANDO IDENTIDAD BIOMÉTRICA...",
-  "> CONSULTANDO EL REGISTRO DE LA COMISIÓN...",
+  "> CONECTANDO DESDE WESTIN VALENCIA...",
+  "> VERIFICANDO AGENTE B 'MINERVA'...",
   "> EXPEDIENTE LOCALIZADO.",
   "> NIVEL DE AUTORIZACIÓN VII.",
   "> ACCESO CONCEDIDO.",
@@ -14,33 +15,40 @@ const LINES = [
 export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    if (step >= LINES.length) {
-      const t = setTimeout(onComplete, 700);
-      return () => clearTimeout(t);
-    }
+  if (step >= LINES.length) {
 
-    const t = setTimeout(
-      () => setStep((s) => s + 1),
-      1200 + Math.random() * 600
-    );
+  setFadeOut(true);
 
-    return () => clearTimeout(t);
-  }, [step, onComplete]);
+  const t = setTimeout(onComplete, 1000);
+
+  return () => clearTimeout(t);
+}
+
+  const t = setTimeout(() => {
+    beep.currentTime = 0;
+    beep.play().catch(() => {});
+    setStep((s) => s + 1);
+  }, 1800 + Math.random() * 800);
+
+  return () => clearTimeout(t);
+}, [step, onComplete]);
 
   useEffect(() => {
     const id = setInterval(() => {
       setProgress((p) =>
         Math.min(100, p + 100 / LINES.length / 4)
       );
-    }, 250);
+    }, 300);
 
     return () => clearInterval(id);
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex items-center justify-center font-mono text-sm scanlines overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-background flex items-center justify-center font-mono text-sm scanlines overflow-hidden"> 
+
 
       <div className="absolute inset-0 grid-bg opacity-30" />
 
@@ -50,7 +58,11 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
 
         <div className="flex flex-col items-center mb-8 animate-flicker">
 
-          <Sigil size={64} />
+          <img
+  src={altaLogo}
+  alt="Alta Mesa"
+  className="w-28 h-28 object-contain drop-shadow-[0_0_12px_rgba(212,175,55,0.45)]"
+/>
 
           <div className="mt-4 text-center">
 
@@ -59,7 +71,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
             </p>
 
             <p className="font-display text-gold text-4xl tracking-[0.18em]">
-              ALTAE MENSAE
+              ALTA MESA
             </p>
 
             <p className="text-gold-dim text-[11px] tracking-[0.45em] mt-3 uppercase">

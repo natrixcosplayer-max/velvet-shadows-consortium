@@ -6,7 +6,7 @@ import { ClearanceGate } from "../components/ClearanceGate";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "EX COMMISSIO ALTAE MENSAE" },
+      { title: "EX COMMISSIO ALTA MESA" },
       { name: "description", content: "Red Interna de la Comisión. Acceso restringido a operativos autorizados." },
     ],
   }),
@@ -15,16 +15,23 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [unlocked, setUnlocked] = useState(false);
-    const handle = () => { setUnlocked(true); };
+    const handle = () => {
+  setUnlocked(true);
+
+  setTimeout(() => {
+    const unlock = new Audio("/sounds/unlock.mp3");
+    unlock.play().catch(() => {});
+  }, 500);
+};
   if (!unlocked) return <ClearanceGate onComplete={handle} />;
   return <Atrium />;
 }
 
 function Atrium() {
   return (
-    <AppShell title="Comisión" latin="Bienvenido, MANDARIN">
+    <AppShell title="MANDARIN" latin="Bienvenido, Agente">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        <StatBlock label="Autorización" value="AURUM III" sub="Autorizado por la Alta Mesa" />
+        <StatBlock label="Autorización" value="AURUM VII" sub="Autorizado por la Alta Mesa" />
         <StatBlock label="Saldo en Monedas" value="1" sub="Marcadores en circulación: 1" />
         <StatBlock label="Operación" value="EN CURSO" />
         <StatBlock label="Estatus" value="In Bonis" sub="Sin deudas pendientes" />
@@ -32,7 +39,7 @@ function Atrium() {
 
      <Panel
   title="Comunicado Oficial"
-  latin="Ex Commissione Altae Mensae"
+  latin="Ex Commissione Alta Mesa"
   className="mb-8"
 >
 
@@ -67,7 +74,7 @@ function Atrium() {
     <div className="border-t border-gold-dim pt-5">
 
       <p className="font-display text-gold text-xl">
-        Ex Commissione Altae Mensae
+        Ex Commissione Alta Mesa
       </p>
 
     </div>

@@ -1,26 +1,23 @@
+import mandarinPhoto from "../assets/agents/mandarin.jpg";
+import minervaPhoto from "../assets/agents/minerva.jpg";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 
 export const Route = createFileRoute("/dossiers")({
-  head: () => ({ meta: [{ title: "Expedientes — Continental" }, { name: "description", content: "Expedientes de personal sellados." }] }),
+  head: () => ({ meta: [{ title: "Expedientes" }, { name: "description", content: "Expedientes de personal sellados." }] }),
   component: Dossiers,
 });
 
 type Dossier = {
   codename: string; latin: string; status: "ACTIVO" | "FALLECIDO" | "EXCOMM" | "RETIRADO";
-  clearance: string; chapter: string; specialty: string; markers: number; notes: string;
+  clearance: string; chapter: string; specialty: string; markers: number; notes: string; bio: string;
+  
 };
 
 const DOSSIERS: Dossier[] = [
-  { codename: "Baba Yaga", latin: "Lupus Solitarius", status: "ACTIVO", clearance: "Aurum I", chapter: "Nueva York", specialty: "Trabajo con lápiz", markers: 2, notes: "Retirado. Luego no. Luego sí otra vez. No provocar." },
-  { codename: "El Adjudicador", latin: "Vox Mensae", status: "ACTIVO", clearance: "Imperium", chapter: "Roma", specialty: "Arbitraje", markers: 0, notes: "Habla con la autoridad de la Mesa. Excomunión con su firma." },
-  { codename: "Cassian", latin: "Custos Portae", status: "ACTIVO", clearance: "Aurum II", chapter: "Nueva York", specialty: "Sommelier · protección cercana", markers: 1, notes: "Conoce la bodega. Conoce la sala. Le conoce a usted." },
-  { codename: "Sofia al-Azwar", latin: "Regina Casablancae", status: "ACTIVO", clearance: "Aurum I", chapter: "Casablanca", specialty: "Hospitalidad · canes", markers: 4, notes: "Gerente del capítulo marroquí. Debe un marcador." },
-  { codename: "Winston", latin: "Princeps Hospitii", status: "RETIRADO", clearance: "Imperium", chapter: "Nueva York", specialty: "Gerencia", markers: 0, notes: "Mandato concluido. Estatus de la casa, incierto." },
-  { codename: "Caronte", latin: "Portitor", status: "FALLECIDO", clearance: "Aurum II", chapter: "Nueva York", specialty: "Conserjería", markers: 0, notes: "In memoriam. El vestíbulo recuerda." },
-  { codename: "Srta. Perkins", latin: "Praedatrix", status: "EXCOMM", clearance: "—", chapter: "Antes NYC", specialty: "Trabajo sucio", markers: 0, notes: "Membresía revocada. Todos los servicios denegados." },
-  { codename: "Zero", latin: "Umbra Silens", status: "ACTIVO", clearance: "Aurum III", chapter: "Osaka", specialty: "Armas blancas · meditación", markers: 1, notes: "Devoto. Devoto. Letal." },
+  { codename: "Mandarin", latin: "Agente vociferador", status: "ACTIVO", clearance: "Aurum VII", chapter: "Valencia", specialty: "Liderazgo & Organización", markers: 1, notes: "Impulsivo, pero efectivo. Operador excepcional. Discreto únicamente cuando está dormido.", bio: "Operativo veterano especializado en camuflaje y combate táctico. Su capacidad para ser un motor incansable y resolver situaciones críticas le ha convertido en uno de los agentes más fiables de la Comisión. Alta capacidad de liderazgo y organizativa. La discreción no figura entre las fortalezas del sujeto. Presenta una marcada tendencia a elevar el volumen de voz incluso en entornos donde el anonimato resulta recomendable. Se aprueba la asignación conjunta con el Agente MINERVA para compensar dichas vulnerabilidades.", },
+  { codename: "Minerva", latin: "Diplomacia y discreción", status: "ACTIVO", clearance: "Imperium", chapter: "Valencia", specialty: "Encanto", markers: 0, notes: "La mayoría de las operaciones concluyen sin un solo disparo. Las pocas excepciones suelen ser responsabilidad del Agente A.", bio: "Especialista en inteligencia, negociación y obtención de información sensible. Experta en aproximarse a objetivos de alto valor sin despertar sospechas. La Comisión la considera una de sus mejores agentes de campo para operaciones de máxima discreción. Domina una técnica de inmovilización clasificada, ejecutada con las extremidades inferiores, capaz de neutralizar incluso a oponentes físicamente superiores. Ha sido asignada a la supervisión táctica del Agente A, aportando equilibrio, criterio y contención para maximizar el éxito de la misión.",},
 ];
 
 const STATUS_COLOR: Record<Dossier["status"], string> = {
@@ -28,6 +25,10 @@ const STATUS_COLOR: Record<Dossier["status"], string> = {
   FALLECIDO: "text-muted-foreground border-muted-foreground",
   EXCOMM: "text-destructive border-destructive",
   RETIRADO: "text-gold-dim border-gold-dim",
+};
+const AGENT_PHOTOS: Record<string, string> = {
+  Mandarin: mandarinPhoto,
+  Minerva: minervaPhoto,
 };
 
 function Dossiers() {
@@ -38,7 +39,7 @@ function Dossiers() {
   );
 
   return (
-    <AppShell title="Expedientes" latin="Tabulae · Archivos sellados de personal">
+    <AppShell title="Expedientes" latin="OPERACIÓN PRIORITARIA · CLASIFICACIÓN VII">
       <div className="grid lg:grid-cols-[360px_1fr] gap-6">
         <Panel className="!p-0">
           <div className="p-4 border-b border-gold-dim">
@@ -53,7 +54,21 @@ function Dossiers() {
             {filtered.map((d) => (
               <li key={d.codename}>
                 <button
-                  onClick={() => setActive(d)}
+                  onClick={() => {
+  let sound = "/sounds/agent.mp3";
+
+  if (d.codename === "Mandarin") {
+    sound = "/sounds/mandarin.mp3";
+  } else if (d.codename === "Minerva") {
+    sound = "/sounds/minerva.mp3";
+  }
+
+  const audio = new Audio(sound);
+  audio.volume = 0.4;
+  audio.play().catch(() => {});
+
+  setActive(d);
+}}
                   className={`w-full text-left p-4 border-b border-gold-dim/40 hover:bg-secondary/40 transition ${active.codename === d.codename ? "bg-secondary/60 border-l-2 border-l-gold" : ""}`}
                 >
                   <div className="flex justify-between items-baseline">
@@ -74,6 +89,13 @@ function Dossiers() {
           <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">Nombre en clave</p>
           <h2 className="font-display text-5xl text-gold mt-2">{active.codename}</h2>
           <p className="font-display text-gold-dim italic mt-1">{active.latin}</p>
+          <div className="mt-8 flex justify-center">
+  <img
+    src={AGENT_PHOTOS[active.codename]}
+    alt={active.codename}
+    className="w-64 h-80 object-cover border border-gold shadow-lg"
+  />
+</div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
             <Field label="Estatus" value={active.status} />
@@ -86,6 +108,15 @@ function Dossiers() {
             <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">Especialidad</p>
             <p className="text-gold mt-1">{active.specialty}</p>
           </div>
+          <div className="mt-8">
+    <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">
+        Biografía
+    </p>
+
+    <p className="text-foreground/90 leading-7 mt-3">
+        {active.bio}
+    </p>
+</div>
 
           <div className="mt-6 border-l-2 border-gold pl-4">
             <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase mb-2">Notas de Campo</p>
@@ -94,7 +125,7 @@ function Dossiers() {
 
           <div className="mt-8 border-t border-gold-dim pt-4 font-mono text-[10px] text-gold-dim tracking-[0.25em] flex justify-between uppercase">
             <span>EXP · {active.codename.replace(/\s+/g, "-").toUpperCase()}-{Math.abs(active.codename.length * 37) % 9999}</span>
-            <span>SELLO · ✦ MESA ALTA ✦</span>
+            <span>SELLO · ✦ ALTA MESA ✦</span>
           </div>
         </Panel>
       </div>
