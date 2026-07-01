@@ -1,7 +1,9 @@
+import { EntryGate } from "../components/EntryGate";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell, Panel, StatBlock } from "../components/AppShell";
 import { ClearanceGate } from "../components/ClearanceGate";
+import { playVoice } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -14,20 +16,37 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const [unlocked, setUnlocked] = useState(false);
+  const [entered, setEntered] = useState(false);
+const [unlocked, setUnlocked] = useState(false);
     const handle = () => {
   setUnlocked(true);
 
-  setTimeout(() => {
-    const unlock = new Audio("/sounds/unlock.mp3");
-    unlock.play().catch(() => {});
-  }, 500);
 };
-  if (!unlocked) return <ClearanceGate onComplete={handle} />;
-  return <Atrium />;
+  if (!entered) {
+  return (
+    <EntryGate
+      onEnter={() => setEntered(true)}
+    />
+  );
+}
+
+if (!unlocked) {
+  return <ClearanceGate onComplete={handle} />;
+}
+
+return <Atrium />;
 }
 
 function Atrium() {
+  useEffect(() => {
+
+  const t = setTimeout(() => {
+    playVoice("/sounds/unlock.mp3");
+  }, 500);
+
+  return () => clearTimeout(t);
+
+}, []);
   return (
     <AppShell title="MANDARIN" latin="Bienvenido, Agente">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
