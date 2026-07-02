@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { Sigil } from "./AppShell";
 import altaLogo from "../assets/alta.png";
+import mandarinPortrait from "../assets/agents/mandarin.jpg";
 const beep = new Audio("/sounds/beep.mp3");
 const LINES = [
-  "> ESTABLECIENDO CANAL CIFRADO...",
-  "> VALIDANDO CREDENCIALES DEL OPERATIVO...",
-  "> CONECTANDO DESDE 4.3.3.9 VALENCIA...",
-  "> VERIFICANDO AGENTE B 'MINERVA'...",
-  "> EXPEDIENTE LOCALIZADO.",
-  "> NIVEL DE AUTORIZACIÓN VII.",
-  "> ACCESO CONCEDIDO.",
+  "> ESTABLECIENDO CANAL SEGURO...",
+  "> VALIDANDO CREDENCIALES...",
+  "> ANALIZANDO BIOMETRÍA FACIAL...",
+  "> RETINA VERIFICADA...",
+  "> ESTRUCTURA ÓSEA COINCIDENTE...",
+  "> ADN COMPATIBLE...",
+  "> AGENTE IDENTIFICADO: MANDARIN",
+  "> NIVEL DE AUTORIZACIÓN: AURUM VII",
+  "> ENLACE CON LA ALTA MESA ESTABLECIDO...",
+  "> ACCESO CONCEDIDO",
 ];
 
 export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
@@ -96,7 +100,84 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
 
           <div className="h-px bg-gold-dim mb-4" />
 
-          <div className="space-y-2 text-gold">
+          <div className="grid md:grid-cols-[220px_1fr] gap-8 items-start">
+
+  <div>
+
+    {step >= 2 && (
+
+      <div className="relative border border-gold-dim p-2 overflow-hidden animate-fade-in">
+
+        <img
+          src={mandarinPortrait}
+          alt="Agent Mandarin"
+          className="w-full grayscale brightness-90 contrast-125"
+        />
+
+        <div className="scan-face" />
+
+        <div className="absolute bottom-2 left-2 right-2 text-center">
+
+          <p className="font-mono text-[10px] tracking-[0.25em] text-gold uppercase">
+            AGENTE MANDARIN
+          </p>
+
+          <p className="font-mono text-[9px] text-gold-dim">
+            NIVEL VII · IDENTIDAD EN VERIFICACIÓN
+          </p>
+
+        </div>
+
+      </div>
+
+    )}
+
+  </div>
+
+  <div className="space-y-2 text-gold">
+
+    {LINES.slice(0, step).map((line, i) => (
+
+      <div key={i} className="flex items-start gap-2">
+
+        <span className="text-gold-dim">
+          [{String(i + 1).padStart(2, "0")}]
+        </span>
+
+        <span className={i === step - 1 ? "" : "opacity-70"}>
+          {line}
+        </span>
+
+        {i === LINES.length - 1 &&
+          i === step - 1 && (
+            <span className="text-gold-bright animate-blink">
+              █
+            </span>
+          )}
+
+      </div>
+
+    ))}
+
+    {step < LINES.length && (
+
+      <div className="flex items-center gap-2 text-gold-dim">
+
+        <span>
+          [{String(step + 1).padStart(2, "0")}]
+        </span>
+
+        <span className="animate-blink">
+          █
+        </span>
+
+      </div>
+
+    )}
+
+  </div>
+
+</div>
 
             {LINES.slice(0, step).map((line, i) => (
 
@@ -158,6 +239,6 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
 
       </div>
 
-    </div>
-  );
+    
+);
 }
