@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
+import ximoPortrait from "../assets/agents/ximo.jpg";
 
 import {
-  playVoice,
+  playEmailVoice,
+  fadeOutVoice,
 } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/comms")({
@@ -11,20 +13,31 @@ export const Route = createFileRoute("/comms")({
   component: Comms,
 });
 
-type Msg = { id: string; from: string; subject: string; body: string; at: string; cipher: string; unread?: boolean };
+type Msg = { id: string; from: string; subject: string; body: string; at: string; cipher: string; portrait?: string; unread?: boolean };
 
 const THREADS: Msg[] = [
-  { id: "1", from: "Gerente Ximo · Valencia", subject: "Su habitación de siempre", body: "La Suite Presidencial ha sido preparada conforme a las especificaciones del huésped. Sábanas excepcionalmente suaves. Dos onzas de chocolate negro esperan en la nevera. Se ha dispuesto un juego nuevo de ropa interior Calvin Klein. El sistema de climatización ha sido revisado y funciona dentro de los parámetros óptimos. Cena de caracoles disponible bajo petición. El Continental le desea una estancia tan discreta como memorable.", at: "03:14", cipher: "RSA-4096 / Curve25519", unread: true },
+  
+  { id: "1", from: "Gerente Ximo · Valencia", subject: "Su habitación de siempre", portrait: ximoPortrait, body: "La Suite Presidencial ha sido preparada conforme a las especificaciones del huésped. Sábanas excepcionalmente suaves. Dos onzas de chocolate negro esperan en la nevera. Se ha dispuesto un juego nuevo de ropa interior Calvin Klein. El sistema de climatización ha sido revisado y funciona dentro de los parámetros óptimos. Cena de caracoles disponible bajo petición. El Continental le desea una estancia tan discreta como memorable.", at: "03:14", cipher: "RSA-4096 / Curve25519", unread: true },
   { id: "2", from: "Agente Kestrel", subject: "Re: Asunto con la Michi", body: "Mandarin, tío... ¿Es cierto que te han asignado con la Michi? No me lo puedo creer. Media Comisión va detrás de ella; ya sabes que la llaman 'La Princesa de la Comisión'. Pero entre nosotros... dicen que es de las buenas. Inteligente, leal, y siempre cuida las espaldas de su compañero. Cuídala, ¿vale? En una organización como esta, donde todo el mundo lleva una máscara, merece la pena encontrarse con alguien así. Mucha suerte, hermano... y disfruta de la misión. - Kestrel", at: "Ayer", cipher: "AES-512-GCM", unread: true },
   { id: "3", from: "LUCIA FERRI · Oficina de Roma", subject: "Interferencias operativas en Roma", body: "Agente. Nuestros informadores confirman la presencia de operativos del Consorcio Obsidiana en Roma. Su objetivo es dificultar tu desplazamiento y retrasar la misión. Han saboteado parte de la red ferroviaria, provocando interrupciones deliberadas en los servicios, y han desplegado agitadores en las principales estaciones para generar confusión. La inteligencia recibida indica además que planean obstaculizar tu vuelo de regreso. Asume que cualquier contratiempo puede formar parte de una operación coordinada. Mantén un perfil bajo, evita rutinas predecibles y extrema las precauciones. Buena suerte, Agente. La Comisión permanece a la escucha.", at: "Hace 15 días", cipher: "Onda Continental" },
   { id: "4", from: "Adjudicador Vex · Osaka", subject: "Entrega autorizada", body: "Las Pitas de Kevlar procedentes de Osaka ya están listas para su recogida. Último modelo homologado por la Comisión. Desconozco para quién son, pero te aconsejo mantenerlas ocultas hasta el momento oportuno. Algunos regalos solo deben descubrirse una vez. Buena suerte.", at: "Hace 23 días", cipher: "RSA-4096" },
   { id: "5", from: "Mesa Alta · Concilium", subject: "Convocatoria", body: "Se requiere su presencia. Casa capitular de Roma. Medianoche, el día tres del mes. Etiqueta. Sin excepciones.", at: "Hace 4 semanas", cipher: "Sello Imperium" },
 ];
 
+
 function Comms() {
   const [open, setOpen] = useState(THREADS[0]);
   const [draft, setDraft] = useState("");
   const [encrypted, setEncrypted] = useState("");
+useEffect(() => {
+
+  playEmailVoice("1");
+
+  return () => {
+    fadeOutVoice();
+  };
+
+}, []);
 
   const encrypt = () => {
     if (!draft) return;
@@ -47,16 +60,13 @@ function Comms() {
                 <button
                   onClick={() => {
 
-  if (t.id === "1") {
-    playVoice("/sounds/mailhotel.wav");
-  } else if (t.id === "2") {
-    playVoice("/sounds/email.mp3");
-  }
+  if (open.id === t.id) return;
 
-  setOpen(t);
+playEmailVoice(t.id);
+
+setOpen(t);
 
 }}
-
                   className={`w-full text-left p-4 border-b border-gold-dim/40 hover:bg-secondary/40 transition ${open.id === t.id ? "bg-secondary/60 border-l-2 border-l-gold" : ""}`}
                 >
                   <div className="flex justify-between items-baseline">
@@ -84,9 +94,23 @@ function Comms() {
                 <p className="font-mono text-[10px] text-gold mt-2 border border-gold-dim px-2 py-0.5">⊙ {open.cipher}</p>
               </div>
             </div>
-            <div className="font-mono text-sm leading-relaxed text-foreground/90 border-l-2 border-gold pl-4 py-2">
-              {open.body}
-            </div>
+            <div className="grid md:grid-cols-[220px_1fr] gap-6 items-start">
+
+  {open.portrait && (
+
+    <img
+      src={open.portrait}
+      alt={open.from}
+      className="w-full border border-gold-dim grayscale object-cover"
+    />
+
+  )}
+
+  <div className="font-mono text-sm leading-relaxed text-foreground/90 border-l-2 border-gold pl-4 py-2">
+    {open.body}
+  </div>
+
+</div>
             <div className="mt-6 font-mono text-[10px] text-gold-dim tracking-[0.3em] uppercase border-t border-gold-dim pt-3 flex justify-between">
               <span>· DESCIFRADO EN MEMORIA ·</span>
               <span>· DESTRUIDO AL CERRAR ·</span>

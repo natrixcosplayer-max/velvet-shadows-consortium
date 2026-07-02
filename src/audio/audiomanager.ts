@@ -1,9 +1,19 @@
 let music: HTMLAudioElement | null = null;
 let voice: HTMLAudioElement | null = null;
+let musicFade: ReturnType<typeof setInterval> | null = null;
+const MUSIC_VOLUME = 0.08;
+const MUSIC_DUCK_VOLUME = 0.02;
+const EMAIL_VOICES: Record<string, string> = {
+  "1": "/sounds/mailhotel.wav",
+  "2": "/sounds/email.mp3",
+  "3": "/sounds/mailroma.wav",
+  "4": "/sounds/pitas.wav",
+  "5": "/sounds/russian.wav",
+};
 
 export function playMusic(
   src: string,
-  volume = 0.1,
+  volume = MUSIC_VOLUME,
   loop = true,
   startTime = 0
 ) {
@@ -42,18 +52,76 @@ export function seekMusic(seconds: number) {
   music.currentTime = seconds;
 }
 
+export function fadeMusicVolume(
+  target: number,
+  ms = 500
+) {
+  if (!music) return;
+
+  const start = music.volume;
+  const step = (target - start) / (ms / 40);
+
+if (musicFade) {
+  clearInterval(musicFade);
+}
+
+
+
+musicFade = setInterval(() => {
+if (!music) {
+  if (musicFade) {
+    clearInterval(musicFade);
+    musicFade = null;
+  }
+  return;
+}
+
+    music.volume += step;
+
+    if (
+      (step > 0 && music.volume >= target) ||
+      (step < 0 && music.volume <= target)
+    ) {
+   music.volume = target;
+
+if (musicFade) {
+  clearInterval(musicFade);
+  musicFade = null;
+}
+    }
+
+  }, 40);
+}
+export function duckMusic() {
+  fadeMusicVolume(MUSIC_DUCK_VOLUME, 300);
+}
+
+export function restoreMusic() {
+  fadeMusicVolume(MUSIC_VOLUME, 1200);
+}
+
 export function playVoice(
   src: string,
   volume = 0.45
 ) {
-  stopVoice();
 
-  voice = new Audio(src);
+  fadeOutVoice().then(() => {
 
-voice.preload = "auto";
-voice.volume = volume;
+    duckMusic();
 
-  voice.play().catch(() => {});
+    voice = new Audio(src);
+
+    voice.preload = "auto";
+    voice.volume = volume;
+
+    voice.onended = () => {
+      restoreMusic();
+    };
+
+    voice.play().catch(console.error);
+
+  });
+
 }
 
 export function stopVoice() {
@@ -64,28 +132,48 @@ export function stopVoice() {
   voice = null;
 }
 
-export function fadeOutVoice(ms = 400) {
-  if (!voice) return;
+export function fadeOutVoice(ms = 300): Promise<void> {
 
-  const step = voice.volume / (ms / 40);
-
-  const fade = setInterval(() => {
+  return new Promise((resolve) => {
 
     if (!voice) {
-      clearInterval(fade);
+      resolve();
       return;
     }
 
-    voice.volume -= step;
+    const step = voice.volume / (ms / 40);
 
-    if (voice.volume <= 0) {
-      voice.pause();
-      voice.currentTime = 0;
-      voice = null;
-      clearInterval(fade);
-    }
+    const fade = setInterval(() => {
 
-  }, 40);
+      if (!voice) {
+
+        clearInterval(fade);
+        resolve();
+        return;
+
+      }
+
+      const newVolume = Math.max(0, voice.volume - step);
+
+voice.volume = newVolume;
+
+      if (voice.volume <= 0) {
+
+        voice.pause();
+        voice.currentTime = 0;
+        voice = null;
+
+        clearInterval(fade);
+
+        resolve();
+
+      }
+      
+
+    }, 40);
+
+  });
+
 }
 
 export function playSfx(src: string, volume = 1) {
@@ -99,21 +187,44 @@ export function playVoiceQueue(
 ) {
   if (files.length === 0) return;
 
-  const playNext = (index: number) => {
+ const playNext = async (index: number) => {
     if (index >= files.length) return;
 
-    stopVoice();
+   await fadeOutVoice();
 
-    voice = new Audio(files[index]);
+duckMusic();
+
+voice = new Audio(files[index]);
 
 voice.preload = "auto";
 voice.volume = volume;
     voice.onended = () => {
-      playNext(index + 1);
-    };
+
+  if (index < files.length - 1) {
+
+    playNext(index + 1);
+
+  } else {
+
+    fadeMusicVolume(MUSIC_VOLUME, 1200);
+
+  }
+
+  
+
+};
 
     voice.play().catch(() => {});
   };
 
   playNext(0);
+}
+export async function playEmailVoice(id: string) {
+
+  const voice = EMAIL_VOICES[id];
+
+  if (!voice) return;
+console.log("Reproduciendo:", voice);
+  await playVoice(voice);
+
 }
