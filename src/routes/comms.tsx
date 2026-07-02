@@ -96,6 +96,7 @@ setOpen(t);
             </div>
             <div className="grid md:grid-cols-[220px_1fr] gap-6 items-start">
 
+  
   {open.portrait && (
 
     <img
