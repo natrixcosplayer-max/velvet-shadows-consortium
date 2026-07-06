@@ -13,7 +13,7 @@ const HOTELS: Hotel[] = [
   { city: "Nueva York", latin: "Novum Eboracum", lat: 40.7, lng: -74.0, manager: "Caronte †", status: "ABIERTO", rooms: 142 },
   { city: "Roma", latin: "Roma", lat: 41.9, lng: 12.5, manager: "Julius", status: "ABIERTO", rooms: 88 },
   { city: "Osaka", latin: "Osaca", lat: 34.7, lng: 135.5, manager: "Akira", status: "ABIERTO", rooms: 64 },
-  { city: "Valencia", latin: "Valentia", lat: 40.6, lng: -17.6, manager: "El Nano", status: "ABIERTO", rooms: 53 },
+  { city: "Valencia", latin: "Valentia", lat: 40.6, lng: -17.6, manager: "Ximo", status: "ABIERTO", rooms: 53 },
   { city: "Berlín", latin: "Berolinum", lat: 52.5, lng: 13.4, manager: "Klaus", status: "RESTRINGIDO", rooms: 71 },
   { city: "Marrakech", latin: "Marrakus", lat: 31.6, lng: -8.0, manager: "Berrada", status: "SELLADO", rooms: 44 },
   { city: "Hong Kong", latin: "Sinus Olidus", lat: 22.3, lng: 114.2, manager: "Xian", status: "RESTRINGIDO", rooms: 96 },

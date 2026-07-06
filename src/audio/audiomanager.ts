@@ -101,12 +101,20 @@ export function restoreMusic() {
   fadeMusicVolume(MUSIC_VOLUME, 1200);
 }
 
+let voiceGen = 0;
+
 export async function playVoice(
   src: string,
   volume = 0.45
 ) {
 
+  const gen = ++voiceGen;
+
   await fadeOutVoice();
+
+  // Si otra llamada más reciente llegó durante el fade, esta se cancela
+  // para que nunca suenen dos voces a la vez.
+  if (gen !== voiceGen) return;
 
 duckMusic();
 
@@ -173,6 +181,43 @@ voice.volume = newVolume;
 
   });
 
+}
+
+// --- Desbloqueo específico para unlock.mp3 en iOS ---
+let unlockSound: HTMLAudioElement | null = null;
+
+// Debe llamarse SÍNCRONAMENTE desde un gesto real del usuario (botón ACCEDER).
+export function primeUnlockSound() {
+  if (unlockSound) return;
+
+  unlockSound = new Audio("/sounds/unlock.mp3");
+  unlockSound.preload = "auto";
+  unlockSound.volume = 0;
+
+  // Reproducir en silencio dentro del gesto desbloquea el elemento en iOS.
+  unlockSound
+    .play()
+    .then(() => {
+      if (!unlockSound) return;
+      unlockSound.pause();
+      unlockSound.currentTime = 0;
+    })
+    .catch(() => {});
+}
+
+export function playUnlockSound(volume = 0.45) {
+  if (!unlockSound) return;
+
+  duckMusic();
+
+  unlockSound.currentTime = 0;
+  unlockSound.volume = volume;
+
+  unlockSound.onended = () => {
+    restoreMusic();
+  };
+
+  unlockSound.play().catch(() => {});
 }
 
 export function playSfx(src: string, volume = 1) {

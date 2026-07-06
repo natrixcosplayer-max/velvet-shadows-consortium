@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell, Panel, StatBlock } from "../components/AppShell";
 import { ClearanceGate } from "../components/ClearanceGate";
-import { playVoice } from "../audio/audiomanager";
+import { playUnlockSound } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,7 +41,7 @@ function Atrium() {
   useEffect(() => {
 
   const t = setTimeout(() => {
-    playVoice("/sounds/unlock.mp3");
+    playUnlockSound();
   }, 500);
 
   return () => clearTimeout(t);

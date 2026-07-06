@@ -25,13 +25,20 @@ const THREADS: Msg[] = [
 ];
 
 
+// Persiste durante la sesión: Ximo solo se autorreproduce la primera vez
+// que se entra a la pestaña de comunicaciones.
+let ximoAutoplayed = false;
+
 function Comms() {
   const [open, setOpen] = useState(THREADS[0]);
   const [draft, setDraft] = useState("");
   const [encrypted, setEncrypted] = useState("");
 useEffect(() => {
 
-  playEmailVoice("1");
+  if (!ximoAutoplayed) {
+    ximoAutoplayed = true;
+    playEmailVoice("1");
+  }
 
   return () => {
     fadeOutVoice();
@@ -94,21 +101,17 @@ setOpen(t);
                 <p className="font-mono text-[10px] text-gold mt-2 border border-gold-dim px-2 py-0.5">⊙ {open.cipher}</p>
               </div>
             </div>
-            <div className="grid md:grid-cols-[220px_1fr] gap-6 items-start">
-              <div className="w-28 md:w-full mx-auto"></div>
+            <div className="flex flex-row gap-4 md:gap-6 items-start">
+              <img
+                src={open.portrait}
+                alt={open.from}
+                className="w-20 md:w-44 shrink-0 border border-gold-dim grayscale object-cover"
+              />
 
-  
-  <img
-  src={open.portrait}
-  alt={open.from}
-  className="w-28 md:w-48 mx-auto border border-gold-dim grayscale object-cover"
-/>
-
-  <div className="font-mono text-sm leading-relaxed text-foreground/90 border-l-2 border-gold pl-4 py-2">
-    {open.body}
-  </div>
-
-</div>
+              <div className="flex-1 font-mono text-sm leading-relaxed text-foreground/90 border-l-2 border-gold pl-4 py-2">
+                {open.body}
+              </div>
+            </div>
             <div className="mt-6 font-mono text-[10px] text-gold-dim tracking-[0.3em] uppercase border-t border-gold-dim pt-3 flex justify-between">
               <span>· DESCIFRADO EN MEMORIA ·</span>
               <span>· DESTRUIDO AL CERRAR ·</span>

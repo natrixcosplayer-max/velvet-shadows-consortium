@@ -2,6 +2,7 @@ import altaLogo from "../assets/alta.png";
 import {
   playMusic,
   playVoice,
+  primeUnlockSound,
 } from "../audio/audiomanager";
 
 type Props = {
@@ -29,6 +30,8 @@ export function EntryGate({ onEnter }: Props) {
 
         <button
           onClick={() => {
+
+  primeUnlockSound();
 
   playMusic(
     "/sounds/john.mp3",

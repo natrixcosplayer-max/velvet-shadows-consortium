@@ -20,7 +20,7 @@ const OPERATION = {
   address: "Enviada ubicación encriptada",
   status: "EN CURSO",
   window: "22:30 - 23:59",
-  risk: "BAJO",
+  risk: "ALTO",
   maps:
     "https://www.google.com/maps/dir/?api=1&destination=39.469900,-0.376300",
 };
