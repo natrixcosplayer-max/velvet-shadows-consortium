@@ -98,6 +98,19 @@ function Debrief() {
     video.addEventListener("ended", onEnded);
     return () => video.removeEventListener("ended", onEnded);
   }, []);
+  useEffect(() => {
+
+  if (phase !== "video") return;
+
+  const video = videoRef.current;
+
+  if (!video) return;
+
+  video.currentTime = 0;
+
+  video.play().catch(console.error);
+
+}, [phase]);
 
   return (
     <AppShell title="Transmisión Final" latin="Alta Mesa · Informe">
@@ -192,23 +205,10 @@ function Debrief() {
 
     setPhase("video");
 
-    requestAnimationFrame(() => {
-
-      const video = videoRef.current;
-
-      if (!video) return;
-
-      video.currentTime = 0;
-
-      video.play().catch(console.error);
-
-    });
-
   }}
-      className="rounded-full border border-gold px-10 py-4 font-mono text-[11px] tracking-[0.35em] uppercase text-gold hover:bg-gold hover:text-black transition"
-    >
-      ACEPTAR TRANSMISIÓN
-    </button>
+>
+  ACEPTAR TRANSMISIÓN
+</button>
 
   </div>
 )}
@@ -247,8 +247,10 @@ function Debrief() {
   ref={videoRef}
   src="/videos/oldwoman.mp4"
   playsInline
-  controls={false}
+  controls
   className="absolute inset-0 w-full h-full object-cover"
+  onLoadedData={() => console.log("VIDEO CARGADO")}
+  onError={(e) => console.log("ERROR VIDEO", e)}
 />
 <div className="pointer-events-none absolute inset-0">
 
