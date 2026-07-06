@@ -113,14 +113,14 @@ setOpen(t);
                 <p className="font-mono text-[10px] text-gold mt-2 border border-gold-dim px-2 py-0.5">⊙ {open.cipher}</p>
               </div>
             </div>
-            <div className="flex flex-row gap-4 md:gap-6 items-start">
+            <div className="flex flex-col gap-4 md:gap-6 items-center text-center">
               <img
                 src={open.portrait}
                 alt={open.from}
                 className="w-20 md:w-44 shrink-0 border border-gold-dim grayscale object-cover"
               />
 
-              <div className="flex-1 font-mono text-sm leading-relaxed text-foreground/90 border-l-2 border-gold pl-4 py-2">
+              <div className="w-full font-mono text-sm leading-relaxed text-foreground/90 border-t border-gold pt-4 md:border-t-0 md:border-gold md:pt-0 md:pl-0 md:border-none md:pt-0">
                 {open.body}
               </div>
             </div>
