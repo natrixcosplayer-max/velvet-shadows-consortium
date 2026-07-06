@@ -186,6 +186,7 @@ export function primeUnlockSound() {
   unlockSound = new Audio("/sounds/unlock.mp3");
   unlockSound.preload = "auto";
   unlockSound.volume = 0;
+  unlockSound.muted = true;
 
   // Reproducir en silencio dentro del gesto desbloquea el elemento en iOS.
   unlockSound
@@ -194,8 +195,13 @@ export function primeUnlockSound() {
       if (!unlockSound) return;
       unlockSound.pause();
       unlockSound.currentTime = 0;
+      unlockSound.muted = false;
     })
-    .catch(() => {});
+    .catch(() => {
+      if (unlockSound) {
+        unlockSound.muted = false;
+      }
+    });
 }
 
 export function playUnlockSound(volume = 0.45) {

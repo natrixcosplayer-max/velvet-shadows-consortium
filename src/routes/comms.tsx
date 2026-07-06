@@ -29,34 +29,16 @@ const THREADS: Msg[] = [
 ];
 
 
-// Persiste durante la sesión: Ximo solo se autorreproduce la primera vez
-// que se entra a la pestaña de comunicaciones.
-let ximoAutoplayed = false;
-
 function Comms() {
   const [open, setOpen] = useState(THREADS[0]);
   const [draft, setDraft] = useState("");
   const [encrypted, setEncrypted] = useState("");
-useEffect(() => {
 
-  let t: ReturnType<typeof setTimeout> | undefined;
-
-  if (!ximoAutoplayed) {
-    // Retraso para no solaparse con el sonido previo al entrar.
-    // La bandera se marca dentro del callback: si el efecto se limpia
-    // antes de 1s (p. ej. doble montaje de React), se reprograma y suena.
-    t = setTimeout(() => {
-      ximoAutoplayed = true;
-      playEmailVoice("1");
-    }, 1000);
-  }
-
-  return () => {
-    if (t) clearTimeout(t);
-    fadeOutVoice();
-  };
-
-}, []);
+  useEffect(() => {
+    return () => {
+      fadeOutVoice();
+    };
+  }, []);
 
   const encrypt = () => {
     if (!draft) return;
@@ -120,7 +102,7 @@ setOpen(t);
                 className="w-24 md:w-44 shrink-0 border border-gold-dim grayscale object-cover"
               />
 
-              <div className="w-full font-mono text-sm leading-relaxed text-foreground/90 border-t border-gold pt-4 md:border-t-0 md:border-gold md:pt-0 md:pl-0 md:border-none md:pt-0">
+              <div className="w-full font-mono text-sm leading-relaxed text-foreground/90 border-t border-gold pt-4 md:border-t-0 md:border-gold md:pt-0 md:pl-0 md:border-none md:pt-0 text-left space-y-4 whitespace-pre-line">
                 {open.body}
               </div>
             </div>
