@@ -40,8 +40,11 @@ function Dossiers() {
 
   return (
     <AppShell title="Expedientes" latin="OPERACIÓN PRIORITARIA · CLASIFICACIÓN VII">
-      <div className="grid lg:grid-cols-[360px_1fr] gap-6">
-        <Panel className="!p-0">
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
+        <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent animate-scan pointer-events-none" />
+        <div className="relative grid lg:grid-cols-[360px_1fr] gap-6">
+          <Panel className="!p-0">
           <div className="p-4 border-b border-gold-dim">
             <input
               value={query}
@@ -90,11 +93,13 @@ function Dossiers() {
             · Confidencial · Solo Lectura ·
           </div>
           <div className="mt-4 md:mt-8 flex justify-center">
-            <img
-              src={AGENT_PHOTOS[active.codename]}
-              alt={active.codename}
-              className={`w-64 h-80 object-cover border border-gold shadow-lg ${active.codename === "Mandarin" || active.codename === "Minerva" ? "animate-flicker" : ""}`}
-            />
+            <div className={`relative ${active.codename === "Mandarin" || active.codename === "Minerva" ? "scanlines" : ""}`}>
+              <img
+                src={AGENT_PHOTOS[active.codename]}
+                alt={active.codename}
+                className={`w-64 h-80 object-cover border border-gold shadow-lg ${active.codename === "Mandarin" || active.codename === "Minerva" ? "animate-flicker" : ""}`}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
@@ -129,6 +134,7 @@ function Dossiers() {
           </div>
         </Panel>
       </div>
+    </div>
     </AppShell>
   );
 }

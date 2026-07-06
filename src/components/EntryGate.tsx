@@ -53,21 +53,11 @@ export function EntryGate({ onEnter }: Props) {
 
         <button
           onClick={() => {
-
-  playSfx("/sounds/luxbeep.mp3");
-
-  playMusic(
-    "/sounds/john.mp3",
-    0.08,
-    true,
-    42
-  );
-
-  primeUnlockSound();
-
-  onEnter();
-
-}}
+          primeUnlockSound();
+          onEnter();
+          playSfx("/sounds/luxbeep.mp3");
+          playMusic("/sounds/john.mp3", 0.08, true, 42);
+        }}
           className="mx-auto flex flex-col items-center border border-gold px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition"
         >
           <span>acceder</span>

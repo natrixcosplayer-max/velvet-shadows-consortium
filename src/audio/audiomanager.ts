@@ -216,7 +216,7 @@ export function playUnlockSound(volume = 0.45) {
   unlockSound.muted = false;
 
   unlockSound.onended = () => {
-    fadeMusicVolume(MUSIC_VOLUME, 1200);
+    restoreMusic();
   };
 
   unlockSound.play().catch(() => {});

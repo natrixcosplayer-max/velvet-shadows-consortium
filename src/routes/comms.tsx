@@ -29,12 +29,19 @@ const THREADS: Msg[] = [
 ];
 
 
+let ximoAutoplayed = false;
+
 function Comms() {
   const [open, setOpen] = useState(THREADS[0]);
   const [draft, setDraft] = useState("");
   const [encrypted, setEncrypted] = useState("");
 
   useEffect(() => {
+    if (!ximoAutoplayed) {
+      ximoAutoplayed = true;
+      playEmailVoice("1");
+    }
+
     return () => {
       fadeOutVoice();
     };
@@ -95,14 +102,14 @@ setOpen(t);
                 <p className="font-mono text-[10px] text-gold mt-2 border border-gold-dim px-2 py-0.5">⊙ {open.cipher}</p>
               </div>
             </div>
-            <div className="flex flex-col gap-4 md:gap-6 items-center text-center">
+            <div className="flex flex-col gap-4 md:gap-6 items-center text-center md:text-left">
               <img
                 src={open.portrait}
                 alt={open.from}
                 className="w-24 md:w-44 shrink-0 border border-gold-dim grayscale object-cover"
               />
 
-              <div className="w-full font-mono text-sm leading-relaxed text-foreground/90 border-t border-gold pt-4 md:border-t-0 md:border-gold md:pt-0 md:pl-0 md:border-none md:pt-0 text-left space-y-4 whitespace-pre-line">
+              <div className="w-full font-mono text-sm leading-relaxed text-foreground/90 border-t border-gold pt-4 md:border-t-0 md:border-none md:pt-0 text-left space-y-4 whitespace-pre-line">
                 {open.body}
               </div>
             </div>

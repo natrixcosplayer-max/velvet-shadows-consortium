@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import { Sigil } from "./AppShell";
 import altaLogo from "../assets/alta.png";
-const beep = new Audio("/sounds/beep.mp3");
 const LINES = [
   "> ESTABLECIENDO CANAL CIFRADO...",
   "> VALIDANDO CREDENCIALES DEL OPERATIVO...",
   "> CONECTANDO DESDE 4.3.3.9 VALENCIA...",
-  "> VERIFICANDO AGENTE B 'MINERVA'...",
   "> EXPEDIENTE LOCALIZADO.",
   "> NIVEL DE AUTORIZACIÓN VII.",
   "> ACCESO CONCEDIDO.",
@@ -18,23 +16,24 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-  if (step >= LINES.length) {
+    if (step >= LINES.length) {
+      setFadeOut(true);
 
-  setFadeOut(true);
+      const t = setTimeout(onComplete, 1000);
+      return () => clearTimeout(t);
+    }
 
-  const t = setTimeout(onComplete, 1000);
+    const t = setTimeout(() => {
+      if (typeof window !== "undefined") {
+        const beep = new Audio("/sounds/beep.mp3");
+        beep.currentTime = 0;
+        beep.play().catch(() => {});
+      }
+      setStep((s) => s + 1);
+    }, 1800 + Math.random() * 800);
 
-  return () => clearTimeout(t);
-}
-
-  const t = setTimeout(() => {
-    beep.currentTime = 0;
-    beep.play().catch(() => {});
-    setStep((s) => s + 1);
-  }, 1800 + Math.random() * 800);
-
-  return () => clearTimeout(t);
-}, [step, onComplete]);
+    return () => clearTimeout(t);
+  }, [step, onComplete]);
 
   useEffect(() => {
     const id = setInterval(() => {
