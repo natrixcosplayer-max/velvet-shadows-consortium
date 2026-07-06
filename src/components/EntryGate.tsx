@@ -54,8 +54,6 @@ export function EntryGate({ onEnter }: Props) {
         <button
           onClick={() => {
 
-  primeUnlockSound();
-
   playSfx("/sounds/luxbeep.mp3");
 
   playMusic(
@@ -64,6 +62,8 @@ export function EntryGate({ onEnter }: Props) {
     true,
     42
   );
+
+  primeUnlockSound();
 
   onEnter();
 
