@@ -3,7 +3,7 @@ let voice: HTMLAudioElement | null = null;
 
 let musicFade: ReturnType<typeof setInterval> | null = null;
 const MUSIC_VOLUME = 0.08;
-const MUSIC_DUCK_VOLUME = 0.01;
+const MUSIC_DUCK_VOLUME = 0.005;
 const EMAIL_VOICES: Record<string, string> = {
   "1": "/sounds/mailhotel.wav",
   "2": "/sounds/email.mp3",
@@ -130,6 +130,7 @@ export function stopVoice() {
   voice.pause();
   voice.currentTime = 0;
   voice = null;
+  restoreMusic();
 }
 
 export function fadeOutVoice(ms = 300): Promise<void> {
@@ -137,6 +138,7 @@ export function fadeOutVoice(ms = 300): Promise<void> {
   return new Promise((resolve) => {
 
     if (!voice) {
+      restoreMusic();
       resolve();
       return;
     }
@@ -148,6 +150,7 @@ export function fadeOutVoice(ms = 300): Promise<void> {
       if (!voice) {
 
         clearInterval(fade);
+        restoreMusic();
         resolve();
         return;
 
@@ -164,7 +167,7 @@ voice.volume = newVolume;
         voice = null;
 
         clearInterval(fade);
-
+        restoreMusic();
         resolve();
 
       }
@@ -195,12 +198,11 @@ export function primeUnlockSound() {
       if (!unlockSound) return;
       unlockSound.pause();
       unlockSound.currentTime = 0;
-      unlockSound.muted = false;
+      // Mantener mute hasta la reproducción real para que no se oiga nada ahora.
+      unlockSound.muted = true;
     })
     .catch(() => {
-      if (unlockSound) {
-        unlockSound.muted = false;
-      }
+      // Si no se puede reproducir ahora, el audio quedará preparado para el siguiente gesto válido.
     });
 }
 
@@ -211,12 +213,21 @@ export function playUnlockSound(volume = 0.45) {
 
   unlockSound.currentTime = 0;
   unlockSound.volume = volume;
+  unlockSound.muted = false;
 
   unlockSound.onended = () => {
     fadeMusicVolume(MUSIC_VOLUME, 1200);
   };
 
   unlockSound.play().catch(() => {});
+}
+
+export function duckMusicForVoice() {
+  fadeMusicVolume(MUSIC_DUCK_VOLUME, 300);
+}
+
+export function restoreMusicAfterVoice() {
+  fadeMusicVolume(MUSIC_VOLUME, 1200);
 }
 
 export function playSfx(src: string, volume = 1) {
