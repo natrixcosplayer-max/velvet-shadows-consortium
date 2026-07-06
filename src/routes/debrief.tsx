@@ -110,7 +110,7 @@ function Debrief() {
               }`}
             />
             <div className="relative flex min-h-[70vh] flex-col justify-center overflow-hidden">
-              {(phase === "starting" || phase === "secure" || phase === "incoming" || phase === "glitch") && (
+              {(phase === "starting" || phase === "secure" || phase === "incoming" ||   phase === "waiting" || phase === "glitch") && (
                 <div
                   className={`relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-8 py-12 text-center transition-all duration-700 ${
                     glitch ? "bg-white/5 backdrop-blur-sm" : ""
@@ -244,13 +244,11 @@ function Debrief() {
 
                   <div className="relative overflow-hidden rounded-[2rem] border border-gold/70 bg-black/80 shadow-[0_0_120px_rgba(212,175,55,0.15)]">
                    <video
-    ref={videoRef}
-    src="/videos/oldwoman.mp4"
-    autoPlay
-    playsInline
-    muted
-    controls
-    className="w-full aspect-video bg-black"
+  ref={videoRef}
+  src="/videos/oldwoman.mp4"
+  playsInline
+  controls
+  className="w-full aspect-video bg-black"
 />
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between px-6 py-4 text-[10px] uppercase tracking-[0.35em] text-gold-dim">
                       <span>TRANSMISIÓN SEGURA</span>
