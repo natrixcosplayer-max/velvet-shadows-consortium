@@ -180,3 +180,4 @@
 @utility animate-blink { animation: blink 1s infinite; }
 @utility animate-pulse-gold { animation: pulse-gold 2s infinite; }
 @utility animate-fade-up { animation: fade-up 0.6s ease-out both; }
+@utility animate-glitch { animation: glitch 2.5s steps(2, end) infinite; }

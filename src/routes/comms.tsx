@@ -2,6 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 import ximoPortrait from "../assets/agents/ximo.jpg";
+import kestrelPortrait from "../assets/agents/kestrel.jpg";
+import signoraPortrait from "../assets/agents/signora.jpg";
+import osakaPortrait from "../assets/agents/osaka.jpg";
+import altaPortrait from "../assets/alta.png";
 
 import {
   playEmailVoice,
@@ -18,10 +22,10 @@ type Msg = { id: string; from: string; subject: string; body: string; at: string
 const THREADS: Msg[] = [
   
   { id: "1", from: "Gerente Ximo · Valencia", subject: "Su habitación de siempre", portrait: ximoPortrait, body: "La Suite Presidencial ha sido preparada conforme a las especificaciones del huésped. Sábanas excepcionalmente suaves. Dos onzas de chocolate negro esperan en la nevera. Se ha dispuesto un juego nuevo de ropa interior Calvin Klein. El sistema de climatización ha sido revisado y funciona dentro de los parámetros óptimos. Cena de caracoles disponible bajo petición. El Continental le desea una estancia tan discreta como memorable.", at: "03:14", cipher: "RSA-4096 / Curve25519", unread: true },
-  { id: "2", from: "Agente Kestrel", subject: "Re: Asunto con la Michi", body: "Mandarin, tío... ¿Es cierto que te han asignado con la Michi? No me lo puedo creer. Media Comisión va detrás de ella; ya sabes que la llaman 'La Princesa de la Comisión'. Pero entre nosotros... dicen que es de las buenas. Inteligente, leal, y siempre cuida las espaldas de su compañero. Cuídala, ¿vale? En una organización como esta, donde todo el mundo lleva una máscara, merece la pena encontrarse con alguien así. Mucha suerte, hermano... y disfruta de la misión. - Kestrel", at: "Ayer", cipher: "AES-512-GCM", unread: true },
-  { id: "3", from: "LUCIA FERRI · Oficina de Roma", subject: "Interferencias operativas en Roma", body: "Agente. Nuestros informadores confirman la presencia de operativos del Consorcio Obsidiana en Roma. Su objetivo es dificultar tu desplazamiento y retrasar la misión. Han saboteado parte de la red ferroviaria, provocando interrupciones deliberadas en los servicios, y han desplegado agitadores en las principales estaciones para generar confusión. La inteligencia recibida indica además que planean obstaculizar tu vuelo de regreso. Asume que cualquier contratiempo puede formar parte de una operación coordinada. Mantén un perfil bajo, evita rutinas predecibles y extrema las precauciones. Buena suerte, Agente. La Comisión permanece a la escucha.", at: "Hace 15 días", cipher: "Onda Continental" },
-  { id: "4", from: "Adjudicador Vex · Osaka", subject: "Entrega autorizada", body: "Las Pitas de Kevlar procedentes de Osaka ya están listas para su recogida. Último modelo homologado por la Comisión. Desconozco para quién son, pero te aconsejo mantenerlas ocultas hasta el momento oportuno. Algunos regalos solo deben descubrirse una vez. Buena suerte.", at: "Hace 23 días", cipher: "RSA-4096" },
-  { id: "5", from: "Mesa Alta · Concilium", subject: "Convocatoria", body: "Se requiere su presencia. Casa capitular de Roma. Medianoche, el día tres del mes. Etiqueta. Sin excepciones.", at: "Hace 4 semanas", cipher: "Sello Imperium" },
+  { id: "2", from: "Agente Kestrel", subject: "Re: Asunto con la Michi", portrait: kestrelPortrait, body: "Mandarin, tío... ¿Es cierto que te han asignado con la Michi? No me lo puedo creer. Media Comisión va detrás de ella; ya sabes que la llaman 'La Princesa de la Comisión'. Pero entre nosotros... dicen que es de las buenas. Inteligente, leal, y siempre cuida las espaldas de su compañero. Cuídala, ¿vale? En una organización como esta, donde todo el mundo lleva una máscara, merece la pena encontrarse con alguien así. Mucha suerte, hermano... y disfruta de la misión. - Kestrel", at: "Ayer", cipher: "AES-512-GCM", unread: true },
+  { id: "3", from: "LUCIA FERRI · Oficina de Roma", subject: "Interferencias operativas en Roma", portrait: signoraPortrait, body: "Agente. Nuestros informadores confirman la presencia de operativos del Consorcio Obsidiana en Roma. Su objetivo es dificultar tu desplazamiento y retrasar la misión. Han saboteado parte de la red ferroviaria, provocando interrupciones deliberadas en los servicios, y han desplegado agitadores en las principales estaciones para generar confusión. La inteligencia recibida indica además que planean obstaculizar tu vuelo de regreso. Asume que cualquier contratiempo puede formar parte de una operación coordinada. Mantén un perfil bajo, evita rutinas predecibles y extrema las precauciones. Buena suerte, Agente. La Comisión permanece a la escucha.", at: "Hace 15 días", cipher: "Onda Continental" },
+  { id: "4", from: "Adjudicador Vex · Osaka", subject: "Entrega autorizada", portrait: osakaPortrait, body: "Las Pitas de Kevlar procedentes de Osaka ya están listas para su recogida. Último modelo homologado por la Comisión. Desconozco para quién son, pero te aconsejo mantenerlas ocultas hasta el momento oportuno. Algunos regalos solo deben descubrirse una vez. Buena suerte.", at: "Hace 23 días", cipher: "RSA-4096" },
+  { id: "5", from: "Mesa Alta · Concilium", subject: "Convocatoria", portrait: altaPortrait, body: "Se requiere su presencia. Casa capitular de Roma. Medianoche, el día tres del mes. Etiqueta. Sin excepciones.", at: "Hace 4 semanas", cipher: "Sello Imperium" },
 ];
 
 
@@ -35,12 +39,20 @@ function Comms() {
   const [encrypted, setEncrypted] = useState("");
 useEffect(() => {
 
+  let t: ReturnType<typeof setTimeout> | undefined;
+
   if (!ximoAutoplayed) {
-    ximoAutoplayed = true;
-    playEmailVoice("1");
+    // Retraso para no solaparse con el sonido previo al entrar.
+    // La bandera se marca dentro del callback: si el efecto se limpia
+    // antes de 1s (p. ej. doble montaje de React), se reprograma y suena.
+    t = setTimeout(() => {
+      ximoAutoplayed = true;
+      playEmailVoice("1");
+    }, 1000);
   }
 
   return () => {
+    if (t) clearTimeout(t);
     fadeOutVoice();
   };
 

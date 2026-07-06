@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
+import { playSfx } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/treasury")({
   head: () => ({ meta: [{ title: "Tesorería — Continental" }, { name: "description", content: "Economía de monedas y marcadores." }] }),
@@ -18,6 +19,7 @@ function Treasury() {
   ]);
 
   const spend = (n: number, reason: string) => {
+    playSfx("/sounds/coin.mp3");
     if (balance < n) return;
     setBalance((b) => b - n);
     setLog((l) => [{ kind: "−", amt: n, reason, at: "Ahora mismo" }, ...l]);

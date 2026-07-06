@@ -83,13 +83,13 @@ function Dossiers() {
         </Panel>
 
         <Panel className="relative">
-          <div className="absolute top-6 right-6 font-mono text-[10px] tracking-[0.3em] text-destructive border border-destructive px-2 py-1 uppercase animate-flicker">
-            · Confidencial · Solo Lectura ·
-          </div>
           <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">Nombre en clave</p>
           <h2 className="font-display text-5xl text-gold mt-2">{active.codename}</h2>
           <p className="font-display text-gold-dim italic mt-1">{active.latin}</p>
-          <div className="mt-8 flex justify-center">
+          <div className="mx-auto w-fit md:absolute md:top-6 md:right-6 mt-6 md:mt-0 font-mono text-[8px] md:text-[10px] tracking-[0.3em] text-destructive border border-destructive px-2 py-1 uppercase animate-flicker">
+            · Confidencial · Solo Lectura ·
+          </div>
+          <div className="mt-4 md:mt-8 flex justify-center">
   <img
     src={AGENT_PHOTOS[active.codename]}
     alt={active.codename}
