@@ -101,27 +101,37 @@ export function restoreMusic() {
   fadeMusicVolume(MUSIC_VOLUME, 1200);
 }
 
-export function playVoice(
+export async function playVoice(
   src: string,
   volume = 0.45
 ) {
   if (voice) {
-    voice.pause();
-    voice.currentTime = 0;
-    voice = null;
+    stopVoice();
   }
-
-  duckMusic();
 
   voice = new Audio(src);
   voice.preload = "auto";
   voice.volume = volume;
 
   voice.onended = () => {
+    voice = null;
     restoreMusic();
   };
 
-  voice.play().catch(console.error);
+  const playPromise = voice.play();
+
+  if (playPromise) {
+    playPromise
+      .then(() => {
+        duckMusic();
+      })
+      .catch(() => {
+        restoreMusic();
+        voice = null;
+      });
+
+    await playPromise.catch(() => undefined);
+  }
 }
 
 export function stopVoice() {
@@ -206,20 +216,29 @@ export function primeUnlockSound() {
     });
 }
 
-export function playUnlockSound(volume = 0.45) {
-  if (!unlockSound) return;
+export async function playUnlockSound(volume = 0.45) {
+  const sound = unlockSound || new Audio("/sounds/unlock.mp3");
 
-  fadeMusicVolume(MUSIC_DUCK_VOLUME, 300);
+  if (!sound) return;
 
-  unlockSound.currentTime = 0;
-  unlockSound.volume = volume;
-  unlockSound.muted = false;
+  sound.currentTime = 0;
+  sound.volume = volume;
+  sound.muted = false;
 
-  unlockSound.onended = () => {
+  sound.onended = () => {
     restoreMusic();
   };
 
-  unlockSound.play().catch(() => {});
+  const result = sound.play();
+  if (result) {
+    result.catch(() => {
+      restoreMusic();
+      if (sound !== unlockSound) {
+        stopMusic();
+        playMusic("/sounds/unlock.mp3", volume, false, 0);
+      }
+    });
+  }
 }
 
 export function duckMusicForVoice() {
@@ -227,7 +246,7 @@ export function duckMusicForVoice() {
 }
 
 export function restoreMusicAfterVoice() {
-  fadeMusicVolume(MUSIC_VOLUME, 1200);
+  restoreMusic();
 }
 
 export function playSfx(src: string, volume = 1) {
@@ -274,11 +293,8 @@ voice.volume = volume;
   playNext(0);
 }
 export async function playEmailVoice(id: string) {
+  const voiceSrc = EMAIL_VOICES[id];
 
-  const voice = EMAIL_VOICES[id];
-
-  if (!voice) return;
-console.log("Reproduciendo:", voice);
-  await playVoice(voice);
-
+  if (!voiceSrc) return;
+  await playVoice(voiceSrc);
 }

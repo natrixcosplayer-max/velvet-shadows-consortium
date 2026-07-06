@@ -67,14 +67,11 @@ function Comms() {
               <li key={t.id}>
                 <button
                   onClick={() => {
+                    if (open.id === t.id) return;
 
-  if (open.id === t.id) return;
-
-playEmailVoice(t.id);
-
-setOpen(t);
-
-}}
+                    playEmailVoice(t.id);
+                    setOpen(t);
+                  }}
                   className={`w-full text-left p-4 border-b border-gold-dim/40 hover:bg-secondary/40 transition ${open.id === t.id ? "bg-secondary/60 border-l-2 border-l-gold" : ""}`}
                 >
                   <div className="flex justify-between items-baseline">
