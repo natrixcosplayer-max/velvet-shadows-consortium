@@ -1,6 +1,5 @@
 let music: HTMLAudioElement | null = null;
 let voice: HTMLAudioElement | null = null;
-let audioUnlocked = false;
 
 let musicFade: ReturnType<typeof setInterval> | null = null;
 const MUSIC_VOLUME = 0.08;
@@ -102,27 +101,25 @@ export function restoreMusic() {
   fadeMusicVolume(MUSIC_VOLUME, 1200);
 }
 
-export function playVoice(
+export async function playVoice(
   src: string,
   volume = 0.45
 ) {
 
-  fadeOutVoice().then(() => {
+  await fadeOutVoice();
 
-    duckMusic();
+duckMusic();
 
-    voice = new Audio(src);
+voice = new Audio(src);
 
-    voice.preload = "auto";
-    voice.volume = volume;
+voice.preload = "auto";
+voice.volume = volume;
 
-    voice.onended = () => {
-      restoreMusic();
-    };
+voice.onended = () => {
+  restoreMusic();
+};
 
-    voice.play().catch(console.error);
-
-  });
+voice.play().catch(console.error);
 
 }
 
@@ -228,26 +225,5 @@ export async function playEmailVoice(id: string) {
   if (!voice) return;
 console.log("Reproduciendo:", voice);
   await playVoice(voice);
-
-}
-export async function unlockAudio() {
-
-  if (audioUnlocked) return;
-
-  audioUnlocked = true;
-
-  const audio = new Audio();
-
-  audio.volume = 0;
-
-  try {
-
-    await audio.play();
-
-  } catch {
-
-    // Safari puede lanzar una excepción; nos da igual.
-
-  }
 
 }
