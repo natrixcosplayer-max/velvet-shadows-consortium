@@ -70,8 +70,7 @@ export function EntryGate({ onEnter }: Props) {
 }}
           className="mx-auto flex flex-col items-center border border-gold px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition"
         >
-          <span>ACCEDER</span>
-          <span>A LA INTRANET</span>
+          <span>acceder</span>
         </button>
 
       </div>

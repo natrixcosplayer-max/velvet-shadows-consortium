@@ -3,7 +3,7 @@ let voice: HTMLAudioElement | null = null;
 
 let musicFade: ReturnType<typeof setInterval> | null = null;
 const MUSIC_VOLUME = 0.08;
-const MUSIC_DUCK_VOLUME = 0.02;
+const MUSIC_DUCK_VOLUME = 0.01;
 const EMAIL_VOICES: Record<string, string> = {
   "1": "/sounds/mailhotel.wav",
   "2": "/sounds/email.mp3",
@@ -101,34 +101,27 @@ export function restoreMusic() {
   fadeMusicVolume(MUSIC_VOLUME, 1200);
 }
 
-let voiceGen = 0;
-
-export async function playVoice(
+export function playVoice(
   src: string,
   volume = 0.45
 ) {
+  if (voice) {
+    voice.pause();
+    voice.currentTime = 0;
+    voice = null;
+  }
 
-  const gen = ++voiceGen;
+  duckMusic();
 
-  await fadeOutVoice();
+  voice = new Audio(src);
+  voice.preload = "auto";
+  voice.volume = volume;
 
-  // Si otra llamada más reciente llegó durante el fade, esta se cancela
-  // para que nunca suenen dos voces a la vez.
-  if (gen !== voiceGen) return;
+  voice.onended = () => {
+    restoreMusic();
+  };
 
-duckMusic();
-
-voice = new Audio(src);
-
-voice.preload = "auto";
-voice.volume = volume;
-
-voice.onended = () => {
-  restoreMusic();
-};
-
-voice.play().catch(console.error);
-
+  voice.play().catch(console.error);
 }
 
 export function stopVoice() {
@@ -208,13 +201,13 @@ export function primeUnlockSound() {
 export function playUnlockSound(volume = 0.45) {
   if (!unlockSound) return;
 
-  duckMusic();
+  fadeMusicVolume(MUSIC_DUCK_VOLUME, 300);
 
   unlockSound.currentTime = 0;
   unlockSound.volume = volume;
 
   unlockSound.onended = () => {
-    restoreMusic();
+    fadeMusicVolume(MUSIC_VOLUME, 1200);
   };
 
   unlockSound.play().catch(() => {});

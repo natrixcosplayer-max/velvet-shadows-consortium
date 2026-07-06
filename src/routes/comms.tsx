@@ -117,7 +117,7 @@ setOpen(t);
               <img
                 src={open.portrait}
                 alt={open.from}
-                className="w-20 md:w-44 shrink-0 border border-gold-dim grayscale object-cover"
+                className="w-24 md:w-44 shrink-0 border border-gold-dim grayscale object-cover"
               />
 
               <div className="w-full font-mono text-sm leading-relaxed text-foreground/90 border-t border-gold pt-4 md:border-t-0 md:border-gold md:pt-0 md:pl-0 md:border-none md:pt-0">
