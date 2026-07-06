@@ -1,461 +1,315 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { AppShell, Panel } from "../components/AppShell";
-import { playSfx } from "../audio/audiomanager";
+'use client';
 
-export const Route = createFileRoute("/debrief")({
-  head: () => ({
-    meta: [
-      { title: "Informe Final — Continental" },
-      { name: "description", content: "Pantalla final cinematográfica de la Alta Mesa." },
-    ],
-  }),
-  component: Debrief,
-});
+import { useNavigate } from '@tanstack/react-router';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { playSfx } from '../audio/audiomanager';
+import { AppShell } from '../components/AppShell';
 
-const MESSAGES = [
-  "Verificando identidad...",
-  "Comprobando autorización...",
-  "Escaneando canal...",
-  "Negociando cifrado...",
-  "Activando enlace Continental...",
+type Phase = 'SECURE_LINK' | 'INCOMING_SIGNAL' | 'CALL_REQUEST' | 'VIDEO' | 'FINALE';
+
+const ESTABLISHMENT_MESSAGES = [
+  'Verificando identidad...',
+  'Comprobando autorización...',
+  'Escaneando canal seguro...',
+  'Negociando cifrado...',
+  'Canal Continental...',
+  'Activando enlace...',
 ];
 
-const HUD_ITEMS = [
-  { label: "CANAL SEGURO", value: "ACTIVO" },
-  { label: "ROMA", value: "PRESIDIO" },
-  { label: "LATENCIA", value: "12 ms" },
-  { label: "CIFRADO", value: "RSA-4096" },
-  { label: "ESTADO", value: "EN LÍNEA" },
-];
+export function DebriefRoute() {
+  const navigate = useNavigate();
+  const [phase, setPhase] = useState<Phase>('SECURE_LINK');
+  const [progress, setProgress] = useState(0);
+  const [messageIndex, setMessageIndex] = useState(0);
+  const [videoEnded, setVideoEnded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const beepIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const messageIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-type Phase =
-  | "starting"
-  | "secure"
-  | "incoming"
-  | "waiting"
-  | "glitch"
-  | "video"
-  | "finished";
+  // PHASE 1: Secure link establishment
+  useEffect(() => {
+    if (phase !== 'SECURE_LINK') return;
 
-function Debrief() {
-  import { createFileRoute, Link } from "@tanstack/react-router";
-  import { useEffect, useRef, useState } from "react";
-  import { AppShell, Panel } from "../components/AppShell";
-  import { playSfx } from "../audio/audiomanager";
-
-  export const Route = createFileRoute("/debrief")({
-    head: () => ({
-      meta: [
-        { title: "Informe Final — Continental" },
-        { name: "description", content: "Pantalla final cinematográfica de la Alta Mesa." },
-      ],
-    }),
-    component: Debrief,
-  });
-
-  const MESSAGES = [
-    "Verificando identidad...",
-    "Comprobando autorización...",
-    "Escaneando canal...",
-    "Negociando cifrado...",
-    "Activando enlace Continental...",
-  ];
-
-  const HUD_ITEMS = [
-    { label: "CANAL SEGURO", value: "ACTIVO" },
-    { label: "ROMA", value: "PRESIDIO" },
-    { label: "LATENCIA", value: "12 ms" },
-    { label: "CIFRADO", value: "RSA-4096" },
-    { label: "ESTADO", value: "EN LÍNEA" },
-  ];
-
-  type Phase = "starting" | "secure" | "incoming" | "glitch" | "video" | "finished";
-
-  function Debrief() {
-    const videoRef = useRef<HTMLVideoElement | null>(null);
-    const hiddenRef = useRef<HTMLVideoElement | null>(null);
-    const [phase, setPhase] = useState<Phase>("starting");
-    const [progress, setProgress] = useState(0);
-    const [messageIndex, setMessageIndex] = useState(0);
-    const [glitch, setGlitch] = useState(false);
-
-    useEffect(() => {
-      if (phase !== "starting") return;
-      let progressValue = 0;
-      let messageValue = 0;
-      const interval = window.setInterval(() => {
-        messageValue = Math.min(messageValue + 1, MESSAGES.length - 1);
-        progressValue = Math.min(100, progressValue + 8);
-        setMessageIndex(messageValue);
-        setProgress(progressValue);
-        playSfx("/sounds/beep.mp3", 0.22);
-        if (progressValue >= 100) {
-          window.clearInterval(interval);
-          setTimeout(() => {
-            playSfx("/sounds/luxbeep.mp3", 0.3);
-            setPhase("secure");
-          }, 900);
+    // Progress bar animation
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        const next = prev + Math.random() * 15;
+        if (next >= 100) {
+          clearInterval(progressInterval);
+          return 100;
         }
-      }, 320);
-      return () => window.clearInterval(interval);
-    }, [phase]);
+        return next;
+      });
+    }, 150);
 
-    useEffect(() => {
-      if (phase !== "secure") return;
-      const timeout = window.setTimeout(() => {
-        playSfx("/sounds/beep.mp3", 0.26);
-        setPhase("incoming");
-      }, 1500);
-      return () => window.clearTimeout(timeout);
-    }, [phase]);
+    // Message cycling every 400ms
+    const msgInterval = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % ESTABLISHMENT_MESSAGES.length);
+      playSfx('/sounds/luxbeep.mp3', 0.12);
+    }, 400);
 
-    useEffect(() => {
-      if (phase !== "incoming") return;
-      const timeout = window.setTimeout(() => {
-        setGlitch(true);
-        playSfx("/sounds/luxbeep.mp3", 0.26);
-        const next = window.setTimeout(() => {
-          setGlitch(false);
-          setPhase("video");
-        }, 700);
-        return () => window.clearTimeout(next);
-      }, 1200);
-      return () => window.clearTimeout(timeout);
-    }, [phase]);
+    messageIntervalRef.current = msgInterval;
 
-    useEffect(() => {
-      const video = videoRef.current;
-      if (!video) return;
-      const onEnded = () => setPhase("finished");
-      video.addEventListener("ended", onEnded);
-      return () => video.removeEventListener("ended", onEnded);
-    }, []);
+    // After ~3.5 seconds, transition to PHASE 2
+    const timer = setTimeout(() => {
+      clearInterval(progressInterval);
+      setProgress(100);
+      setPhase('INCOMING_SIGNAL');
+    }, 3500);
 
-    const acceptTransmission = async () => {
-      const src = "/videos/oldwoman.mp4";
+    timerRef.current = timer;
 
-      const primed = hiddenRef.current;
-      let videoEl: HTMLVideoElement | null = primed || videoRef.current;
+    return () => {
+      clearInterval(progressInterval);
+      if (messageIntervalRef.current) clearInterval(messageIntervalRef.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [phase]);
 
-      if (!videoEl) {
-        videoEl = document.createElement("video");
-        videoEl.src = src;
-        videoEl.playsInline = true;
-        videoEl.muted = false;
-      }
+  // PHASE 2: Incoming signal
+  useEffect(() => {
+    if (phase !== 'INCOMING_SIGNAL') return;
 
-      videoEl.muted = false;
-      videoEl.volume = 1;
+    const timer = setTimeout(() => {
+      setPhase('CALL_REQUEST');
+    }, 2500);
 
+    timerRef.current = timer;
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [phase]);
+
+  // PHASE 4: Video auto-play when entering
+  useEffect(() => {
+    if (phase !== 'VIDEO' || !videoRef.current) return;
+
+    const playVideo = async () => {
       try {
-        const playPromise = videoEl.play();
-        if (playPromise) await playPromise.catch(() => {});
-      } catch {}
-
-      try {
-        if (videoEl.requestFullscreen) {
-          await videoEl.requestFullscreen();
-        } else if ((videoEl as any).webkitEnterFullScreen) {
-          try {
-            (videoEl as any).webkitEnterFullScreen();
-          } catch {}
-        }
-      } catch {}
-
-      if (primed && videoRef.current) {
-        try {
-          primed.pause();
-        } catch {}
-        setPhase("video");
-        setTimeout(async () => {
-          const visible = videoRef.current;
-          if (!visible) return;
-          visible.muted = false;
-          visible.currentTime = primed.currentTime || 0;
-          try {
-            await visible.play().catch(() => {});
-          } catch {}
-          try {
-            if (visible.requestFullscreen) await visible.requestFullscreen();
-            else if ((visible as any).webkitEnterFullScreen) (visible as any).webkitEnterFullScreen();
-          } catch {}
-        }, 50);
-      } else {
-        setPhase("video");
+        await videoRef.current?.play();
+      } catch (err) {
+        console.error('Video play failed:', err);
       }
     };
 
-    return (
-      <AppShell title="Transmisión Final" latin="Alta Mesa · Informe">
-        <div className="min-h-[75vh] flex items-center justify-center px-4 py-8">
-          <div className="w-full max-w-[1240px]">
-            <Panel className="relative overflow-hidden border border-gold-dim/60 bg-black/95">
-              <div className="relative flex min-h-[70vh] flex-col justify-center overflow-hidden">
-                {(phase === "starting" || phase === "secure" || phase === "incoming" || phase === "glitch") && (
-                  <div className={`relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-8 py-12 text-center transition-all duration-700 ${glitch ? "bg-white/5 backdrop-blur-sm" : ""}`}>
-                    <div className="space-y-6">
-                      <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">ESTABLECIENDO CANAL SEGURO</p>
-                      <div className="space-y-2">
-                        <p className="font-mono text-5xl tracking-[0.35em] uppercase text-gold">ROMA</p>
-                        <p className="font-mono text-sm tracking-[0.35em] uppercase text-gold-dim">CONSEJO MAGISTRAL</p>
-                      </div>
-                    </div>
+    playVideo();
+  }, [phase]);
 
-                    {phase === "starting" && (
-                      <div className="w-full space-y-6">
-                        import { createFileRoute, Link } from "@tanstack/react-router";
-                        import { useEffect, useRef, useState } from "react";
-                        import { AppShell, Panel } from "../components/AppShell";
-                        import { playSfx } from "../audio/audiomanager";
+  // Video ended handler
+  const handleVideoEnded = useCallback(() => {
+    setVideoEnded(true);
+    setPhase('FINALE');
+  }, []);
 
-                        export const Route = createFileRoute("/debrief")({
-                          head: () => ({
-                            meta: [
-                              { title: "Informe Final — Continental" },
-                              { name: "description", content: "Pantalla final cinematográfica de la Alta Mesa." },
-                            ],
-                          }),
-                          component: Debrief,
-                        });
+  // Handle accept call button
+  const handleAcceptCall = useCallback(() => {
+    playSfx('/sounds/luxbeep.mp3', 0.15);
+    setPhase('VIDEO');
+  }, []);
 
-                        const MESSAGES = [
-                          "Verificando identidad...",
-                          "Comprobando autorización...",
-                          "Escaneando canal...",
-                          "Negociando cifrado...",
-                          "Activando enlace Continental...",
-                        ];
+  // Handle close expedient button
+  const handleCloseExpedient = useCallback(() => {
+    navigate({ to: '/' });
+  }, [navigate]);
 
-                        const HUD_ITEMS = [
-                          { label: "CANAL SEGURO", value: "ACTIVO" },
-                          { label: "ROMA", value: "PRESIDIO" },
-                          { label: "LATENCIA", value: "12 ms" },
-                          { label: "CIFRADO", value: "RSA-4096" },
-                          { label: "ESTADO", value: "EN LÍNEA" },
-                        ];
+  return (
+    <AppShell title="Debrief" latin="Recessus">
+      <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden relative">
+        {/* Vignette effect */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.4) 100%)',
+          zIndex: 10,
+        }} />
 
-                        type Phase = "starting" | "secure" | "incoming" | "glitch" | "video" | "finished";
+        {/* Scanlines */}
+        <div className="fixed inset-0 pointer-events-none scanlines" style={{
+          zIndex: 11,
+          opacity: 0.08,
+        }} />
 
-                        function Debrief() {
-                          const videoRef = useRef<HTMLVideoElement | null>(null);
-                          const hiddenRef = useRef<HTMLVideoElement | null>(null);
-                          const [phase, setPhase] = useState<Phase>("starting");
-                          const [progress, setProgress] = useState(0);
-                          const [messageIndex, setMessageIndex] = useState(0);
-                          const [glitch, setGlitch] = useState(false);
+        {/* PHASE 1: Secure Link Establishment */}
+        {phase === 'SECURE_LINK' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 animate-in fade-in">
+            <div className="space-y-8 max-w-xl">
+              {/* Title */}
+              <div className="text-center space-y-2">
+                <h1 className="font-display text-3xl md:text-4xl tracking-wider text-gold">
+                  ESTABLECIENDO ENLACE SEGURO
+                </h1>
+                <p className="font-mono text-sm text-gold-dim tracking-[0.2em]">
+                  ROMA
+                </p>
+                <p className="font-mono text-sm text-gold-dim tracking-[0.2em]">
+                  CONSEJO MAGISTRAL
+                </p>
+              </div>
 
-                          useEffect(() => {
-                            if (phase !== "starting") return;
-                            let progressValue = 0;
-                            let messageValue = 0;
-                            const interval = window.setInterval(() => {
-                              messageValue = Math.min(messageValue + 1, MESSAGES.length - 1);
-                              progressValue = Math.min(100, progressValue + 8);
-                              setMessageIndex(messageValue);
-                              setProgress(progressValue);
-                              playSfx("/sounds/beep.mp3", 0.22);
-                              if (progressValue >= 100) {
-                                window.clearInterval(interval);
-                                setTimeout(() => {
-                                  playSfx("/sounds/luxbeep.mp3", 0.3);
-                                  setPhase("secure");
-                                }, 900);
-                              }
-                            }, 320);
-                            return () => window.clearInterval(interval);
-                          }, [phase]);
+              {/* Progress bar */}
+              <div className="space-y-4">
+                <div className="relative h-1 bg-gold-dim/20 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-transparent via-gold to-transparent transition-all duration-300"
+                    style={{
+                      width: `${progress}%`,
+                    }}
+                  />
+                </div>
 
-                          useEffect(() => {
-                            if (phase !== "secure") return;
-                            const timeout = window.setTimeout(() => {
-                              playSfx("/sounds/beep.mp3", 0.26);
-                              setPhase("incoming");
-                            }, 1500);
-                            return () => window.clearTimeout(timeout);
-                          }, [phase]);
+                {/* Status message */}
+                <div className="h-6 flex items-center justify-center">
+                  <p className="font-mono text-xs text-gold-dim text-center tracking-wide">
+                    {ESTABLISHMENT_MESSAGES[messageIndex]}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
-                          useEffect(() => {
-                            if (phase !== "incoming") return;
-                            const timeout = window.setTimeout(() => {
-                              setGlitch(true);
-                              playSfx("/sounds/luxbeep.mp3", 0.26);
-                              const next = window.setTimeout(() => {
-                                setGlitch(false);
-                                setPhase("video");
-                              }, 700);
-                              return () => window.clearTimeout(next);
-                            }, 1200);
-                            return () => window.clearTimeout(timeout);
-                          }, [phase]);
+        {/* PHASE 2: Incoming Signal */}
+        {phase === 'INCOMING_SIGNAL' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 animate-in fade-in">
+            <div className="space-y-8 max-w-xl text-center">
+              {/* Top text */}
+              <div className="space-y-4">
+                <p className="font-mono text-xs text-gold-dim tracking-[0.3em]">
+                  CANAL SEGURO ESTABLECIDO
+                </p>
 
-                          useEffect(() => {
-                            const video = videoRef.current;
-                            if (!video) return;
-                            const onEnded = () => setPhase("finished");
-                            video.addEventListener("ended", onEnded);
-                            return () => video.removeEventListener("ended", onEnded);
-                          }, []);
+                {/* Slight glitch effect text */}
+                <div className="relative h-16 flex items-center justify-center">
+                  <p
+                    className="font-display text-2xl tracking-wider text-gold"
+                    style={{
+                      animation: 'flicker 0.15s ease-in-out',
+                    }}
+                  >
+                    TRANSMISIÓN ENTRANTE
+                  </p>
+                </div>
 
-                          const acceptTransmission = async () => {
-                            const src = "/videos/oldwoman.mp4";
-                            const primed = hiddenRef.current;
-                            let videoEl: HTMLVideoElement | null = primed || videoRef.current;
+                <div className="space-y-2">
+                  <p className="font-mono text-xs text-gold-dim tracking-[0.2em]">
+                    MAGISTRADA DE LA ALTA MESA
+                  </p>
+                </div>
+              </div>
 
-                            if (!videoEl) {
-                              videoEl = document.createElement("video");
-                              videoEl.src = src;
-                              videoEl.playsInline = true;
-                              videoEl.muted = false;
-                            }
+              {/* Decorative elements */}
+              <div className="flex justify-center gap-4">
+                <div className="w-1 h-8 bg-gold/30" />
+                <div className="w-1 h-12 bg-gold/50" />
+                <div className="w-1 h-8 bg-gold/30" />
+              </div>
+            </div>
+          </div>
+        )}
 
-                            videoEl.muted = false;
-                            videoEl.volume = 1;
+        {/* PHASE 3: Call Request */}
+        {phase === 'CALL_REQUEST' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 animate-in fade-in">
+            <div className="space-y-12 max-w-lg text-center">
+              <div>
+                <p className="font-display text-lg tracking-widest text-gold-bright mb-2">
+                  LA MAGISTRADA
+                </p>
+                <p className="font-mono text-sm text-gold-dim tracking-wider">
+                  solicita una comunicación privada
+                </p>
+              </div>
 
-                            try {
-                              const playPromise = videoEl.play();
-                              if (playPromise) await playPromise.catch(() => {});
-                            } catch (e) {}
+              <button
+                onClick={handleAcceptCall}
+                className="px-8 py-4 border-2 border-gold text-gold font-display text-sm tracking-[0.2em] transition-all duration-300 hover:bg-gold/10 hover:shadow-lg active:scale-95"
+                style={{
+                  boxShadow: '0 0 20px rgba(178, 148, 69, 0.3)',
+                }}
+              >
+                ACEPTAR LLAMADA
+              </button>
+            </div>
+          </div>
+        )}
 
-                            try {
-                              if (videoEl.requestFullscreen) {
-                                await videoEl.requestFullscreen();
-                              } else if ((videoEl as any).webkitEnterFullScreen) {
-                                try {
-                                  (videoEl as any).webkitEnterFullScreen();
-                                } catch {}
-                              }
-                            } catch {}
+        {/* PHASE 4: Video Call */}
+        {phase === 'VIDEO' && (
+          <div className="absolute inset-0 bg-black flex items-center justify-center">
+            <video
+              ref={videoRef}
+              src="/videos/oldwoman.mp4"
+              className="w-full h-full object-cover"
+              playsInline
+              onEnded={handleVideoEnded}
+            />
 
-                            if (primed && videoRef.current) {
-                              try {
-                                primed.pause();
-                              } catch {}
-                              setPhase("video");
-                              setTimeout(async () => {
-                                const visible = videoRef.current;
-                                if (!visible) return;
-                                visible.muted = false;
-                                visible.currentTime = primed.currentTime || 0;
-                                try {
-                                  await visible.play().catch(() => {});
-                                } catch {}
-                                try {
-                                  if (visible.requestFullscreen) await visible.requestFullscreen();
-                                  else if ((visible as any).webkitEnterFullScreen) (visible as any).webkitEnterFullScreen();
-                                } catch {}
-                              }, 50);
-                            } else {
-                              setPhase("video");
-                            }
-                          };
+            {/* Top Left Info */}
+            <div className="absolute top-4 left-4 font-mono text-[10px] text-gold-dim space-y-1 z-20 pointer-events-none">
+              <p>ROMA</p>
+              <p>MAGISTRADA</p>
+              <p>ALTA MESA</p>
+            </div>
 
-                          return (
-                            <AppShell title="Transmisión Final" latin="Alta Mesa · Informe">
-                              <div className="min-h-[75vh] flex items-center justify-center px-4 py-8">
-                                <div className="w-full max-w-[1240px]">
-                                  <Panel className="relative overflow-hidden border border-gold-dim/60 bg-black/95">
-                                    <div className="relative flex min-h-[70vh] flex-col justify-center overflow-hidden">
-                                      {(phase === "starting" || phase === "secure" || phase === "incoming" || phase === "glitch") && (
-                                        <div className={`relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-8 py-12 text-center transition-all duration-700 ${glitch ? "bg-white/5 backdrop-blur-sm" : ""}`}>
-                                          <div className="space-y-6">
-                                            <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">ESTABLECIENDO CANAL SEGURO</p>
-                                            <div className="space-y-2">
-                                              <p className="font-mono text-5xl tracking-[0.35em] uppercase text-gold">ROMA</p>
-                                              <p className="font-mono text-sm tracking-[0.35em] uppercase text-gold-dim">CONSEJO MAGISTRAL</p>
-                                            </div>
-                                          </div>
+            {/* Top Right - Live indicator */}
+            <div className="absolute top-4 right-4 flex items-center gap-2 font-mono text-[10px] text-gold-dim z-20 pointer-events-none">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+              <span>EN DIRECTO</span>
+            </div>
 
-                                          {phase === "starting" && (
-                                            <div className="w-full space-y-6">
-                                              <div className="h-3 w-full overflow-hidden rounded-full border border-gold-dim bg-white/5">
-                                                <div className="h-full rounded-full bg-gradient-to-r from-gold via-gold/90 to-transparent transition-all duration-300" style={{ width: `${progress}%` }} />
-                                              </div>
-                                              <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-gold-dim">
-                                                <span>{progress}%</span>
-                                                <span>{MESSAGES[messageIndex]}</span>
-                                              </div>
-                                            </div>
-                                          )}
+            {/* Bottom Left - Security Info */}
+            <div className="absolute bottom-4 left-4 font-mono text-[10px] text-gold-dim space-y-1 z-20 pointer-events-none">
+              <p>CANAL SEGURO</p>
+              <p>RSA-4096</p>
+            </div>
 
-                                          {phase === "secure" && (
-                                            <div className="space-y-6">
-                                              <div className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">CANAL SEGURO ESTABLECIDO</div>
-                                              <div className="font-mono text-4xl tracking-[0.2em] uppercase text-gold">TRANSMISIÓN ENTRANTE</div>
-                                              <p className="font-mono text-sm uppercase tracking-[0.35em] text-gold-dim">MAGISTRADA DE LA ALTA MESA</p>
-                                              <button onClick={acceptTransmission} className="mt-6 inline-flex items-center gap-3 rounded-full border border-gold px-6 py-3 font-mono text-[12px] uppercase tracking-[0.35em] text-gold hover:bg-gold/10">ACEPTAR TRANSMISIÓN</button>
-                                            </div>
-                                          )}
+            {/* Bottom Right - Latency Info */}
+            <div className="absolute bottom-4 right-4 font-mono text-[10px] text-gold-dim space-y-1 text-right z-20 pointer-events-none">
+              <p>LATENCIA 12 ms</p>
+              <p>AURUM VII</p>
+            </div>
+          </div>
+        )}
 
-                                          {phase === "incoming" && (
-                                            <div className="space-y-4">
-                                              <div className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">TRANSMISIÓN ENTRANTE</div>
-                                              <div className="font-mono text-3xl tracking-[0.2em] uppercase text-gold">PREPARANDO ENLACE</div>
-                                              <div className="mx-auto h-px w-32 bg-gold/30 animate-pulse" />
-                                              <button onClick={acceptTransmission} className="mt-4 inline-flex items-center rounded-full border border-gold px-5 py-2 font-mono text-[11px] uppercase tracking-[0.35em] text-gold hover:bg-gold/10">ACEPTAR TRANSMISIÓN</button>
-                                            </div>
-                                          )}
+        {/* PHASE 5: Finale */}
+        {phase === 'FINALE' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 animate-in fade-in">
+            <div className="space-y-8 max-w-xl text-center">
+              {/* Fade in text */}
+              <div className="space-y-6">
+                <p className="font-mono text-xs text-gold-dim tracking-[0.3em]">
+                  TRANSMISIÓN FINALIZADA
+                </p>
 
-                                          {phase === "glitch" && (
-                                            <div className="space-y-4">
-                                              <div className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">INTERFERENCIAS DETECTADAS</div>
-                                              <div className="inline-flex rounded-full border border-gold/20 bg-black/70 px-4 py-2 text-[11px] uppercase tracking-[0.35em] text-gold">GLITCH MÍNIMO</div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
+                <p className="font-display text-2xl tracking-wider text-gold">
+                  OPERACIÓN MINERVA
+                </p>
 
-                                      <video ref={hiddenRef} src="/videos/oldwoman.mp4" playsInline style={{ display: "none" }} />
+                <p className="font-mono text-sm text-gold-dim tracking-[0.15em]">
+                  ACTIVO RECUPERADO
+                </p>
 
-                                      {phase === "video" && (
-                                        <div className="relative mx-auto w-full max-w-6xl space-y-8 px-4 pb-8 pt-6">
-                                          <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-                                            <div className="space-y-2">
-                                              <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold-dim">CANAL SEGURO</p>
-                                              <p className="font-display text-4xl tracking-[0.25em] text-gold">ROMA</p>
-                                            </div>
-                                            <div className="grid gap-2 rounded-3xl border border-gold-dim/40 bg-black/80 p-4 text-right">
-                                              {HUD_ITEMS.map((item) => (
-                                                <div key={item.label} className="font-mono text-[10px] uppercase tracking-[0.3em] text-gold-dim">
-                                                  <span className="block">{item.label}</span>
-                                                  <span className="font-display text-base text-gold">{item.value}</span>
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </div>
+                <p className="font-display text-lg tracking-widest text-gold-bright">
+                  MISIÓN COMPLETADA
+                </p>
+              </div>
 
-                                          <div className="relative overflow-hidden rounded-[2rem] border border-gold/70 bg-black/80 shadow-[0_0_120px_rgba(212,175,55,0.15)]">
-                                            <video ref={videoRef} src="/videos/oldwoman.mp4" autoPlay playsInline muted={false} controls={false} className="w-full aspect-video bg-black" />
-                                            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between px-6 py-4 text-[10px] uppercase tracking-[0.35em] text-gold-dim">
-                                              <span>TRANSMISIÓN SEGURA</span>
-                                              <span>ALTA MESA</span>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {phase === "finished" && (
-                                        <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-8 py-16 text-center">
-                                          <div className="space-y-6">
-                                            <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">TRANSMISIÓN FINALIZADA</p>
-                                            <p className="font-display text-5xl uppercase text-gold">OPERACIÓN MINERVA</p>
-                                          </div>
-                                          <div className="grid gap-4 md:grid-cols-3">
-                                            {[{ label: "ACTIVO RECUPERADO" }, { label: "MISIÓN COMPLETADA" }, { label: "CANAL CERRADO" }].map((item) => (
-                                              <div key={item.label} className="rounded-3xl border border-gold-dim/50 bg-black/80 px-8 py-6">
-                                                <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold-dim">{item.label}</p>
-                                              </div>
-                                            ))}
-                                          </div>
-                                          <Link to="/" className="inline-flex rounded-full border border-gold bg-gold px-10 py-3 font-mono text-[11px] uppercase tracking-[0.35em] text-black transition hover:bg-gold/90">CERRAR EXPEDIENTE</Link>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </Panel>
-                                </div>
-                              </div>
-                            </AppShell>
-                          );
-                        }
-
-                        export default Debrief;
+              {/* Close button */}
+              <div className="pt-6">
+                <button
+                  onClick={handleCloseExpedient}
+                  className="px-8 py-4 border-2 border-gold text-gold font-display text-sm tracking-[0.2em] transition-all duration-300 hover:bg-gold/10 hover:shadow-lg active:scale-95"
+                  style={{
+                    boxShadow: '0 0 20px rgba(178, 148, 69, 0.3)',
+                  }}
+                >
+                  CERRAR EXPEDIENTE
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </AppShell>
+  );
+}
