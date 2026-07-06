@@ -226,7 +226,7 @@ function Debrief() {
               )}
 
               {phase === "video" && (
-                <div className="relative mx-auto w-full max-w-6xl space-y-8 px-4 pb-8 pt-6">
+                <div className="fixed inset-0 z-50 bg-black overflow-hidden">
                   <div className="grid gap-3 md:grid-cols-[1fr_auto]">
                     <div className="space-y-2">
                       <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold-dim">CANAL SEGURO</p>
@@ -247,13 +247,47 @@ function Debrief() {
   ref={videoRef}
   src="/videos/oldwoman.mp4"
   playsInline
-  controls
-  className="w-full aspect-video bg-black"
+  controls={false}
+  className="absolute inset-0 w-full h-full object-cover"
 />
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between px-6 py-4 text-[10px] uppercase tracking-[0.35em] text-gold-dim">
-                      <span>TRANSMISIÓN SEGURA</span>
-                      <span>ALTA MESA</span>
-                    </div>
+<div className="pointer-events-none absolute inset-0">
+
+  <div className="absolute top-6 left-6">
+
+    <p className="font-mono text-[10px] tracking-[0.45em] uppercase text-gold/80">
+      ROMA
+    </p>
+
+    <p className="font-display text-3xl text-gold">
+      MAGISTRADA
+    </p>
+
+    <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold-dim">
+      ALTA MESA
+    </p>
+
+  </div>
+
+  <div className="absolute top-6 right-6 flex items-center gap-3">
+
+    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+
+    <span className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold">
+      EN DIRECTO
+    </span>
+
+  </div>
+
+  <div className="absolute bottom-6 left-6">
+
+    <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold-dim">
+      CANAL SEGURO · RSA-4096
+    </p>
+
+  </div>
+
+</div>
+                    
                   </div>
                 </div>
               )}
