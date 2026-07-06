@@ -95,17 +95,14 @@ setOpen(t);
               </div>
             </div>
             <div className="grid md:grid-cols-[220px_1fr] gap-6 items-start">
+              <div className="w-28 md:w-full mx-auto"></div>
 
   
-  {open.portrait && (
-
-    <img
-      src={open.portrait}
-      alt={open.from}
-      className="w-full border border-gold-dim grayscale object-cover"
-    />
-
-  )}
+  <img
+  src={open.portrait}
+  alt={open.from}
+  className="w-28 md:w-48 mx-auto border border-gold-dim grayscale object-cover"
+/>
 
   <div className="font-mono text-sm leading-relaxed text-foreground/90 border-l-2 border-gold pl-4 py-2">
     {open.body}
