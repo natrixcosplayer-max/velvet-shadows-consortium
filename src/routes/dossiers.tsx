@@ -90,12 +90,12 @@ function Dossiers() {
             · Confidencial · Solo Lectura ·
           </div>
           <div className="mt-4 md:mt-8 flex justify-center">
-  <img
-    src={AGENT_PHOTOS[active.codename]}
-    alt={active.codename}
-    className="w-64 h-80 object-cover border border-gold shadow-lg"
-  />
-</div>
+            <img
+              src={AGENT_PHOTOS[active.codename]}
+              alt={active.codename}
+              className={`w-64 h-80 object-cover border border-gold shadow-lg ${active.codename === "Mandarin" || active.codename === "Minerva" ? "animate-flicker" : ""}`}
+            />
+          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
             <Field label="Estatus" value={active.status} />
