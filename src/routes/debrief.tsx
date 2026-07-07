@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { AppShell, Panel } from "../components/AppShell";
 import {
   fadeMusicVolume,
@@ -229,7 +229,9 @@ function Debrief() {
     if (media) {
       media.pause();
       media.currentTime = 0;
+      media.muted = false;
       media.controls = false;
+      media.play().catch(() => {});
     }
 
     requestVideoFullscreen();
@@ -564,12 +566,6 @@ function Debrief() {
     }, 500);
     timers.push(bootOff);
 
-    const start = window.setTimeout(() => {
-      media.currentTime = 0;
-      media.play().catch(() => {});
-    }, 140);
-    timers.push(start);
-
     const occasionalGlitch = window.setTimeout(() => {
       queueAudio(() => playSfx(SFX.glitch, 0.14));
       setVideo((prev) => ({ ...prev, signalLoss: true, microGlitch: true }));
@@ -601,10 +597,11 @@ function Debrief() {
   }, [clearCallPulse]);
 
   return (
-    <AppShell title="Transmision Final" latin="Alta Mesa · Informe">
-      <div className="flex min-h-[75vh] items-center justify-center px-4 py-8">
-        <div className="w-full max-w-[1240px]">
-          <Panel className="relative overflow-hidden border border-gold-dim/60 bg-black/95">
+    <>
+      <AppShell title="Transmision Final" latin="Alta Mesa · Informe">
+        <div className="flex min-h-[75vh] items-center justify-center px-4 py-8">
+          <div className="w-full max-w-[1240px]">
+            <Panel className="relative overflow-hidden border border-gold-dim/60 bg-black/95">
             <div className={`pointer-events-none absolute inset-0 transition-opacity duration-200 ${startup.globalGlitch ? "bg-white/10 opacity-100" : "opacity-0"}`} />
             <div className={`pointer-events-none absolute inset-0 bg-black/30 transition-opacity duration-100 ${call.preSignalLoss ? "opacity-100" : "opacity-0"}`} />
             <div className={`pointer-events-none absolute inset-0 bg-white/20 transition-opacity duration-100 ${link.flash ? "opacity-100" : "opacity-0"}`} />
@@ -642,24 +639,6 @@ function Debrief() {
                 </div>
               )}
 
-              {video.showLayer && (
-                <VideoCall
-                  videoRef={videoRef}
-                  layerRef={videoLayerRef}
-                  phase={phase === "video" ? "video" : "finished"}
-                  fx={{
-                    microGlitch: video.microGlitch,
-                    bootNoise: video.bootNoise,
-                    signalLoss: video.signalLoss,
-                    endingCut: video.endingCut,
-                    fade: video.fade,
-                  }}
-                  hudDate={call.hudDate}
-                  hudTime={call.hudTime}
-                  onEnded={handleVideoEnded}
-                />
-              )}
-
               {phase === "finished" && (
                 <ClosingSequence
                   showTransmissionDone={closing.showTransmissionDone}
@@ -681,10 +660,32 @@ function Debrief() {
                 </Link>
               )}
             </div>
-          </Panel>
+            </Panel>
+          </div>
         </div>
-      </div>
-    </AppShell>
+      </AppShell>
+
+      {video.showLayer &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <VideoCall
+            videoRef={videoRef}
+            layerRef={videoLayerRef}
+            phase={phase === "video" ? "video" : "finished"}
+            fx={{
+              microGlitch: video.microGlitch,
+              bootNoise: video.bootNoise,
+              signalLoss: video.signalLoss,
+              endingCut: video.endingCut,
+              fade: video.fade,
+            }}
+            hudDate={call.hudDate}
+            hudTime={call.hudTime}
+            onEnded={handleVideoEnded}
+          />,
+          document.body
+        )}
+    </>
   );
 }
 

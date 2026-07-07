@@ -22,18 +22,22 @@ export function VideoCall({ videoRef, layerRef, phase, fx, hudDate, hudTime, onE
   const activeFilter = fx.signalLoss || fx.bootNoise || fx.microGlitch;
 
   return (
-    <div ref={layerRef} className="fixed inset-0 z-[140] isolate h-screen w-screen overflow-hidden bg-black" style={{ height: "100dvh" }}>
+    <div ref={layerRef} className="fixed inset-0 z-[9999] isolate w-[100vw] h-[100dvh] overflow-hidden bg-black" style={{ width: "100vw", height: "100dvh" }}>
       <video
         ref={videoRef}
         src="/videos/oldwoman.mp4"
         onEnded={onEnded}
         playsInline
+        autoPlay
+        muted={false}
         preload="auto"
         controls={false}
         disablePictureInPicture
-        className={`absolute inset-0 z-0 h-screen w-screen object-cover ${fx.microGlitch ? "translate-x-[1px] -translate-y-[1px]" : ""}`}
+        disableRemotePlayback
+        className={`absolute inset-0 z-0 w-full h-full object-cover ${fx.microGlitch ? "translate-x-[1px] -translate-y-[1px]" : ""}`}
         style={{
-          height: "100dvh",
+          width: "100%",
+          height: "100%",
           filter: activeFilter
             ? [
                 `brightness(${fx.signalLoss ? 0.96 : 1})`,
