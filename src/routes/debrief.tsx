@@ -651,10 +651,10 @@ function Debrief() {
                 />
               )}
 
-              {closing.showCloseButton && (
+              {phase === "finished" && closing.showCloseButton && (
                 <Link
                   to="/"
-                  className="fixed bottom-8 left-1/2 z-[90] inline-flex -translate-x-1/2 border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.35em] text-gold transition hover:bg-gold/20"
+                  className="relative z-[90] mx-auto mt-2 inline-flex border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.35em] text-gold transition hover:bg-gold/20"
                 >
                   CERRAR EXPEDIENTE
                 </Link>
