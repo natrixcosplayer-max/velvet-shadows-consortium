@@ -37,7 +37,7 @@ const HOTEL_DESCRIPTIONS: Record<string, string> = {
   "Valencia": "Buenos agentes. Se dan a la celebración y a los placeres terrenales como el vino, pero a cambio efectúan su trabajo con precisión.",
   "Marrakech": "Actualmente cerrado. Redada de casas enemigas. Gerente desaparecida.",
   "Berlín": "Asesinos de élite entrenados por las mafias locales.",
-  "Roma": "Cuna de la Alta Mesa. Hogar de las Magistradas. Sede de la Ruska Roma, casa madre de grandes agentes y asesios, especialmente mujeres.",
+  "Roma": "Cuna de la Alta Mesa. Hogar de las Magistradas. Sede de la Ruska Roma, casa madre de grandes agentes y asesino, especialmente mujeres.",
   "El Cairo": "Opera con normalidad aunque reciben amenazas constantes provenientes de Hamunaptra y tesoros desenterrados allí. Sus asesinos son conocidos como Medjay.",
   "Bombay": "Caótico, pero discreto. Precios más baratos, asesinos entrenados en artes milenarias.",
   "Hong Kong": "Sede de muchas casas enemigas. Muchedumbres, armas modernas. Tráfico, gente, neón. Contratos siempre activos.",

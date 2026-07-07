@@ -2,6 +2,7 @@ import altaLogo from "../assets/alta.png";
 import {
   playMusic,
   playSfx,
+  playUnlockSound,
   primeUnlockSound,
 } from "../audio/audiomanager";
 
@@ -56,6 +57,10 @@ export function EntryGate({ onEnter }: Props) {
         <button
           onClick={() => {
           primeUnlockSound();
+          playUnlockSound();
+          if (typeof window !== "undefined") {
+            window.sessionStorage.setItem("unlock-sound-played", "1");
+          }
           onEnter();
           playSfx("/sounds/luxbeep.mp3");
           playMusic("/sounds/john.mp3", 0.08, true, 42);

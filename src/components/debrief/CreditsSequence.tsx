@@ -22,7 +22,7 @@ const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "CITA", lines: ["\"Porque naveguemos juntos todas las aguas,", "", "las buenas y las malas,", "", "y salgamos siempre mas fuertes.", "Te quiero.\""] },
 ];
 
-const PHOTO_BASENAMES = ["eli1", "nata1", "eli2", "nata2", "eli3", "nata3"] as const;
+const PHOTO_BASENAMES = ["eli1", "nata1", "eli2", "nata2", "eli3", "couple0", "nata3", "eli", "nata"] as const;
 const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"] as const;
 
 export function CreditsSequence({ active }: CreditsSequenceProps) {
@@ -108,7 +108,8 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         await wait(2800);
         if (cancelled) return;
 
-        const nextPhoto = resolvedPhotos[i] || null;
+        const photoIndex = Math.floor((i / Math.max(1, CREDIT_BLOCKS.length - 1)) * Math.max(0, resolvedPhotos.length - 1));
+        const nextPhoto = resolvedPhotos[photoIndex] || null;
         if (nextPhoto) {
           setPhotoPrevious(lastPhoto);
           setPhotoCurrent(nextPhoto);

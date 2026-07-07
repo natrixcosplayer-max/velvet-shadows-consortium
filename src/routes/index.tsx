@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell, Panel, StatBlock } from "../components/AppShell";
 import { ClearanceGate } from "../components/ClearanceGate";
-import { playSfx, playUnlockSound } from "../audio/audiomanager";
+import { playSfx } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -16,7 +16,6 @@ export const Route = createFileRoute("/")({
 });
 
 const SKIP_COMMISSION_GATES_KEY = "skip-commission-gates-once";
-const UNLOCK_SOUND_PLAYED_KEY = "unlock-sound-played";
 
 function Index() {
   const [entered, setEntered] = useState(false);
@@ -183,14 +182,6 @@ function Atrium() {
       };
       schedule();
     };
-
-    const unlockPlayed = typeof window !== "undefined" && window.sessionStorage.getItem(UNLOCK_SOUND_PLAYED_KEY) === "1";
-    if (!unlockPlayed) {
-      addTimeout(() => {
-        playUnlockSound();
-        window.sessionStorage.setItem(UNLOCK_SOUND_PLAYED_KEY, "1");
-      }, 500);
-    }
 
     if (seenBefore) {
       setSyncVisibleCount(syncLines.length);

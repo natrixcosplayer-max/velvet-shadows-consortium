@@ -10,6 +10,7 @@ let listenersAttached = false;
 let pendingMusicPlay = false;
 let pendingUnlockVolume: number | null = null;
 let emailVoiceRequestId = 0;
+let musicRestoreSuppressed = false;
 
 const MUSIC_VOLUME = 0.08;
 const MUSIC_DUCK_VOLUME = 0.005;
@@ -166,7 +167,23 @@ function duckMusicImmediate() {
 }
 
 export function restoreMusic() {
+  if (musicRestoreSuppressed) {
+    fadeMusicVolume(0, 180);
+    return;
+  }
+
   fadeMusicVolume(MUSIC_VOLUME, 1200);
+}
+
+export function setMusicRestoreSuppressed(suppressed: boolean) {
+  musicRestoreSuppressed = suppressed;
+
+  if (suppressed) {
+    fadeMusicVolume(0, 180);
+    return;
+  }
+
+  restoreMusic();
 }
 
 function clearVoiceFade() {

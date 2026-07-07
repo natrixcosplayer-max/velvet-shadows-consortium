@@ -1,7 +1,7 @@
 import mandarinPhoto from "../assets/agents/mandarin.jpg";
 import minervaPhoto from "../assets/agents/minerva.jpg";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 import { playSfx } from "../audio/audiomanager";
 
@@ -17,8 +17,8 @@ type Dossier = {
 };
 
 const DOSSIERS: Dossier[] = [
-  { codename: "Mandarin", latin: "Agente vociferador", status: "ACTIVO", clearance: "Aurum VII", chapter: "Valencia", specialty: "Liderazgo & Organización", markers: 1, notes: "Impulsivo, pero efectivo. Sólo es discreto cuando duerme", bio: "Operativo veterano especializado en camuflaje y combate táctico. Su capacidad para ser un motor incansable y resolver situaciones críticas le ha convertido en uno de los agentes más fiables de la Comisión. Alta capacidad de liderazgo y organizativa. La discreción no figura entre las fortalezas del sujeto. Presenta una marcada tendencia a elevar el volumen de voz incluso en entornos donde el anonimato resulta recomendable. Se aprueba la asignación conjunta con el Agente MINERVA para compensar dichas vulnerabilidades.", },
-  { codename: "Minerva", latin: "Diplomacia y discreción", status: "ACTIVO", clearance: "Imperium", chapter: "Valencia", specialty: "Encanto", markers: 0, notes: "La mayoría de las operaciones concluyen sin un solo disparo. Las pocas excepciones suelen ser responsabilidad del Agente A.", bio: "Especialista en inteligencia, negociación y obtención de información sensible. Experta en aproximarse a objetivos de alto valor sin despertar sospechas. La Comisión la considera una de sus mejores agentes de campo para operaciones de máxima discreción. Domina una técnica de inmovilización clasificada, ejecutada con las extremidades inferiores, capaz de neutralizar incluso a oponentes físicamente superiores. Ha sido asignada a la supervisión táctica del Agente A, aportando equilibrio, criterio y contención para maximizar el éxito de la misión.",},
+  { codename: "Mandarin", latin: "Agente vociferador", status: "ACTIVO", clearance: "Aurum VII", chapter: "Valencia", specialty: "Liderazgo & Organización", markers: 1, notes: "Impulsivo, pero efectivo. Sólo es discreto cuando duerme", bio: "Operativo veterano especializado en camuflaje y combate táctico. Su capacidad para ser un motor incansable y resolver situaciones críticas le ha convertido en uno de los agentes más fiables de la Comisión. Destaca por su liderazgo, capacidad organizativa y una inagotable predisposición para asumir cualquier misión. Entre operaciones mantiene tres hábitos considerados estratégicos para su rendimiento: el almuerzo, la siesta táctica y la adquisición prácticamente compulsiva de nuevos trajes de kevlar y artilugios de última generación. La discreción no figura entre las fortalezas del sujeto; presenta una marcada tendencia a elevar el volumen de voz incluso en entornos donde el anonimato resulta recomendable. Se aprueba la asignación conjunta con la Agente MINERVA para compensar dichas vulnerabilidades y maximizar las probabilidades de éxito de la misión.",}
+  { codename: "Minerva", latin: "Diplomacia y discreción", status: "ACTIVO", clearance: "Imperium", chapter: "Valencia", specialty: "Encanto & Diplomacia", markers: 0, notes: "La mayoría de las operaciones concluyen sin un solo disparo. Las pocas excepciones suelen ser responsabilidad del Agente A.", bio: "Especialista en inteligencia, negociación y obtención de información sensible. Experta en aproximarse a objetivos de alto valor sin despertar sospechas y en desenvolverse con absoluta naturalidad en cualquier país o entorno. La Comisión la considera una de sus mejores agentes de campo para operaciones de máxima discreción. Su pasión por el vino y por nadar en aguas heladas de montaña forman parte de un entrenamiento poco convencional que ha reforzado su disciplina y resistencia. Domina una técnica de inmovilización clasificada conocida como la Llave del Mochi, capaz de neutralizar incluso a oponentes físicamente superiores. Ha sido asignada a la supervisión táctica del Agente Mandarin, aportando equilibrio, criterio y la dosis justa de cordura para garantizar el éxito de la operación.",},
 ];
 
 const STATUS_COLOR: Record<Dossier["status"], string> = {
@@ -55,7 +55,6 @@ function Dossiers() {
   const [tagIndex, setTagIndex] = useState(0);
   const [hudCipherIndex, setHudCipherIndex] = useState(0);
   const [hudChannelIndex, setHudChannelIndex] = useState(0);
-  const [notesIndex, setNotesIndex] = useState(0);
   const [microGlitch, setMicroGlitch] = useState(false);
 
   const [query, setQuery] = useState("");
@@ -68,16 +67,6 @@ function Dossiers() {
   const CONF_LABELS = ["CONFIDENCIAL", "SOLO LECTURA", "RESTRINGIDO", "CLASIFICADO"] as const;
   const HUD_CIPHER = ["AES-512", "AES-1024", "AES-512"] as const;
   const HUD_CHANNEL = ["CANAL SEGURO", "CANAL ESTABLE", "CANAL SEGURO"] as const;
-
-  const notePool = useMemo(() => {
-    const parsed = active.notes
-      .split(".")
-      .map((n) => n.trim())
-      .filter(Boolean)
-      .map((n) => `${n}.`);
-
-    return [...parsed, "Nivel de confianza: ALTO.", "Operativo prioritario."];
-  }, [active.notes]);
 
   const clearanceValue =
     clearancePhase === "validating"
@@ -144,7 +133,6 @@ function Dossiers() {
     setIsTypingBio(false);
     setPortraitVerified(false);
     setPortraitScanActive(true);
-    setNotesIndex(0);
 
     const portraitTimer = window.setTimeout(() => {
       setPortraitScanActive(false);
@@ -221,16 +209,6 @@ function Dossiers() {
     }, 11000);
     return () => window.clearInterval(id);
   }, []);
-
-  useEffect(() => {
-    if (isDecrypting || notePool.length <= 1) return;
-
-    const id = window.setInterval(() => {
-      setNotesIndex((prev) => (prev + 1) % notePool.length);
-    }, 23000);
-
-    return () => window.clearInterval(id);
-  }, [notePool.length, isDecrypting]);
 
   useEffect(() => {
     const scheduleGlitch = () => {
@@ -367,7 +345,7 @@ function Dossiers() {
 
           <div className="mt-6 border-l-2 border-gold pl-4">
             <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase mb-2">Notas de Campo</p>
-            <p className="text-foreground/90 italic transition-opacity duration-700">"{notePool[notesIndex]}"</p>
+            <p className="text-foreground/90 italic whitespace-pre-line break-words">"{active.notes}"</p>
           </div>
 
           <div className="mt-8 border-t border-gold-dim pt-4 font-mono text-[10px] text-gold-dim tracking-[0.25em] flex justify-between uppercase">

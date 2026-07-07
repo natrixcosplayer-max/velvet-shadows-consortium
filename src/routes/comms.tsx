@@ -10,7 +10,8 @@ import altaPortrait from "../assets/alta.png";
 import {
   fadeMusicVolume,
   playEmailVoice,
-  restoreMusic,
+  playMusic,
+  stopMusic,
   stopEmailVoice,
 } from "../audio/audiomanager";
 
@@ -50,8 +51,8 @@ function Comms() {
   useEffect(() => {
     if (pathname !== "/comms") return;
 
-    // Keep john.mp3 running but muted while inside Comms.
-    fadeMusicVolume(0, 220);
+    // Stop ambient music entirely while in Comms.
+    stopMusic();
 
     const alreadyAutoplayed =
       typeof window !== "undefined" && window.sessionStorage.getItem(XIMO_AUTOPLAY_SESSION_KEY) === "1";
@@ -62,7 +63,9 @@ function Comms() {
     }
 
     const handleVisibilityOrPageExit = () => {
-      stopEmailVoice(240);
+      if (document.visibilityState === "hidden") {
+        stopEmailVoice(240);
+      }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityOrPageExit);
@@ -72,7 +75,8 @@ function Comms() {
       document.removeEventListener("visibilitychange", handleVisibilityOrPageExit);
       window.removeEventListener("pagehide", handleVisibilityOrPageExit);
       stopEmailVoice(240);
-      restoreMusic();
+      playMusic("/sounds/john.mp3", 0, true, 42);
+      fadeMusicVolume(0.08, 320);
     };
   }, [pathname]);
 
@@ -96,6 +100,7 @@ function Comms() {
               <li key={t.id}>
                 <button
                   onClick={() => {
+                    stopEmailVoice(120);
                     playEmailVoice(t.id);
 
                     if (open.id !== t.id) {
@@ -132,7 +137,7 @@ function Comms() {
             <div className="relative overflow-hidden rounded-sm">
               <div className="absolute inset-0 opacity-70 bg-[linear-gradient(rgba(214,173,74,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(214,173,74,0.12)_1px,transparent_1px)] bg-[size:18px_18px]" />
               <div className="relative z-10 flex flex-col gap-4 md:gap-6 items-center text-center md:text-left px-2 py-2 md:px-3 md:py-3">
-                <div className="relative w-36 md:w-44 shrink-0 overflow-hidden">
+                <div className="relative w-44 md:w-56 lg:w-64 shrink-0 overflow-hidden">
                   <div className="absolute inset-0 rounded-sm bg-gold/10 blur-[10px]" />
                   <div className="absolute inset-x-0 top-0 h-[2px] bg-gold/80 shadow-[0_0_12px_rgba(214,173,74,0.9)] animate-scan pointer-events-none" />
                   <img
