@@ -29,7 +29,6 @@ export function VideoCall({ videoRef, layerRef, phase, fx, hudDate, hudTime, onE
         src="/videos/oldwoman.mp4"
         onEnded={onEnded}
         playsInline
-        autoPlay
         muted={false}
         preload="auto"
         controls={false}
@@ -92,21 +91,16 @@ export function VideoCall({ videoRef, layerRef, phase, fx, hudDate, hudTime, onE
               INTENSIDAD DE SENAL
             </div>
             <div className={`mt-1 h-[40px] w-full ${signalPerturbation ? "[animation:debrief-signal-glitch-bump_220ms_ease-out_1]" : ""}`}>
-              <div className="mx-auto grid h-full w-full grid-cols-14 items-end gap-x-[3px]">
-                {Array.from({ length: 14 }).map((_, col) => (
-                  <div key={`sat-col-${col}`} className="grid h-full grid-rows-5 gap-y-[2px]">
-                    {Array.from({ length: 5 }).map((__, row) => (
-                      <span
-                        key={`sat-cell-${col}-${row}`}
-                        className="w-full rounded-[1px] bg-gold-bright/90 shadow-[0_0_5px_rgba(245,211,94,0.42)]"
-                        style={{
-                          opacity: 0.2 + ((col + row) % 4) * 0.18,
-                          animation: `debrief-sat-square ${2.9 + (col % 4) * 0.55}s ease-in-out ${(col * 0.08) + (row * 0.06)}s infinite`,
-                          transformOrigin: "center bottom",
-                        }}
-                      />
-                    ))}
-                  </div>
+              <div className="mx-auto flex h-full w-full items-end justify-center gap-[10px]">
+                {Array.from({ length: 8 }).map((_, idx) => (
+                  <span
+                    key={`sat-bar-${idx}`}
+                    className="h-full w-[9px] rounded-[2px] bg-gold-bright/85 shadow-[0_0_6px_rgba(245,211,94,0.36)]"
+                    style={{
+                      animation: `debrief-sat-bar ${2 + (idx % 3) * 0.45}s ease-in-out ${idx * 0.1}s infinite`,
+                      transformOrigin: "center bottom",
+                    }}
+                  />
                 ))}
               </div>
             </div>

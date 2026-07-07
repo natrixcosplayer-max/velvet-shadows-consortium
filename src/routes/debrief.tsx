@@ -5,7 +5,6 @@ import { AppShell, Panel } from "../components/AppShell";
 import {
   fadeMusicVolume,
   playControlledAudio,
-  playControlledAudioAndWait,
   playSfx,
   stopControlledAudio,
   stopMusic,
@@ -98,6 +97,8 @@ function Debrief() {
   const videoLayerRef = useRef<HTMLDivElement | null>(null);
   const callPulseClearRef = useRef<number | null>(null);
   const videoTeardownRef = useRef<number | null>(null);
+  const videoStartedRef = useRef(false);
+  const videoStartCleanupRef = useRef<(() => void) | null>(null);
   const audioQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   const [phase, setPhase] = useState<DebriefPhase>("starting");
@@ -220,6 +221,12 @@ function Debrief() {
     stopControlledAudio("debrief-call");
     clearCallPulse();
     setCall((prev) => ({ ...prev, acceptFreeze: true }));
+    videoStartedRef.current = false;
+
+    if (videoStartCleanupRef.current) {
+      videoStartCleanupRef.current();
+      videoStartCleanupRef.current = null;
+    }
 
     flushSync(() => {
       setVideo((prev) => ({ ...prev, showLayer: true, fade: false, bootNoise: true }));
@@ -231,7 +238,7 @@ function Debrief() {
       media.currentTime = 0;
       media.muted = false;
       media.controls = false;
-      media.play().catch(() => {});
+      media.load();
     }
 
     requestVideoFullscreen();
@@ -243,6 +250,12 @@ function Debrief() {
 
     window.setTimeout(() => setPhase("auth"), 260);
   }, [clearCallPulse, queueAudio, requestVideoFullscreen]);
+
+  const handlePriorityAccept = useCallback(() => {
+    queueAudio(() => playSfx(SFX.magistrada, 0.24));
+    triggerIncomingPulse();
+    window.setTimeout(() => setPhase("waiting"), 260);
+  }, [queueAudio, triggerIncomingPulse]);
 
   const handleVideoEnded = useCallback(() => {
     const media = videoRef.current;
@@ -296,6 +309,7 @@ function Debrief() {
         let progressValue = 0;
         let messageValue = 0;
         queueAudio(() => playSfx("/sounds/beep.mp3", 0.22));
+        playControlledAudio("debrief-progress", SFX.incomingCall, 0.08, true);
 
         const id = window.setInterval(() => {
           messageValue = Math.min(messageValue + 1, 4);
@@ -304,6 +318,7 @@ function Debrief() {
 
           if (progressValue >= 100) {
             window.clearInterval(id);
+            stopControlledAudio("debrief-progress");
             fadeMusicVolume(0.024, 900);
             const t1 = window.setTimeout(() => {
               queueAudio(() => playSfx(SFX.interference, 0.22));
@@ -339,27 +354,11 @@ function Debrief() {
         await wait(300);
         if (cancelled) return;
         setStartup((prev) => ({ ...prev, priorityRevealStep: 3 }));
-
-        await Promise.all([wait(3200), playControlledAudioAndWait("debrief-magistrada", SFX.magistrada, 0.26)]);
-        if (cancelled) return;
-
-        await wait(300);
-        if (cancelled) return;
-
-        triggerIncomingPulse();
-        await wait(320);
-        if (cancelled) return;
-        setPhase("waiting");
       }
 
       if (phase === "waiting") {
         tickHudClock();
         setCall((prev) => ({ ...prev, countdown: 20, showAcceptButton: false, preSignalLoss: false }));
-
-        const magistradaCue = window.setTimeout(() => {
-          queueAudio(() => playSfx(SFX.magistrada, 0.2));
-        }, 200);
-        timers.push(magistradaCue);
 
         const ringStart = window.setTimeout(() => {
           setCall((prev) => ({ ...prev, showAcceptButton: true }));
@@ -543,7 +542,7 @@ function Debrief() {
       cancelled = true;
       timers.forEach((id) => window.clearTimeout(id));
       intervals.forEach((id) => window.clearInterval(id));
-      if (phase === "priority") stopControlledAudio("debrief-magistrada");
+      if (phase === "starting") stopControlledAudio("debrief-progress");
       if (phase === "waiting") {
         stopControlledAudio("debrief-call");
         clearCallPulse();
@@ -558,10 +557,42 @@ function Debrief() {
     const media = videoRef.current;
     if (!media) return;
 
-    media.currentTime = 0;
     media.muted = false;
     media.volume = 1;
     media.controls = false;
+
+    const startPlayback = () => {
+      if (videoStartedRef.current) return;
+      videoStartedRef.current = true;
+      media.play().catch(() => {
+        videoStartedRef.current = false;
+      });
+    };
+
+    if (media.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+      startPlayback();
+    } else {
+      const onCanPlayThrough = () => {
+        cleanupStartListeners();
+        startPlayback();
+      };
+
+      const onError = () => {
+        cleanupStartListeners();
+      };
+
+      const cleanupStartListeners = () => {
+        media.removeEventListener("canplaythrough", onCanPlayThrough);
+        media.removeEventListener("error", onError);
+        if (videoStartCleanupRef.current) {
+          videoStartCleanupRef.current = null;
+        }
+      };
+
+      media.addEventListener("canplaythrough", onCanPlayThrough);
+      media.addEventListener("error", onError);
+      videoStartCleanupRef.current = cleanupStartListeners;
+    }
 
     const timers: number[] = [];
 
@@ -585,6 +616,10 @@ function Debrief() {
     return () => {
       timers.forEach((id) => window.clearTimeout(id));
       window.clearInterval(clock);
+      if (videoStartCleanupRef.current) {
+        videoStartCleanupRef.current();
+        videoStartCleanupRef.current = null;
+      }
       setVideo((prev) => ({ ...prev, signalLoss: false, microGlitch: false }));
     };
   }, [phase, video.showLayer, queueAudio, tickHudClock]);
@@ -620,6 +655,7 @@ function Debrief() {
                   priorityRevealStep={startup.priorityRevealStep}
                   linkProgress={link.progress}
                   linkStable={link.stable}
+                  onPriorityAccept={handlePriorityAccept}
                 />
               )}
 

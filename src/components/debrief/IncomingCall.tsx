@@ -43,7 +43,7 @@ export function IncomingCall({
         className={`inline-flex items-center justify-center border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.34em] text-gold transition-all duration-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold ${callPulse ? "bg-gold/16 shadow-[0_0_22px_rgba(212,175,55,0.32)]" : "shadow-[0_0_10px_rgba(212,175,55,0.15)]"} ${showAcceptButton ? "opacity-100" : "opacity-0"}`}
         style={{ pointerEvents: showAcceptButton ? "auto" : "none" }}
       >
-        ACEPTAR COMUNICACION
+        INICIAR LLAMADA
       </button>
 
       <div className="mx-auto flex w-full max-w-lg items-center justify-between font-mono text-[9px] tracking-[0.2em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)]">

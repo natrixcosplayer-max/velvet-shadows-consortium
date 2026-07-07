@@ -8,6 +8,7 @@ type ConnectionSequenceProps = {
   priorityRevealStep: number;
   linkProgress: number;
   linkStable: boolean;
+  onPriorityAccept: () => void;
 };
 
 export function ConnectionSequence({
@@ -18,6 +19,7 @@ export function ConnectionSequence({
   priorityRevealStep,
   linkProgress,
   linkStable,
+  onPriorityAccept,
 }: ConnectionSequenceProps) {
   return (
     <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 py-12 text-center md:px-8">
@@ -46,6 +48,12 @@ export function ConnectionSequence({
           <p className={`font-mono text-sm tracking-[0.35em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)] transition-opacity duration-500 ${priorityRevealStep >= 1 ? "opacity-100" : "opacity-0"}`}>ORIGEN</p>
           <p className={`font-mono text-4xl md:text-5xl tracking-[0.35em] uppercase text-gold [text-shadow:0_0_8px_rgba(214,173,74,0.24)] transition-opacity duration-500 ${priorityRevealStep >= 2 ? "opacity-100" : "opacity-0"}`}>ROMA</p>
           <p className={`font-mono text-sm tracking-[0.35em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)] transition-opacity duration-500 ${priorityRevealStep >= 3 ? "opacity-100" : "opacity-0"}`}>ALTA MESA</p>
+          <button
+            onClick={onPriorityAccept}
+            className={`mx-auto inline-flex items-center justify-center border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.34em] text-gold transition-all duration-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold ${priorityRevealStep >= 3 ? "opacity-100" : "pointer-events-none opacity-0"}`}
+          >
+            ACEPTAR COMUNICACION
+          </button>
           <div className="pointer-events-none absolute inset-x-6 top-[52%] h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.45),transparent)] opacity-45 [animation:comm-top-sweep_4.6s_ease-in-out_infinite]" />
         </div>
       )}
