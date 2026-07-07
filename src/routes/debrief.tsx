@@ -35,6 +35,7 @@ const CLOSING_LINES = [
   "ACTIVO RECUPERADO ✔",
   "MISION COMPLETADA ✔",
 ];
+const FINAL_BEEP = "/sounds/shortbeep.mp3";
 
 type Phase =
   | "starting"
@@ -57,6 +58,7 @@ function Debrief() {
   const [showVideoLayer, setShowVideoLayer] = useState(false);
   const [videoElapsed, setVideoElapsed] = useState(0);
   const [videoMicroGlitch, setVideoMicroGlitch] = useState(false);
+  const [videoFlicker, setVideoFlicker] = useState(false);
   const [showTransmissionDone, setShowTransmissionDone] = useState(false);
   const [typedClosingLines, setTypedClosingLines] = useState<string[]>(Array(CLOSING_LINES.length).fill(""));
   const [activeClosingLine, setActiveClosingLine] = useState<number | null>(null);
@@ -191,6 +193,22 @@ function Debrief() {
   useEffect(() => {
     if (phase !== "video") return;
 
+    let flickerTimer: number | null = null;
+    let flickerClear: number | null = null;
+
+    const scheduleFlicker = () => {
+      const delay = 10000 + Math.floor(Math.random() * 5000);
+      flickerTimer = window.setTimeout(() => {
+        setVideoFlicker(true);
+        flickerClear = window.setTimeout(() => {
+          setVideoFlicker(false);
+          scheduleFlicker();
+        }, 80);
+      }, delay);
+    };
+
+    scheduleFlicker();
+
     const scheduleGlitch = () => {
       const delay = 20000 + Math.floor(Math.random() * 10000);
       videoGlitchTimeoutRef.current = window.setTimeout(() => {
@@ -212,7 +230,17 @@ function Debrief() {
         window.clearTimeout(videoGlitchTimeoutRef.current);
         videoGlitchTimeoutRef.current = null;
       }
+
+      if (flickerTimer) {
+        window.clearTimeout(flickerTimer);
+      }
+
+      if (flickerClear) {
+        window.clearTimeout(flickerClear);
+      }
+
       setVideoMicroGlitch(false);
+      setVideoFlicker(false);
     };
   }, [phase]);
 
@@ -256,7 +284,7 @@ function Debrief() {
       if (cancelled) return;
 
       setVideoFade(true);
-      playSfx("/sounds/final1.wav", 0.2);
+      playSfx(FINAL_BEEP, 0.24);
 
       await wait(600);
       if (cancelled) return;
@@ -271,7 +299,7 @@ function Debrief() {
         if (cancelled) return;
 
         if (lineIndex === 1 || lineIndex === 3) {
-          playSfx("/sounds/final2.wav", 0.2);
+          playSfx(FINAL_BEEP, 0.2);
         }
 
         await wait(220);
@@ -294,7 +322,7 @@ function Debrief() {
         }).format(new Date())
       );
       setShowPermanentRecord(true);
-      playSfx("/sounds/final3.wav", 0.2);
+      playSfx(FINAL_BEEP, 0.2);
 
       await wait(1000);
       if (cancelled) return;
@@ -333,7 +361,7 @@ function Debrief() {
             <div className="relative flex min-h-[70vh] flex-col justify-center overflow-hidden">
               {(phase === "starting" || phase === "secure" || phase === "incoming" ||   phase === "waiting" || phase === "glitch") && (
                 <div
-                  className={`relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-8 py-12 text-center transition-all duration-700 ${
+                  className={`relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 md:px-8 py-12 text-center transition-all duration-700 ${
                     glitch ? "bg-white/5 backdrop-blur-sm" : ""
                   }`}
                 >
@@ -369,7 +397,7 @@ function Debrief() {
                       <div className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">
                         CANAL SEGURO ESTABLECIDO
                       </div>
-                      <div className="font-mono text-4xl tracking-[0.2em] uppercase text-gold">
+                      <div className="font-mono text-2xl md:text-4xl tracking-[0.12em] md:tracking-[0.2em] uppercase text-gold px-2 break-words">
                         TRANSMISIÓN ENTRANTE
                       </div>
                       <p className="font-mono text-sm uppercase tracking-[0.35em] text-gold-dim">
@@ -383,7 +411,7 @@ function Debrief() {
                       <div className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">
                         TRANSMISIÓN ENTRANTE
                       </div>
-                      <div className="font-mono text-3xl tracking-[0.2em] uppercase text-gold">
+                      <div className="font-mono text-2xl md:text-3xl tracking-[0.12em] md:tracking-[0.2em] uppercase text-gold px-2 break-words">
                         PREPARANDO ENLACE
                       </div>
                       <div className="mx-auto h-px w-32 bg-gold/30 animate-pulse" />
@@ -444,30 +472,58 @@ function Debrief() {
                     preload="auto"
                     controls={false}
                     disablePictureInPicture
-                    className={`h-full w-full object-cover transition-transform duration-75 ${videoMicroGlitch ? "translate-x-[1px] -translate-y-[1px]" : ""} [animation:debrief-camera-flicker_9s_ease-in-out_infinite,debrief-chroma-shift_12s_steps(1,end)_infinite]`}
+                    className={`h-full w-full object-cover transition-[transform,filter] duration-75 ${videoMicroGlitch ? "translate-x-[1px] -translate-y-[1px]" : ""} ${videoFlicker ? "brightness-[0.985]" : "brightness-100"} [animation:debrief-chroma-shift_12s_steps(1,end)_infinite]`}
                   />
 
                   {phase === "video" && (
                     <>
-                      <div className="pointer-events-none absolute inset-0 opacity-[0.03] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_2px,rgba(255,255,255,0.85)_2px,rgba(255,255,255,0.85)_3px)] mix-blend-overlay" />
-                      <div className="pointer-events-none absolute inset-0 opacity-[0.022] [background-image:radial-gradient(circle,rgba(255,255,255,0.42)_0.7px,transparent_1px)] [background-size:3px_3px] [animation:debrief-noise-drift_1.6s_steps(2,end)_infinite]" />
-                      <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/25 [animation:debrief-video-scan_9s_linear_infinite]" />
+                      <div className="pointer-events-none absolute inset-0 opacity-[0.056] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_3px,rgba(255,255,255,0.9)_3px,rgba(255,255,255,0.9)_5px)] mix-blend-overlay" />
+                      <div className="pointer-events-none absolute inset-0 opacity-[0.02] [background-image:radial-gradient(circle,rgba(255,255,255,0.45)_0.8px,transparent_1.2px)] [background-size:3px_3px] [animation:debrief-noise-drift_1.8s_steps(2,end)_infinite]" />
+                      <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/30 [animation:debrief-video-scan_8s_linear_infinite]" />
+                      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_56%,rgba(0,0,0,0.33)_100%)]" />
 
-                      <div className="pointer-events-none absolute top-4 left-4 right-4 flex items-start justify-between font-mono text-[10px] tracking-[0.25em] uppercase text-gold-dim">
-                        <div className="inline-flex items-center gap-2 border border-gold-dim/60 bg-black/45 px-3 py-1.5">
-                          <span className="h-1.5 w-1.5 rounded-full bg-gold" />
-                          <span>EN DIRECTO</span>
-                          <span className="opacity-70">CANAL VII</span>
-                          <span className="opacity-70">ROMA</span>
+                      <div className="pointer-events-none absolute top-4 left-4 right-4 flex items-start justify-between font-mono text-xs md:text-[10px] tracking-[0.18em] md:tracking-[0.25em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.24)]">
+                        <div className="inline-flex flex-col gap-1 border border-gold-dim/60 bg-black/45 px-3 py-2 md:px-3 md:py-1.5">
+                          <span>ROMA</span>
+                          <span>MAGISTRADA</span>
+                          <span>ALTA MESA</span>
                         </div>
-                        <div className="inline-flex items-center border border-gold-dim/60 bg-black/45 px-3 py-1.5">
-                          {formatClock(videoElapsed)}
+
+                        <div className="inline-flex flex-col gap-2 border border-gold-dim/60 bg-black/45 px-3 py-2 md:px-3 md:py-1.5">
+                          <div className="inline-flex items-center gap-2 text-gold">
+                            <span className="h-2 w-2 rounded-full bg-red-500 [animation:debrief-live-led_1.7s_ease-in-out_infinite]" />
+                            <span>EN DIRECTO</span>
+                          </div>
+                          <span className="text-gold-dim">CANAL VII</span>
+                          <div className="inline-flex items-end gap-[2px] h-4">
+                            {Array.from({ length: 10 }).map((_, i) => (
+                              <span
+                                key={`signal-${i}`}
+                                className="w-[3px] md:w-[2px] bg-gold/75 origin-bottom [animation:debrief-signal-bar_1.8s_ease-in-out_infinite]"
+                                style={{
+                                  animationDelay: `${i * 0.11}s`,
+                                  animationDuration: `${1.6 + (i % 4) * 0.24}s`,
+                                  height: `${7 + (i % 3)}px`,
+                                }}
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
 
-                      <div className="pointer-events-none absolute bottom-6 left-4 font-mono text-[10px] tracking-[0.25em] uppercase text-gold-dim border border-gold-dim/60 bg-black/45 px-3 py-2">
-                        <span className="mr-3">SEÑAL</span>
-                        <span className="inline-block [animation:debrief-signal-breathe_3.8s_ease-in-out_infinite]">██████████</span>
+                      <div className="pointer-events-none absolute top-[88px] right-4 md:top-[70px] md:right-4 font-mono text-sm md:text-[10px] tracking-[0.16em] md:tracking-[0.24em] uppercase text-gold-dim border border-gold-dim/60 bg-black/45 px-3 py-1.5 [text-shadow:0_0_6px_rgba(214,173,74,0.24)]">
+                        {formatClock(videoElapsed)}
+                      </div>
+
+                      <div className="pointer-events-none absolute bottom-6 left-4 right-4 flex items-end justify-between font-mono text-sm md:text-[10px] tracking-[0.16em] md:tracking-[0.24em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.24)]">
+                        <div className="border border-gold-dim/60 bg-black/45 px-3 py-2 md:px-3 md:py-1.5">
+                          <p>CANAL SEGURO</p>
+                          <p className="mt-1 text-gold">RSA-4096</p>
+                        </div>
+                        <div className="border border-gold-dim/60 bg-black/45 px-3 py-2 md:px-3 md:py-1.5 text-right">
+                          <p>LATENCIA</p>
+                          <p className="mt-1 text-gold">12 ms</p>
+                        </div>
                       </div>
                     </>
                   )}
@@ -484,7 +540,7 @@ function Debrief() {
               )}
 
               {phase === "finished" && (
-                <div className="relative z-[60] mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-8 py-16 text-center">
+                <div className="relative z-[60] mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 md:px-8 py-16 text-center">
                   <div className={`space-y-3 transition-opacity duration-700 ${showTransmissionDone ? "opacity-100" : "opacity-0"}`}>
                     <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">
                       TRANSMISION FINALIZADA
@@ -495,7 +551,7 @@ function Debrief() {
                     {typedClosingLines.map((line, idx) => (
                       <p
                         key={`closing-line-${idx}`}
-                        className="font-mono text-[12px] tracking-[0.3em] uppercase text-gold-dim"
+                        className="font-mono text-[11px] md:text-[12px] tracking-[0.2em] md:tracking-[0.3em] uppercase text-gold-dim text-center"
                       >
                         {line}
                         {activeClosingLine === idx && <span className="animate-blink">█</span>}
@@ -504,12 +560,12 @@ function Debrief() {
                   </div>
 
                   <div
-                    className={`w-full max-w-[560px] border border-gold-dim/45 bg-black/70 px-6 py-5 text-left scanlines transition-all duration-700 ${
+                    className={`w-full max-w-[560px] border border-gold-dim/45 bg-black/70 px-4 md:px-6 py-5 text-center md:text-left scanlines transition-all duration-700 ${
                       showPermanentRecord ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
                     }`}
                   >
                     <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold mb-4">REGISTRO PERMANENTE</p>
-                    <div className="grid grid-cols-[170px_1fr] gap-y-2 font-mono text-[11px] tracking-[0.18em] uppercase text-gold-dim">
+                    <div className="grid grid-cols-1 md:grid-cols-[170px_1fr] gap-y-2 font-mono text-[11px] tracking-[0.14em] md:tracking-[0.18em] uppercase text-gold-dim">
                       <span>ID</span>
                       <span className="text-gold">AURUM VII · 0734</span>
                       <span>HORA DE CIERRE</span>
