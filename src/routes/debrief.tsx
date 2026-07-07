@@ -314,6 +314,9 @@ function Debrief() {
     stopControlledAudio("debrief-ambience");
     stopControlledAudio("debrief-progress");
     clearCallPulse();
+
+    // Start in user gesture to avoid iOS/Safari autoplay blocking.
+    playControlledAudio("debrief-credits", "/sounds/debrief/credits.mp3", 0.001, true);
     setPhase("credits");
   }, [clearCallPulse]);
 
@@ -652,6 +655,7 @@ function Debrief() {
     return () => {
       stopControlledAudio("debrief-call");
       stopControlledAudio("debrief-ambience");
+      stopControlledAudio("debrief-credits");
       clearCallPulse();
       if (videoTeardownRef.current) {
         window.clearTimeout(videoTeardownRef.current);

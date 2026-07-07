@@ -428,6 +428,13 @@ export function stopControlledAudio(key?: string) {
   controlledAudioKey = null;
 }
 
+export function setControlledAudioVolume(key: string, volume: number) {
+  if (!controlledAudio) return;
+  if (controlledAudioKey !== key) return;
+
+  controlledAudio.volume = Math.max(0, Math.min(1, volume));
+}
+
 export function playControlledAudioAndWait(
   key: string,
   src: string,

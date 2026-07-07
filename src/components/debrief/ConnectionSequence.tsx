@@ -69,7 +69,7 @@ export function ConnectionSequence({
             className={`mx-auto inline-flex items-center justify-center border border-gold/85 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.34em] text-gold transition-all duration-250 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold ${priorityAccepted ? "bg-gold/35 shadow-[0_0_30px_rgba(212,175,55,0.55)]" : "bg-gold/12 shadow-[0_0_18px_rgba(212,175,55,0.22)] hover:scale-[1.03] hover:bg-gold/20 hover:shadow-[0_0_24px_rgba(212,175,55,0.35)] [animation:pulse-gold_1.7s_ease-in-out_infinite]"} ${priorityRevealStep >= 3 ? "opacity-100" : "pointer-events-none opacity-0"}`}
             style={{ pointerEvents: priorityRevealStep >= 3 && !priorityAccepted ? "auto" : "none" }}
           >
-            ACEPTAR
+            ¿Quién llama?
           </button>
           <div className="pointer-events-none absolute inset-x-6 top-[52%] h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.45),transparent)] opacity-45 [animation:comm-top-sweep_4.6s_ease-in-out_infinite]" />
         </div>
