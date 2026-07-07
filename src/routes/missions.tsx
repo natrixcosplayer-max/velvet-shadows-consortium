@@ -289,13 +289,13 @@ function Missions() {
 
         <p>• Desplácese junto a la Agente Minerva y mantenga vigilancia permanente durante el trayecto.</p>
         
-        <p>•  En caso de detectar seguimiento o actividad sospechosa, interrumpa temporalmente la operación. Adopte una cobertura civil y permanezca integrado en el entorno tomando un Cocktail.</p>
+        <p>• En caso de detectar seguimiento o actividad sospechosa, interrumpa temporalmente la operación. Adopte una cobertura civil y permanezca integrado en el entorno tomando un Cocktail.</p>
 
         <p>• Descifre las credenciales proporcionadas más abajo.</p>
 
         <p>• Recupere el activo sin comprometer la misión.</p>
 
-        <p>• Abandone la zona utilizando el vehículo asignado y espere nuevas instrucciones a través del canal cifrado.</p>
+        <p>• Confirme la recuperación del activo.</p>
 
       </div>
 

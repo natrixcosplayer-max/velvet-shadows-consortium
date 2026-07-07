@@ -258,6 +258,10 @@
   0%, 100% { transform: scale(1); opacity: 0.78; box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
   50% { transform: scale(1.16); opacity: 1; box-shadow: 0 0 8px rgba(239, 68, 68, 0.45); }
 }
+@keyframes debrief-live-white {
+  0%, 100% { transform: scale(1); opacity: 0.64; box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+  50% { transform: scale(1.1); opacity: 0.92; box-shadow: 0 0 6px rgba(255, 255, 255, 0.27); }
+}
 @keyframes debrief-signal-bar {
   0%, 100% { transform: scaleY(0.55); opacity: 0.58; }
   45% { transform: scaleY(1); opacity: 0.96; }

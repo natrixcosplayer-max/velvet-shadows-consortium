@@ -427,6 +427,55 @@ export function stopControlledAudio(key?: string) {
   controlledAudio = null;
   controlledAudioKey = null;
 }
+
+export function playControlledAudioAndWait(
+  key: string,
+  src: string,
+  volume = 0.22
+): Promise<void> {
+  return new Promise((resolve) => {
+    if (!hasUserGesture) {
+      attachGestureUnlockListeners();
+    }
+
+    if (controlledAudio) {
+      controlledAudio.pause();
+      controlledAudio.currentTime = 0;
+      controlledAudio = null;
+      controlledAudioKey = null;
+    }
+
+    const audio = new Audio(src);
+    controlledAudio = audio;
+    controlledAudioKey = key;
+    audio.preload = "auto";
+    audio.loop = false;
+    audio.volume = volume;
+
+    let finished = false;
+    const cleanup = () => {
+      if (finished) return;
+      finished = true;
+      audio.onended = null;
+      audio.onerror = null;
+      if (controlledAudio === audio) {
+        controlledAudio = null;
+        controlledAudioKey = null;
+      }
+      resolve();
+    };
+
+    audio.onended = cleanup;
+    audio.onerror = cleanup;
+
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        cleanup();
+      });
+    }
+  });
+}
 export function playVoiceQueue(
   files: string[],
   volume = 0.45
