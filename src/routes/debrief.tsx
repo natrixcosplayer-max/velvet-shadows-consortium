@@ -5,6 +5,7 @@ import { AppShell, Panel } from "../components/AppShell";
 import {
   fadeMusicVolume,
   playControlledAudio,
+  playControlledAudioAndWait,
   playSfx,
   stopControlledAudio,
   stopMusic,
@@ -38,6 +39,7 @@ const SFX = {
   ambience: "/sounds/debrief/ambience.mp3",
   magistrada: "/sounds/debrief/magistrada.mp3",
   archive: "/sounds/debrief/archive.mp3",
+  cerrar: "/sounds/debrief/cerrar.mp3",
   commission: "/sounds/debrief/comission.mp3",
 } as const;
 
@@ -255,10 +257,19 @@ function Debrief() {
   const handlePriorityAccept = useCallback(() => {
     if (priorityAcceptedRef.current) return;
     priorityAcceptedRef.current = true;
-    queueAudio(() => playSfx(SFX.magistrada, 0.24));
-    triggerIncomingPulse();
-    window.setTimeout(() => setPhase("waiting"), 260);
-  }, [queueAudio, triggerIncomingPulse]);
+
+    // Ensure magistrada is heard alone: stop any background controlled tracks first.
+    stopControlledAudio("debrief-progress");
+    stopControlledAudio("debrief-call");
+    stopControlledAudio("debrief-ambience");
+    clearCallPulse();
+
+    void queueAudio(async () => {
+      await playControlledAudioAndWait("debrief-magistrada", SFX.magistrada, 0.24);
+      triggerIncomingPulse();
+      setPhase("waiting");
+    });
+  }, [clearCallPulse, queueAudio, triggerIncomingPulse]);
 
   const handleVideoEnded = useCallback(() => {
     const media = videoRef.current;
@@ -283,7 +294,7 @@ function Debrief() {
       window.setTimeout(() => setVideo((prev) => ({ ...prev, fade: true })), 140);
 
       window.setTimeout(() => {
-        queueAudio(() => playSfx(SFX.archive, 0.2));
+        queueAudio(() => playSfx(SFX.cerrar, 0.2));
         setVideo((prev) => ({ ...prev, showLayer: false, signalLoss: false, endingCut: false }));
 
         if (videoRef.current) {
