@@ -26,7 +26,7 @@ const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "TE QUIERO", lines: ["Con amor,", "tu Michi."] },
 ];
 
-const PHOTO_BASENAMES = ["eli", "nata", "eli1", "nata1", "eli2", "nata2", "eli3", "nata3", "nata4", "couple", "couple1", "couple0"] as const;
+const PHOTO_BASENAMES = ["eli", "nata", "eli1", "nata1", "eli2", "nata2", "eli3", "nata3", "nata4", "couple", "couple0"] as const;
 const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"] as const;
 
 export function CreditsSequence({ active }: CreditsSequenceProps) {

@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell, Panel, StatBlock } from "../components/AppShell";
 import { ClearanceGate } from "../components/ClearanceGate";
-import { playSfx } from "../audio/audiomanager";
+import { playSfx, playUnlockSound } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/")({
 });
 
 const SKIP_COMMISSION_GATES_KEY = "skip-commission-gates-once";
+const UNLOCK_SOUND_PLAYED_KEY = "unlock-sound-played";
 
 function Index() {
   const [entered, setEntered] = useState(false);
@@ -81,6 +82,16 @@ function Atrium() {
   const [showAuthenticated, setShowAuthenticated] = useState(false);
   const [operativoPulse, setOperativoPulse] = useState(false);
   const [borderSweepVisible, setBorderSweepVisible] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const unlockPlayed = window.sessionStorage.getItem(UNLOCK_SOUND_PLAYED_KEY) === "1";
+    if (unlockPlayed) return;
+
+    playUnlockSound(0.62);
+    window.sessionStorage.setItem(UNLOCK_SOUND_PLAYED_KEY, "1");
+  }, []);
 
   useEffect(() => {
     const seenBefore = typeof window !== "undefined" && window.sessionStorage.getItem("comunicado-seen") === "1";

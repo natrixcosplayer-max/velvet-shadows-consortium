@@ -9,7 +9,6 @@ let hasUserGesture = false;
 let listenersAttached = false;
 let pendingMusicPlay = false;
 let pendingUnlockVolume: number | null = null;
-let emailVoiceRequestId = 0;
 let musicRestoreSuppressed = false;
 
 const MUSIC_VOLUME = 0.08;
@@ -21,6 +20,7 @@ const EMAIL_VOICES: Record<string, string> = {
   "4": "/sounds/pitas.wav",
   "5": "/sounds/russian.wav",
 };
+const EMAIL_CONTROLLED_KEY = "comms-email";
 
 function attachGestureUnlockListeners() {
   if (listenersAttached || typeof window === "undefined") return;
@@ -540,22 +540,18 @@ voice.volume = volume;
 
   playNext(0);
 }
-export async function playEmailVoice(id: string, fadeMs = 120) {
+export function playEmailVoice(id: string) {
   const voiceSrc = EMAIL_VOICES[id];
 
-  const requestId = ++emailVoiceRequestId;
+  if (!voiceSrc) {
+    stopControlledAudio(EMAIL_CONTROLLED_KEY);
+    return;
+  }
 
-  await fadeOutVoice(fadeMs);
-
-  if (!voiceSrc) return;
-
-  // If a newer email was requested while fading, cancel this older request.
-  if (requestId !== emailVoiceRequestId) return;
-
-  await playVoice(voiceSrc);
+  // Single controlled key guarantees hard cut of previous mail and immediate start of the new one.
+  playControlledAudio(EMAIL_CONTROLLED_KEY, voiceSrc, 0.58, false);
 }
 
-export function stopEmailVoice(ms = 300) {
-  emailVoiceRequestId += 1;
-  return fadeOutVoice(ms);
+export function stopEmailVoice(_ms = 300) {
+  stopControlledAudio(EMAIL_CONTROLLED_KEY);
 }

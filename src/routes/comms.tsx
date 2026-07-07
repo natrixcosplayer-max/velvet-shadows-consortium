@@ -59,7 +59,7 @@ function Comms() {
 
     if (!alreadyAutoplayed) {
       window.sessionStorage.setItem(XIMO_AUTOPLAY_SESSION_KEY, "1");
-      playEmailVoice("1", 120);
+      playEmailVoice("1");
     }
 
     const handleVisibilityChange = () => {
@@ -104,7 +104,7 @@ function Comms() {
               <li key={t.id}>
                 <button
                   onClick={() => {
-                    playEmailVoice(t.id, 120);
+                    playEmailVoice(t.id);
 
                     if (open.id !== t.id) {
                       setOpen(t);
