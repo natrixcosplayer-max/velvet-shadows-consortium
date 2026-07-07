@@ -33,9 +33,19 @@ let ximoAutoplayed = false;
 
 function Comms() {
   const [open, setOpen] = useState(THREADS[0]);
+  const [unreadIds, setUnreadIds] = useState<string[]>(() =>
+    THREADS.filter((t) => t.unread || ["1", "2", "3"].includes(t.id))
+      .slice(0, 3)
+      .map((t) => t.id)
+  );
   const [draft, setDraft] = useState("");
   const [encrypted, setEncrypted] = useState("");
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  useEffect(() => {
+    // The currently opened message is considered read.
+    setUnreadIds((prev) => prev.filter((id) => id !== open.id));
+  }, [open.id]);
 
   useEffect(() => {
     if (pathname !== "/comms") return;
@@ -63,7 +73,7 @@ function Comms() {
       <div className="grid lg:grid-cols-[320px_1fr] gap-6">
         <Panel className="!p-0">
           <div className="p-3 border-b border-gold-dim font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase flex justify-between">
-            <span>Bandeja</span><span>{THREADS.filter((t) => t.unread).length} nuevos</span>
+            <span>Bandeja</span><span>{unreadIds.length} nuevos</span>
           </div>
           <ul>
             {THREADS.map((t) => (
@@ -75,14 +85,14 @@ function Comms() {
                     playEmailVoice(t.id);
                     setOpen(t);
                   }}
-                  className={`w-full text-left p-4 border-b border-gold-dim/40 hover:bg-secondary/40 transition ${open.id === t.id ? "bg-secondary/60 border-l-2 border-l-gold" : ""}`}
+                  className={`w-full text-left p-4 border-b border-gold-dim/40 hover:bg-secondary/40 transition ${unreadIds.includes(t.id) ? "bg-gold/20" : ""} ${open.id === t.id ? "bg-secondary/60 border-l-2 border-l-gold" : ""}`}
                 >
                   <div className="flex justify-between items-baseline">
-                    <span className={`font-display ${t.unread ? "text-gold-bright" : "text-gold"}`}>{t.from}</span>
+                    <span className={`font-display ${unreadIds.includes(t.id) ? "text-gold-bright" : "text-gold"}`}>{t.from}</span>
                     <span className="font-mono text-[10px] text-gold-dim">{t.at}</span>
                   </div>
                   <p className="text-xs text-foreground/80 mt-1 truncate">{t.subject}</p>
-                  {t.unread && <span className="inline-block mt-1.5 w-1.5 h-1.5 bg-gold rounded-full" />}
+                  {unreadIds.includes(t.id) && <span className="inline-block mt-1.5 w-1.5 h-1.5 bg-gold rounded-full" />}
                 </button>
                   </li>
   ))}

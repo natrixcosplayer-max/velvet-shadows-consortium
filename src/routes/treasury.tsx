@@ -33,8 +33,9 @@ function Treasury() {
           <div className="relative flex flex-col items-center text-center py-8">
             <Coin />
             <p className="font-mono text-[10px] tracking-[0.4em] text-gold-dim uppercase mt-6">Saldo en Monedas</p>
-            <p className="font-display text-7xl text-gold mt-2">
-              {balance} <span className="text-3xl align-top">⊙</span>
+            <p className="font-display text-7xl text-gold mt-2 inline-flex items-center gap-2">
+              <span>{balance}</span>
+              <span className="text-3xl leading-none">⊙</span>
             </p>
             <p className="font-mono text-xs text-foreground/70 mt-3 max-w-md italic">
               "Una moneda. Un servicio. Sin excepciones. El valor no está en el metal sino en el juramento."

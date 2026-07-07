@@ -164,8 +164,8 @@
   51%, 100% { opacity: 0; }
 }
 @keyframes pulse-gold {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.78 0.13 85 / 50%); }
-  50% { box-shadow: 0 0 0 8px oklch(0.78 0.13 85 / 0%); }
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.78 0.13 85 / 62%); }
+  50% { box-shadow: 0 0 0 10px oklch(0.78 0.13 85 / 0%); }
 }
 @keyframes glitch {
   0%, 100% { transform: translate(0); }
@@ -178,6 +178,18 @@
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+@keyframes progress-flow {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+@keyframes progress-alert {
+  0%, 100% { filter: brightness(1.02) saturate(1.08); opacity: 0.92; }
+  50% { filter: brightness(1.22) saturate(1.2); opacity: 0.98; }
+}
+@keyframes scan-objective {
+  0% { transform: translateY(-4px); }
+  100% { transform: translateY(360px); }
+}
 
 @utility animate-flicker { animation: flicker 4s infinite; }
 @utility animate-scan { animation: scan 3s linear infinite; }
@@ -186,3 +198,5 @@
 @utility animate-pulse-gold { animation: pulse-gold 2s infinite; }
 @utility animate-fade-up { animation: fade-up 0.6s ease-out both; }
 @utility animate-glitch { animation: glitch 2.5s steps(2, end) infinite; }
+@utility animate-progress-flow { animation: progress-flow 1.2s linear infinite; }
+@utility animate-progress-alert { animation: progress-flow 0.9s linear infinite, progress-alert 0.7s ease-in-out infinite; }

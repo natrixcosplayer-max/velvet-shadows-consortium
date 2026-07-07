@@ -49,12 +49,12 @@ function Debrief() {
     if (phase !== "starting") return;
     let progressValue = 0;
     let messageValue = 0;
+    playSfx("/sounds/beep.mp3", 0.24);
     const interval = window.setInterval(() => {
       messageValue = Math.min(messageValue + 1, MESSAGES.length - 1);
       progressValue = Math.min(100, progressValue + 8);
       setMessageIndex(messageValue);
       setProgress(progressValue);
-      playSfx("/sounds/beep.mp3", 0.22);
       if (progressValue >= 100) {
         window.clearInterval(interval);
         setTimeout(() => {
@@ -107,6 +107,8 @@ function Debrief() {
   if (!video) return;
 
   video.currentTime = 0;
+  video.muted = false;
+  video.volume = 1;
 
   video.play().catch(console.error);
 
@@ -143,9 +145,9 @@ function Debrief() {
 
                   {phase === "starting" && (
                     <div className="w-full space-y-6">
-                      <div className="h-3 w-full overflow-hidden rounded-full border border-gold-dim bg-white/5">
+                      <div className="h-4 w-full overflow-hidden rounded-full border border-gold/70 bg-white/10 shadow-[0_0_18px_rgba(212,175,55,0.22)]">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-gold via-gold/90 to-transparent transition-all duration-300"
+                          className="h-full rounded-full bg-[linear-gradient(90deg,oklch(0.55_0.08_80)_0%,oklch(0.78_0.13_85)_35%,oklch(0.9_0.1_88_/_0.65)_50%,oklch(0.78_0.13_85)_65%,oklch(0.55_0.08_80)_100%)] bg-[length:200%_100%] animate-progress-flow transition-all duration-300 shadow-[0_0_14px_rgba(212,175,55,0.48)]"
                           style={{ width: `${progress}%` }}
                         />
                       </div>
@@ -206,6 +208,7 @@ function Debrief() {
     setPhase("video");
 
   }}
+  className="inline-flex items-center justify-center border border-gold bg-gold/12 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.34em] text-gold shadow-[0_0_20px_rgba(212,175,55,0.24)] transition hover:bg-gold/22 hover:shadow-[0_0_28px_rgba(212,175,55,0.34)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold animate-pulse-gold"
 >
   ACEPTAR TRANSMISIÓN
 </button>
@@ -227,70 +230,16 @@ function Debrief() {
 
               {phase === "video" && (
                 <div className="fixed inset-0 z-50 bg-black overflow-hidden">
-                  <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-                    <div className="space-y-2">
-                      <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold-dim">CANAL SEGURO</p>
-                      <p className="font-display text-4xl tracking-[0.25em] text-gold">ROMA</p>
-                    </div>
-                    <div className="grid gap-2 rounded-3xl border border-gold-dim/40 bg-black/80 p-4 text-right">
-                      {HUD_ITEMS.map((item) => (
-                        <div key={item.label} className="font-mono text-[10px] uppercase tracking-[0.3em] text-gold-dim">
-                          <span className="block">{item.label}</span>
-                          <span className="font-display text-base text-gold">{item.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <video
+                    ref={videoRef}
+                    src="/videos/oldwoman.mp4"
+                    playsInline
+                    controls
+                    className="h-full w-full object-cover"
+                  />
 
-                  <div className="relative overflow-hidden rounded-[2rem] border border-gold/70 bg-black/80 shadow-[0_0_120px_rgba(212,175,55,0.15)]">
-                   <video
-  ref={videoRef}
-  src="/videos/oldwoman.mp4"
-  playsInline
-  controls
-  className="absolute inset-0 w-full h-full object-cover"
-  onLoadedData={() => console.log("VIDEO CARGADO")}
-  onError={(e) => console.log("ERROR VIDEO", e)}
-/>
-<div className="pointer-events-none absolute inset-0">
-
-  <div className="absolute top-6 left-6">
-
-    <p className="font-mono text-[10px] tracking-[0.45em] uppercase text-gold/80">
-      ROMA
-    </p>
-
-    <p className="font-display text-3xl text-gold">
-      MAGISTRADA
-    </p>
-
-    <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold-dim">
-      ALTA MESA
-    </p>
-
-  </div>
-
-  <div className="absolute top-6 right-6 flex items-center gap-3">
-
-    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-
-    <span className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold">
-      EN DIRECTO
-    </span>
-
-  </div>
-
-  <div className="absolute bottom-6 left-6">
-
-    <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold-dim">
-      CANAL SEGURO · RSA-4096
-    </p>
-
-  </div>
-
-</div>
-                    
-                  </div>
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/65 to-transparent" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/65 to-transparent" />
                 </div>
               )}
 

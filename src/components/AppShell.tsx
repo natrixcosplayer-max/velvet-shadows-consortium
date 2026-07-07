@@ -23,7 +23,21 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
   useEffect(() => {
     const tick = () => {
       const d = new Date();
-      setNow(d.toISOString().replace("T", " ").slice(0, 19) + " UTC");
+      const parts = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: "Europe/Madrid",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).formatToParts(d);
+
+      const get = (type: Intl.DateTimeFormatPartTypes) =>
+        parts.find((p) => p.type === type)?.value ?? "00";
+
+      setNow(`${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")} CEST`);
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -103,7 +117,7 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
 
   setMobileOpen(false);
 }}
-                  className={`relative font-mono text-[11px] tracking-[0.25em] uppercase py-3 md:py-2.5 md:mr-8 transition-colors ${active ? "text-gold" : "text-gold-dim hover:text-gold"}`}
+                  className={`relative font-mono text-base md:text-[11px] font-bold md:font-normal tracking-[0.18em] md:tracking-[0.25em] uppercase py-3 md:py-2.5 md:mr-8 transition-colors ${active ? "text-gold" : "text-gold-dim hover:text-gold"}`}
                 >
                   {item.label}
                   <span className="ml-2 text-[9px] opacity-60 font-display">· {item.latin}</span>
@@ -119,7 +133,7 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
         <div className="mb-10 animate-fade-up">
           <p className="font-mono text-[10px] tracking-[0.4em] text-gold-dim uppercase">{latin}</p>
           <h1 className="font-display text-4xl md:text-5xl text-gold mt-2">{title}</h1>
-          <div className="mt-4 h-px w-24 bg-gradient-to-r from-gold to-transparent" />
+          <div className="mt-4 h-px w-56 bg-gradient-to-r from-gold to-transparent" />
         </div>
         {children}
       </main>

@@ -85,7 +85,12 @@ function Dossiers() {
           </ul>
         </Panel>
 
-        <Panel className="relative">
+        <Panel className="relative overflow-hidden">
+          {(active.codename === "Mandarin" || active.codename === "Minerva") && (
+            <div className="absolute inset-0 pointer-events-none grid-bg opacity-35" />
+          )}
+
+          <div className="relative z-10">
           <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">Nombre en clave</p>
           <h2 className="font-display text-5xl text-gold mt-2">{active.codename}</h2>
           <p className="font-display text-gold-dim italic mt-1">{active.latin}</p>
@@ -94,6 +99,7 @@ function Dossiers() {
           </div>
           <div className="mt-4 md:mt-8 flex justify-center">
             <div className={`relative ${active.codename === "Mandarin" || active.codename === "Minerva" ? "scanlines" : ""}`}>
+              <div className="absolute inset-0 -z-10 scale-110 rounded-sm bg-gold/20 blur-xl" />
               <img
                 src={AGENT_PHOTOS[active.codename]}
                 alt={active.codename}
@@ -131,6 +137,7 @@ function Dossiers() {
           <div className="mt-8 border-t border-gold-dim pt-4 font-mono text-[10px] text-gold-dim tracking-[0.25em] flex justify-between uppercase">
             <span>EXP · {active.codename.replace(/\s+/g, "-").toUpperCase()}-{Math.abs(active.codename.length * 37) % 9999}</span>
             <span>SELLO · ✦ ALTA MESA ✦</span>
+          </div>
           </div>
         </Panel>
       </div>
