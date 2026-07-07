@@ -356,9 +356,13 @@ function Debrief() {
         tickHudClock();
         setCall((prev) => ({ ...prev, countdown: 20, showAcceptButton: false, preSignalLoss: false }));
 
+        const magistradaCue = window.setTimeout(() => {
+          queueAudio(() => playSfx(SFX.magistrada, 0.2));
+        }, 200);
+        timers.push(magistradaCue);
+
         const ringStart = window.setTimeout(() => {
           setCall((prev) => ({ ...prev, showAcceptButton: true }));
-          queueAudio(() => playSfx(SFX.magistrada, 0.2));
 
           const ringLoop = window.setInterval(() => {
             triggerIncomingPulse();

@@ -66,7 +66,7 @@ export function VideoCall({ videoRef, layerRef, phase, fx, hudDate, hudTime, onE
           >
             <div className="inline-flex max-w-[34vw] flex-col gap-0.5 brightness-110 md:max-w-none md:gap-1">
               <span>ROMA</span>
-              <span>MAGISTRADA</span>
+              <span>MAGISTRADA LIVIA</span>
               <span>ALTA MESA</span>
             </div>
 
@@ -84,7 +84,7 @@ export function VideoCall({ videoRef, layerRef, phase, fx, hudDate, hudTime, onE
           <div
             className="pointer-events-none absolute left-1/2 z-20 -translate-x-1/2"
             style={{
-              bottom: "max(calc(2rem + env(safe-area-inset-bottom)), 34px)",
+              bottom: "max(calc(0.9rem + env(safe-area-inset-bottom)), 12px)",
               width: "clamp(175px, 50vw, 420px)",
             }}
           >
@@ -92,39 +92,23 @@ export function VideoCall({ videoRef, layerRef, phase, fx, hudDate, hudTime, onE
               INTENSIDAD DE SENAL
             </div>
             <div className={`mt-1 h-[40px] w-full ${signalPerturbation ? "[animation:debrief-signal-glitch-bump_220ms_ease-out_1]" : ""}`}>
-              <svg viewBox="0 0 300 40" preserveAspectRatio="none" className="h-full w-full overflow-visible">
-                <defs>
-                  <linearGradient id="debrief-signal-gradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="rgba(212,175,55,0.2)" />
-                    <stop offset="50%" stopColor="rgba(245,211,94,0.95)" />
-                    <stop offset="100%" stopColor="rgba(212,175,55,0.2)" />
-                  </linearGradient>
-                  <filter id="debrief-signal-glow" x="-20%" y="-200%" width="140%" height="500%">
-                    <feGaussianBlur stdDeviation="1.15" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                <path
-                  d="M0,22 C15,20 24,23 36,20 C48,17 58,21 72,19 C86,18 95,24 110,22 C122,20 132,14 142,18 C154,22 164,26 178,21 C190,17 199,22 212,18 C224,15 236,20 248,17 C260,15 272,20 300,18"
-                  fill="none"
-                  stroke="url(#debrief-signal-gradient)"
-                  strokeWidth={signalPerturbation ? 2.1 : 1.7}
-                  strokeLinecap="round"
-                  filter="url(#debrief-signal-glow)"
-                >
-                  <animate
-                    attributeName="d"
-                    dur="7.2s"
-                    repeatCount="indefinite"
-                    calcMode="spline"
-                    keySplines="0.35 0.05 0.25 1;0.42 0 0.58 1"
-                    values="M0,22 C15,20 24,23 36,20 C48,17 58,21 72,19 C86,18 95,24 110,22 C122,20 132,14 142,18 C154,22 164,26 178,21 C190,17 199,22 212,18 C224,15 236,20 248,17 C260,15 272,20 300,18;M0,21 C12,23 24,16 38,19 C50,22 62,14 76,18 C90,23 102,16 114,20 C126,24 138,17 152,19 C166,21 178,15 190,20 C204,24 214,16 226,19 C238,22 248,14 262,18 C276,22 286,17 300,19;M0,22 C15,20 24,23 36,20 C48,17 58,21 72,19 C86,18 95,24 110,22 C122,20 132,14 142,18 C154,22 164,26 178,21 C190,17 199,22 212,18 C224,15 236,20 248,17 C260,15 272,20 300,18"
-                  />
-                </path>
-              </svg>
+              <div className="mx-auto grid h-full w-full grid-cols-14 items-end gap-x-[3px]">
+                {Array.from({ length: 14 }).map((_, col) => (
+                  <div key={`sat-col-${col}`} className="grid h-full grid-rows-5 gap-y-[2px]">
+                    {Array.from({ length: 5 }).map((__, row) => (
+                      <span
+                        key={`sat-cell-${col}-${row}`}
+                        className="w-full rounded-[1px] bg-gold-bright/90 shadow-[0_0_5px_rgba(245,211,94,0.42)]"
+                        style={{
+                          opacity: 0.2 + ((col + row) % 4) * 0.18,
+                          animation: `debrief-sat-square ${2.9 + (col % 4) * 0.55}s ease-in-out ${(col * 0.08) + (row * 0.06)}s infinite`,
+                          transformOrigin: "center bottom",
+                        }}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="mt-0.5 text-center font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-gold-bright [text-shadow:0_0_8px_rgba(214,173,74,0.18)] md:text-[10px]">
               <span className="inline-block [animation:debrief-signal-status_16s_step-end_infinite]">ESTABLE</span>
