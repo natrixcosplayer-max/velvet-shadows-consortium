@@ -18,11 +18,15 @@ const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "ELENCO", lines: ["Los Michis"] },
   { title: "LA MICHI", lines: ["Programando durante dos semanas", "para su Michi."] },
   { title: "EL MICHI", lines: ["Realizando un operativo", "sin sospechar absolutamente nada."] },
-  { title: "MENSAJE", lines: ["Espero que te guste todo, amor.", "", "Hecho con mucho carino durante estas semanas por tu Michi."] },
-  { title: "CITA", lines: ["\"Porque naveguemos juntos todas las aguas,", "", "las buenas y las malas,", "", "y salgamos siempre mas fuertes.", "Te quiero.\""] },
+  { title: "MENSAJE", lines: ["Espero que te guste el regalo"] },
+  { title: "MENSAJE", lines: ["Y espero que juguemos juntos, jiji"] },
+  { title: "DETALLE", lines: ["Cada imagen guarda", "un pedacito de nosotros."] },
+  { title: "PROMESA", lines: ["Seguimos sumando", "recuerdos juntos."] },
+  { title: "CITA", lines: ["\"Porque naveguemos juntos todas las aguas,", "", "las buenas y las malas,", "", "y salgamos siempre mas fuertes.\""] },
+  { title: "TE QUIERO", lines: ["Con amor,", "tu Michi."] },
 ];
 
-const PHOTO_BASENAMES = ["eli1", "nata1", "eli2", "nata2", "eli3", "couple0", "nata3", "eli", "nata"] as const;
+const PHOTO_BASENAMES = ["eli", "nata", "eli1", "nata1", "eli2", "nata2", "eli3", "nata3", "nata4", "couple", "couple1", "couple0"] as const;
 const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"] as const;
 
 export function CreditsSequence({ active }: CreditsSequenceProps) {
@@ -92,12 +96,18 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       const resolvedPhotos = await Promise.all(PHOTO_BASENAMES.map((name) => resolvePhotoSrc(name)));
       if (cancelled) return;
 
+      const CREDIT_VISIBLE_MS = 1900;
+      const PHOTO_CROSSFADE_MS = 1200;
+      const PHOTO_HOLD_MS = 1900;
+      const PHOTO_FADEOUT_MS = 550;
+
       setShowLogo(true);
-      await wait(3000);
+      await wait(2700);
       if (cancelled) return;
 
       setShowLogo(false);
-      await wait(1000);
+      // Let logo fade-out finish fully before credits start.
+      await wait(2300);
       if (cancelled) return;
 
       let lastPhoto: string | null = null;
@@ -105,10 +115,10 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       for (let i = 0; i < CREDIT_BLOCKS.length; i += 1) {
         setActiveCreditIndex(i);
         setCreditVisible(true);
-        await wait(2800);
+        await wait(CREDIT_VISIBLE_MS);
         if (cancelled) return;
 
-        const photoIndex = Math.floor((i / Math.max(1, CREDIT_BLOCKS.length - 1)) * Math.max(0, resolvedPhotos.length - 1));
+        const photoIndex = Math.min(i, Math.max(0, resolvedPhotos.length - 1));
         const nextPhoto = resolvedPhotos[photoIndex] || null;
         if (nextPhoto) {
           setPhotoPrevious(lastPhoto);
@@ -116,16 +126,15 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           setPhotoVisible(true);
           setCreditVisible(false);
 
-          // Let previous image crossfade out over ~2s while new image fades in.
-          await wait(2100);
+          await wait(PHOTO_CROSSFADE_MS);
           if (cancelled) return;
           setPhotoPrevious(null);
 
-          await wait(3500);
+          await wait(PHOTO_HOLD_MS);
           if (cancelled) return;
 
           setPhotoVisible(false);
-          await wait(900);
+          await wait(PHOTO_FADEOUT_MS);
           if (cancelled) return;
 
           lastPhoto = nextPhoto;
@@ -137,7 +146,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       }
 
       setShowFinalCommission(true);
-      await wait(4200);
+      await wait(3200);
       if (cancelled) return;
 
       setShowFinalCommission(false);
@@ -193,7 +202,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           <img
             src={altaLogo}
             alt="Alta Mesa"
-            className={`mx-auto w-[78px] md:w-[92px] transition-opacity duration-[2000ms] ${showLogo ? "opacity-90" : "opacity-0"}`}
+            className={`mx-auto w-[96px] md:w-[116px] transition-opacity duration-[2000ms] ease-out ${showLogo ? "opacity-90" : "opacity-0"}`}
           />
 
           {activeCreditIndex !== null && (
