@@ -47,11 +47,16 @@ type Phase =
 
 function Debrief() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoTeardownRef = useRef<number | null>(null);
+  const videoGlitchTimeoutRef = useRef<number | null>(null);
   const [phase, setPhase] = useState<Phase>("starting");
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [glitch, setGlitch] = useState(false);
   const [videoFade, setVideoFade] = useState(false);
+  const [showVideoLayer, setShowVideoLayer] = useState(false);
+  const [videoElapsed, setVideoElapsed] = useState(0);
+  const [videoMicroGlitch, setVideoMicroGlitch] = useState(false);
   const [showTransmissionDone, setShowTransmissionDone] = useState(false);
   const [typedClosingLines, setTypedClosingLines] = useState<string[]>(Array(CLOSING_LINES.length).fill(""));
   const [activeClosingLine, setActiveClosingLine] = useState<number | null>(null);
@@ -60,6 +65,38 @@ function Debrief() {
   const [showCommissionMark, setShowCommissionMark] = useState(false);
   const [showThanks, setShowThanks] = useState(false);
   const [showCloseButton, setShowCloseButton] = useState(false);
+
+  const handleVideoEnded = () => {
+    const video = videoRef.current;
+
+    if (video) {
+      video.pause();
+      video.controls = false;
+      video.currentTime = 0;
+    }
+
+    setPhase("finished");
+
+    if (videoTeardownRef.current) {
+      window.clearTimeout(videoTeardownRef.current);
+    }
+
+    videoTeardownRef.current = window.setTimeout(() => {
+      setShowVideoLayer(false);
+
+      if (videoRef.current) {
+        videoRef.current.removeAttribute("src");
+        videoRef.current.load();
+      }
+    }, 620);
+  };
+
+  const formatClock = (totalSeconds: number) => {
+    const h = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+    const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+    const s = String(totalSeconds % 60).padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  };
 
   useEffect(() => {
     if (phase !== "starting") return;
@@ -106,17 +143,18 @@ function Debrief() {
   }, [phase]);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const onEnded = () => {
-      setPhase("finished");
-    };
-    video.addEventListener("ended", onEnded);
-    return () => video.removeEventListener("ended", onEnded);
-  }, []);
-  useEffect(() => {
 
   if (phase !== "video") return;
+
+  setShowVideoLayer(true);
+  setVideoFade(false);
+  setVideoElapsed(0);
+
+}, [phase]);
+
+  useEffect(() => {
+
+  if (phase !== "video" || !showVideoLayer) return;
 
   const video = videoRef.current;
 
@@ -125,10 +163,58 @@ function Debrief() {
   video.currentTime = 0;
   video.muted = false;
   video.volume = 1;
+  video.controls = false;
 
   video.play().catch(console.error);
 
-}, [phase]);
+}, [phase, showVideoLayer]);
+
+  useEffect(() => {
+    if (phase !== "video") return;
+
+    const id = window.setInterval(() => {
+      const t = Math.floor(videoRef.current?.currentTime ?? 0);
+      setVideoElapsed(t);
+    }, 1000);
+
+    return () => window.clearInterval(id);
+  }, [phase]);
+
+  useEffect(() => {
+    return () => {
+      if (videoTeardownRef.current) {
+        window.clearTimeout(videoTeardownRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "video") return;
+
+    const scheduleGlitch = () => {
+      const delay = 20000 + Math.floor(Math.random() * 10000);
+      videoGlitchTimeoutRef.current = window.setTimeout(() => {
+        setVideoMicroGlitch(true);
+
+        const clearId = window.setTimeout(() => {
+          setVideoMicroGlitch(false);
+          scheduleGlitch();
+        }, 70);
+
+        videoGlitchTimeoutRef.current = clearId;
+      }, delay);
+    };
+
+    scheduleGlitch();
+
+    return () => {
+      if (videoGlitchTimeoutRef.current) {
+        window.clearTimeout(videoGlitchTimeoutRef.current);
+        videoGlitchTimeoutRef.current = null;
+      }
+      setVideoMicroGlitch(false);
+    };
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== "finished") return;
@@ -348,15 +434,43 @@ function Debrief() {
                 </div>
               )}
 
-              {(phase === "video" || phase === "finished") && (
+              {showVideoLayer && (
                 <div className="fixed inset-0 z-50 bg-black overflow-hidden">
                   <video
                     ref={videoRef}
                     src="/videos/oldwoman.mp4"
+                    onEnded={handleVideoEnded}
                     playsInline
-                    controls
-                    className="h-full w-full object-cover"
+                    preload="auto"
+                    controls={false}
+                    disablePictureInPicture
+                    className={`h-full w-full object-cover transition-transform duration-75 ${videoMicroGlitch ? "translate-x-[1px] -translate-y-[1px]" : ""} [animation:debrief-camera-flicker_9s_ease-in-out_infinite,debrief-chroma-shift_12s_steps(1,end)_infinite]`}
                   />
+
+                  {phase === "video" && (
+                    <>
+                      <div className="pointer-events-none absolute inset-0 opacity-[0.03] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_2px,rgba(255,255,255,0.85)_2px,rgba(255,255,255,0.85)_3px)] mix-blend-overlay" />
+                      <div className="pointer-events-none absolute inset-0 opacity-[0.022] [background-image:radial-gradient(circle,rgba(255,255,255,0.42)_0.7px,transparent_1px)] [background-size:3px_3px] [animation:debrief-noise-drift_1.6s_steps(2,end)_infinite]" />
+                      <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/25 [animation:debrief-video-scan_9s_linear_infinite]" />
+
+                      <div className="pointer-events-none absolute top-4 left-4 right-4 flex items-start justify-between font-mono text-[10px] tracking-[0.25em] uppercase text-gold-dim">
+                        <div className="inline-flex items-center gap-2 border border-gold-dim/60 bg-black/45 px-3 py-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+                          <span>EN DIRECTO</span>
+                          <span className="opacity-70">CANAL VII</span>
+                          <span className="opacity-70">ROMA</span>
+                        </div>
+                        <div className="inline-flex items-center border border-gold-dim/60 bg-black/45 px-3 py-1.5">
+                          {formatClock(videoElapsed)}
+                        </div>
+                      </div>
+
+                      <div className="pointer-events-none absolute bottom-6 left-4 font-mono text-[10px] tracking-[0.25em] uppercase text-gold-dim border border-gold-dim/60 bg-black/45 px-3 py-2">
+                        <span className="mr-3">SEÑAL</span>
+                        <span className="inline-block [animation:debrief-signal-breathe_3.8s_ease-in-out_infinite]">██████████</span>
+                      </div>
+                    </>
+                  )}
 
                   <div
                     className={`pointer-events-none absolute inset-0 bg-black transition-opacity duration-[600ms] ${

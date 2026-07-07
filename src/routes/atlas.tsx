@@ -55,13 +55,6 @@ function Atlas() {
     playSfx("/sounds/shortbeep.mp3", 0.35);
   };
 
-  const popupPosition = popupHotel ? (() => {
-    const p = proj(popupHotel.lat, popupHotel.lng);
-    const xOffset = popupHotel.city === "Nueva York" ? -3.2 : popupHotel.city === "Hong Kong" ? -2.4 : 0;
-    const yOffset = popupHotel.city === "Reikiavik" ? 0 : 3.6;
-    return { x: p.x + xOffset, y: (p.y / 2) + yOffset };
-  })() : null;
-
   return (
     <AppShell title="Atlas Continental" latin="Orbis · Refugios en todo el mundo">
       <Panel className="!p-0 overflow-hidden">
@@ -97,17 +90,6 @@ function Atlas() {
               );
             })}
           </svg>
-          {popupHotel && popupPosition && (
-            <div
-              className="pointer-events-none absolute z-20 w-[220px] max-w-[calc(100%-1.5rem)] rounded border border-gold/70 bg-background/90 px-3 py-2 shadow-[0_0_20px_rgba(214,173,74,0.25)] backdrop-blur-sm"
-              style={{ left: `${popupPosition.x}%`, top: `${popupPosition.y + 2.2}%`, transform: "translate(-50%, 0)" }}
-            >
-              <p className="font-display text-[11px] uppercase tracking-[0.2em] font-bold text-gold">{popupHotel.city}</p>
-              <p className="mt-1 font-mono text-[10px] font-bold leading-relaxed text-gold-dim">
-                {HOTEL_DESCRIPTIONS[popupHotel.city] ?? "Descripción en preparación."}
-              </p>
-            </div>
-          )}
           <div className="absolute top-4 left-4 font-mono text-[10px] text-gold-dim tracking-[0.3em] uppercase">
             · ORBIS · CONTINENTALIS ·
           </div>
@@ -117,6 +99,18 @@ function Atlas() {
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-destructive" /> Sellado</span>
           </div>
         </div>
+        {popupHotel && (
+          <div className="border-t border-gold-dim/50 bg-background/85 px-5 py-4">
+            <div className="flex flex-col gap-2 md:flex-row md:items-start md:gap-5">
+              <p className="font-display text-sm uppercase tracking-[0.22em] font-bold text-gold shrink-0">
+                {popupHotel.city}
+              </p>
+              <p className="font-mono text-[11px] leading-relaxed text-gold-dim">
+                {HOTEL_DESCRIPTIONS[popupHotel.city] ?? "Descripción en preparación."}
+              </p>
+            </div>
+          </div>
+        )}
       </Panel>
 
       <div className="grid md:grid-cols-[1fr_2fr] gap-6 mt-6">

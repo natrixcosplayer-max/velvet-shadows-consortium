@@ -227,6 +227,33 @@
   66% { transform: translateX(0.8px); opacity: 1; }
   100% { transform: translateX(0); opacity: 1; }
 }
+@keyframes debrief-camera-flicker {
+  0%, 44%, 46%, 100% { filter: brightness(1); }
+  45% { filter: brightness(0.986); }
+  72% { filter: brightness(0.992); }
+}
+@keyframes debrief-video-scan {
+  0% { transform: translateY(0); opacity: 0.08; }
+  100% { transform: translateY(100vh); opacity: 0.04; }
+}
+@keyframes debrief-chroma-shift {
+  0%, 96%, 100% {
+    transform: translateX(0);
+    filter: brightness(1);
+  }
+  97% {
+    transform: translateX(0.6px);
+    filter: drop-shadow(-1px 0 rgba(255, 50, 50, 0.14)) drop-shadow(1px 0 rgba(70, 120, 255, 0.14));
+  }
+}
+@keyframes debrief-noise-drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 12px 18px; }
+}
+@keyframes debrief-signal-breathe {
+  0%, 100% { opacity: 0.78; }
+  50% { opacity: 1; }
+}
 
 @utility animate-flicker { animation: flicker 4s infinite; }
 @utility animate-scan { animation: scan 3s linear infinite; }

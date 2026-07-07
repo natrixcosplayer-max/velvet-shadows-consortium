@@ -150,6 +150,17 @@ export function duckMusic() {
   fadeMusicVolume(MUSIC_DUCK_VOLUME, 300);
 }
 
+function duckMusicImmediate() {
+  if (!music) return;
+
+  if (musicFade) {
+    clearInterval(musicFade);
+    musicFade = null;
+  }
+
+  music.volume = MUSIC_DUCK_VOLUME;
+}
+
 export function restoreMusic() {
   fadeMusicVolume(MUSIC_VOLUME, 1200);
 }
@@ -174,9 +185,11 @@ export async function playVoice(
   const playPromise = voice.play();
 
   if (playPromise) {
+    duckMusicImmediate();
+
     playPromise
       .then(() => {
-        duckMusic();
+        duckMusicImmediate();
       })
       .catch(() => {
         restoreMusic();
@@ -276,8 +289,8 @@ export async function playUnlockSound(volume = 0.45) {
 
   if (!sound) return;
 
-  // Prioritize unlock cue intelligibility on mobile by ducking background music.
-  duckMusic();
+  // iPhone can make short cues feel unducked if we only fade; force immediate duck.
+  duckMusicImmediate();
 
   sound.currentTime = 0;
   sound.volume = volume;
@@ -325,7 +338,7 @@ export function playVoiceQueue(
 
    await fadeOutVoice();
 
-duckMusic();
+duckMusicImmediate();
 
 voice = new Audio(files[index]);
 
