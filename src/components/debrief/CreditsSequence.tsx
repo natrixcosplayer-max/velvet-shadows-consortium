@@ -13,12 +13,13 @@ type CreditBlock = {
 };
 
 const CREDIT_BLOCKS: CreditBlock[] = [
-  { title: "OPERACION", lines: ["MINERVA"] },
+  { title: "ALTA MESA", lines: ["presenta"] },
+  { title: "OPERACION", lines: ["CUMPLE"] },
   { title: "ELENCO", lines: ["Los Michis"] },
-  { title: "AGENTE OPERATIVO", lines: ["MANDARIN"] },
-  { title: "AGENTE DE APOYO", lines: ["MINERVA"] },
-  { title: "CAPITULO", lines: ["VALENCIA"] },
-  { title: "LOCALIZACION", lines: ["HOTEL WESTIN CONTINENTAL", "VALENCIA"] },
+  { title: "LA MICHI", lines: ["Programando durante dos semanas", "para su Michi."] },
+  { title: "EL MICHI", lines: ["Realizando un operativo", "sin sospechar absolutamente nada."] },
+  { title: "MENSAJE", lines: ["Espero que te guste todo, amor.", "", "Hecho con mucho carino durante estas semanas por tu Michi."] },
+  { title: "CITA", lines: ["\"Porque naveguemos juntos todas las aguas,", "", "las buenas y las malas,", "", "y salgamos siempre mas fuertes.", "Te quiero.\""] },
 ];
 
 const PHOTO_BASENAMES = ["eli1", "nata1", "eli2", "nata2", "eli3", "nata3"] as const;
@@ -27,7 +28,6 @@ const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"] as const;
 export function CreditsSequence({ active }: CreditsSequenceProps) {
   const [overlayVisible, setOverlayVisible] = useState(false);
   const [showLogo, setShowLogo] = useState(false);
-  const [showPresenta, setShowPresenta] = useState(false);
   const [activeCreditIndex, setActiveCreditIndex] = useState<number | null>(null);
   const [creditVisible, setCreditVisible] = useState(false);
   const [photoVisible, setPhotoVisible] = useState(false);
@@ -93,15 +93,11 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       if (cancelled) return;
 
       setShowLogo(true);
-      await wait(1700);
+      await wait(3000);
       if (cancelled) return;
 
-      setShowPresenta(true);
-      await wait(2200);
-      if (cancelled) return;
-
-      setShowPresenta(false);
-      await wait(700);
+      setShowLogo(false);
+      await wait(1000);
       if (cancelled) return;
 
       let lastPhoto: string | null = null;
@@ -109,11 +105,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       for (let i = 0; i < CREDIT_BLOCKS.length; i += 1) {
         setActiveCreditIndex(i);
         setCreditVisible(true);
-        await wait(4800);
-        if (cancelled) return;
-
-        setCreditVisible(false);
-        await wait(1200);
+        await wait(2800);
         if (cancelled) return;
 
         const nextPhoto = resolvedPhotos[i] || null;
@@ -121,15 +113,25 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           setPhotoPrevious(lastPhoto);
           setPhotoCurrent(nextPhoto);
           setPhotoVisible(true);
+          setCreditVisible(false);
 
-          await wait(7000); // 2s fade in + 5s hold
+          // Let previous image crossfade out over ~2s while new image fades in.
+          await wait(2100);
+          if (cancelled) return;
+          setPhotoPrevious(null);
+
+          await wait(3500);
           if (cancelled) return;
 
           setPhotoVisible(false);
-          await wait(2000); // 2s fade out
+          await wait(900);
           if (cancelled) return;
 
           lastPhoto = nextPhoto;
+        } else {
+          setCreditVisible(false);
+          await wait(900);
+          if (cancelled) return;
         }
       }
 
@@ -168,7 +170,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
             <img
               src={photoPrevious}
               alt="Creditos anterior"
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] ${photoVisible ? "opacity-[0.8]" : "opacity-0"}`}
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] ${photoVisible ? "opacity-0" : "opacity-[0.85]"}`}
             />
           )}
 
@@ -176,7 +178,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
             <img
               src={photoCurrent}
               alt="Creditos"
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] ${photoVisible ? "opacity-[0.94]" : "opacity-0"}`}
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] ${photoVisible ? "opacity-[0.85]" : "opacity-0"}`}
             />
           )}
 
@@ -193,13 +195,8 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
             className={`mx-auto w-[78px] md:w-[92px] transition-opacity duration-[2000ms] ${showLogo ? "opacity-90" : "opacity-0"}`}
           />
 
-          <div className={`mt-7 font-mono text-[11px] uppercase tracking-[0.42em] text-gold-bright [text-shadow:0_0_10px_rgba(214,173,74,0.2)] transition-opacity duration-[1700ms] ${showPresenta ? "opacity-100" : "opacity-0"}`}>
-            <div>ALTA MESA</div>
-            <div className="mt-2 text-gold-dim">presenta</div>
-          </div>
-
           {activeCreditIndex !== null && (
-            <div className={`mt-16 transition-opacity duration-[1200ms] ${creditVisible ? "opacity-100" : "opacity-0"}`}>
+            <div className={`mt-16 transition-opacity duration-[900ms] ${creditVisible ? "opacity-100" : "opacity-0"}`}>
               <h3 className="font-mono text-[11px] uppercase tracking-[0.42em] text-gold-dim [text-shadow:0_0_10px_rgba(214,173,74,0.15)] md:text-[13px]">
                 {CREDIT_BLOCKS[activeCreditIndex].title}
               </h3>
