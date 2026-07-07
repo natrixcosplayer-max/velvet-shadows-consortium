@@ -3,7 +3,7 @@ import minervaPhoto from "../assets/agents/minerva.jpg";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
-import { playSfx } from "../audio/audiomanager";
+import { playControlledAudio, playSfx, stopControlledAudio } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/dossiers")({
   head: () => ({ meta: [{ title: "Expedientes" }, { name: "description", content: "Expedientes de personal sellados." }] }),
@@ -78,6 +78,14 @@ function Dossiers() {
   const handleSelect = (d: Dossier) => {
     if (isDecrypting || d.codename === active.codename) return;
 
+    const voiceSrc = DOSSIER_VOICE[d.codename];
+    if (voiceSrc) {
+      // Trigger within user gesture for maximum iPhone playback reliability.
+      playControlledAudio("dossier-voice", voiceSrc, 0.56, false);
+    } else {
+      stopControlledAudio("dossier-voice");
+    }
+
     playSfx("/sounds/beep.mp3", 0.2);
     setQueued(d);
     setDecryptProgress(0);
@@ -110,13 +118,10 @@ function Dossiers() {
   }, [isDecrypting, queued]);
 
   useEffect(() => {
-    if (isDecrypting) return;
-
-    const voiceSrc = DOSSIER_VOICE[active.codename];
-    if (!voiceSrc) return;
-
-    playSfx(voiceSrc, 0.32);
-  }, [active.codename, isDecrypting]);
+    return () => {
+      stopControlledAudio("dossier-voice");
+    };
+  }, []);
 
   useEffect(() => {
     if (isDecrypting) return;

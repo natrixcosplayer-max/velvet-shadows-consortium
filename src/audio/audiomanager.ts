@@ -336,6 +336,8 @@ export function primeUnlockSound() {
     .play()
     .then(() => {
       if (!unlockSound) return;
+      // If unlock playback was already requested, do not interrupt it.
+      if (!unlockSound.muted) return;
       unlockSound.pause();
       unlockSound.currentTime = 0;
       // Mantener mute hasta la reproducción real para que no se oiga nada ahora.
@@ -538,14 +540,14 @@ voice.volume = volume;
 
   playNext(0);
 }
-export async function playEmailVoice(id: string) {
+export async function playEmailVoice(id: string, fadeMs = 120) {
   const voiceSrc = EMAIL_VOICES[id];
-
-  if (!voiceSrc) return;
 
   const requestId = ++emailVoiceRequestId;
 
-  await fadeOutVoice(260);
+  await fadeOutVoice(fadeMs);
+
+  if (!voiceSrc) return;
 
   // If a newer email was requested while fading, cancel this older request.
   if (requestId !== emailVoiceRequestId) return;

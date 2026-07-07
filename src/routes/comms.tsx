@@ -59,22 +59,26 @@ function Comms() {
 
     if (!alreadyAutoplayed) {
       window.sessionStorage.setItem(XIMO_AUTOPLAY_SESSION_KEY, "1");
-      playEmailVoice("1");
+      playEmailVoice("1", 120);
     }
 
-    const handleVisibilityOrPageExit = () => {
+    const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        stopEmailVoice(240);
+        stopEmailVoice(80);
       }
     };
 
-    document.addEventListener("visibilitychange", handleVisibilityOrPageExit);
-    window.addEventListener("pagehide", handleVisibilityOrPageExit);
+    const handlePageHide = () => {
+      stopEmailVoice(80);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
 
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityOrPageExit);
-      window.removeEventListener("pagehide", handleVisibilityOrPageExit);
-      stopEmailVoice(240);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
+      stopEmailVoice(80);
       playMusic("/sounds/john.mp3", 0, true, 42);
       fadeMusicVolume(0.08, 320);
     };
@@ -100,8 +104,7 @@ function Comms() {
               <li key={t.id}>
                 <button
                   onClick={() => {
-                    stopEmailVoice(120);
-                    playEmailVoice(t.id);
+                    playEmailVoice(t.id, 120);
 
                     if (open.id !== t.id) {
                       setOpen(t);

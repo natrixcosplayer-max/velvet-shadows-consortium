@@ -1,5 +1,6 @@
 import altaLogo from "../assets/alta.png";
 import {
+  fadeMusicVolume,
   playMusic,
   playSfx,
   playUnlockSound,
@@ -55,15 +56,22 @@ export function EntryGate({ onEnter }: Props) {
         </h2>
 
         <button
+          onPointerDown={() => {
+            primeUnlockSound();
+          }}
+          onTouchStart={() => {
+            primeUnlockSound();
+          }}
           onClick={() => {
           primeUnlockSound();
-          playUnlockSound();
+          playUnlockSound(0.62);
           if (typeof window !== "undefined") {
             window.sessionStorage.setItem("unlock-sound-played", "1");
           }
           onEnter();
-          playSfx("/sounds/luxbeep.mp3");
-          playMusic("/sounds/john.mp3", 0.08, true, 42);
+          playSfx("/sounds/luxbeep.mp3", 0.14);
+          playMusic("/sounds/john.mp3", 0, true, 42);
+          fadeMusicVolume(0.08, 650);
         }}
           className="mx-auto flex flex-col items-center border border-gold px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition animate-pulse-gold"
         >
