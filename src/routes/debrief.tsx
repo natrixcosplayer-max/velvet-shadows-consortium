@@ -99,6 +99,7 @@ function Debrief() {
   const videoTeardownRef = useRef<number | null>(null);
   const videoStartedRef = useRef(false);
   const videoStartCleanupRef = useRef<(() => void) | null>(null);
+  const priorityAcceptedRef = useRef(false);
   const audioQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   const [phase, setPhase] = useState<DebriefPhase>("starting");
@@ -252,6 +253,8 @@ function Debrief() {
   }, [clearCallPulse, queueAudio, requestVideoFullscreen]);
 
   const handlePriorityAccept = useCallback(() => {
+    if (priorityAcceptedRef.current) return;
+    priorityAcceptedRef.current = true;
     queueAudio(() => playSfx(SFX.magistrada, 0.24));
     triggerIncomingPulse();
     window.setTimeout(() => setPhase("waiting"), 260);
