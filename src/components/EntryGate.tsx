@@ -1,7 +1,6 @@
 import altaLogo from "../assets/alta.png";
 import {
   playMusic,
-  playVoice,
   playSfx,
   primeUnlockSound,
 } from "../audio/audiomanager";
@@ -15,7 +14,10 @@ export function EntryGate({ onEnter }: Props) {
     <main className="fixed inset-0 bg-background flex items-center justify-center scanlines overflow-hidden">
 
       {/* Rejilla digital de fondo */}
-      <div aria-hidden className="absolute inset-0 grid-bg opacity-80" />
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none grid-bg opacity-100 [mask-image:radial-gradient(circle_at_center,black_58%,transparent_100%)]"
+      />
 
       {/* Línea de escaneo que recorre la pantalla */}
       <div
@@ -58,7 +60,7 @@ export function EntryGate({ onEnter }: Props) {
           playSfx("/sounds/luxbeep.mp3");
           playMusic("/sounds/john.mp3", 0.08, true, 42);
         }}
-          className="mx-auto flex flex-col items-center border border-gold px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition"
+          className="mx-auto flex flex-col items-center border border-gold px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition animate-pulse-gold"
         >
           <span>acceder</span>
         </button>

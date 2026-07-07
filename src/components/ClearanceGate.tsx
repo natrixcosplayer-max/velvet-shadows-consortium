@@ -38,9 +38,9 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
     const id = setInterval(() => {
       setProgress((p) =>
-        Math.min(100, p + 100 / LINES.length / 4)
+        Math.min(100, p + 100 / LINES.length / 6)
       );
-    }, 300);
+    }, 380);
 
     return () => clearInterval(id);
   }, []);
@@ -49,7 +49,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
     <div className="fixed inset-0 z-50 bg-background flex items-center justify-center font-mono text-sm scanlines overflow-hidden"> 
 
 
-      <div className="absolute inset-0 grid-bg opacity-30" />
+      <div className="absolute inset-0 pointer-events-none grid-bg opacity-45 [mask-image:radial-gradient(circle_at_center,black_55%,transparent_100%)]" />
 
       <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent animate-scan" />
 
@@ -105,7 +105,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
                   [{String(i + 1).padStart(2, "0")}]
                 </span>
 
-                <span className={i === step - 1 ? "" : "opacity-70"}>
+                <span className={i === step - 1 ? "font-bold text-gold-bright" : "opacity-70"}>
                   {line}
                 </span>
 
@@ -141,7 +141,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
           <div className="mt-6 h-1 bg-secondary border border-gold-dim">
 
             <div
-              className="h-full bg-gradient-to-r from-gold-dim to-gold transition-all"
+              className="h-full animate-progress-alert bg-[linear-gradient(90deg,oklch(0.55_0.08_80)_0%,oklch(0.78_0.13_85)_24%,oklch(0.9_0.1_88_/_0.55)_40%,oklch(0.88_0.16_88)_50%,oklch(0.9_0.1_88_/_0.55)_60%,oklch(0.78_0.13_85)_76%,oklch(0.55_0.08_80)_100%)] bg-[length:220%_100%] shadow-[0_0_8px_oklch(0.88_0.16_88_/_0.45)] transition-all"
               style={{ width: `${progress}%` }}
             />
 

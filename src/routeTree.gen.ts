@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TreasuryRouteImport } from './routes/treasury'
 import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as DossiersRouteImport } from './routes/dossiers'
+import { Route as DebriefRouteImport } from './routes/debrief'
 import { Route as CommsRouteImport } from './routes/comms'
 import { Route as AtlasRouteImport } from './routes/atlas'
 import { Route as IndexRouteImport } from './routes/index'
@@ -29,6 +30,11 @@ const MissionsRoute = MissionsRouteImport.update({
 const DossiersRoute = DossiersRouteImport.update({
   id: '/dossiers',
   path: '/dossiers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DebriefRoute = DebriefRouteImport.update({
+  id: '/debrief',
+  path: '/debrief',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommsRoute = CommsRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/atlas': typeof AtlasRoute
   '/comms': typeof CommsRoute
+  '/debrief': typeof DebriefRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
   '/treasury': typeof TreasuryRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/atlas': typeof AtlasRoute
   '/comms': typeof CommsRoute
+  '/debrief': typeof DebriefRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
   '/treasury': typeof TreasuryRoute
@@ -68,20 +76,36 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/atlas': typeof AtlasRoute
   '/comms': typeof CommsRoute
+  '/debrief': typeof DebriefRoute
   '/dossiers': typeof DossiersRoute
   '/missions': typeof MissionsRoute
   '/treasury': typeof TreasuryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/atlas' | '/comms' | '/dossiers' | '/missions' | '/treasury'
+  fullPaths:
+    | '/'
+    | '/atlas'
+    | '/comms'
+    | '/debrief'
+    | '/dossiers'
+    | '/missions'
+    | '/treasury'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/atlas' | '/comms' | '/dossiers' | '/missions' | '/treasury'
+  to:
+    | '/'
+    | '/atlas'
+    | '/comms'
+    | '/debrief'
+    | '/dossiers'
+    | '/missions'
+    | '/treasury'
   id:
     | '__root__'
     | '/'
     | '/atlas'
     | '/comms'
+    | '/debrief'
     | '/dossiers'
     | '/missions'
     | '/treasury'
@@ -91,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AtlasRoute: typeof AtlasRoute
   CommsRoute: typeof CommsRoute
+  DebriefRoute: typeof DebriefRoute
   DossiersRoute: typeof DossiersRoute
   MissionsRoute: typeof MissionsRoute
   TreasuryRoute: typeof TreasuryRoute
@@ -117,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/dossiers'
       fullPath: '/dossiers'
       preLoaderRoute: typeof DossiersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/debrief': {
+      id: '/debrief'
+      path: '/debrief'
+      fullPath: '/debrief'
+      preLoaderRoute: typeof DebriefRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comms': {
@@ -147,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AtlasRoute: AtlasRoute,
   CommsRoute: CommsRoute,
+  DebriefRoute: DebriefRoute,
   DossiersRoute: DossiersRoute,
   MissionsRoute: MissionsRoute,
   TreasuryRoute: TreasuryRoute,

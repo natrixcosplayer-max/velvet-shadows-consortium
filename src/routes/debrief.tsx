@@ -1,315 +1,1008 @@
-'use client';
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import { AppShell, Panel } from "../components/AppShell";
+import {
+  fadeMusicVolume,
+  playControlledAudio,
+  playControlledAudioAndWait,
+  playSfx,
+  stopControlledAudio,
+  stopMusic,
+} from "../audio/audiomanager";
 
-import { useNavigate } from '@tanstack/react-router';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { playSfx } from '../audio/audiomanager';
-import { AppShell } from '../components/AppShell';
+export const Route = createFileRoute("/debrief")({
+  head: () => ({
+    meta: [
+      { title: "Informe Final â€” Continental" },
+      { name: "description", content: "Pantalla final cinematografica de la Alta Mesa." },
+    ],
+  }),
+  component: Debrief,
+});
 
-type Phase = 'SECURE_LINK' | 'INCOMING_SIGNAL' | 'CALL_REQUEST' | 'VIDEO' | 'FINALE';
-
-const ESTABLISHMENT_MESSAGES = [
-  'Verificando identidad...',
-  'Comprobando autorización...',
-  'Escaneando canal seguro...',
-  'Negociando cifrado...',
-  'Canal Continental...',
-  'Activando enlace...',
+const MESSAGES = [
+  "Verificando identidad...",
+  "Comprobando autorizacion...",
+  "Escaneando canal...",
+  "Negociando cifrado...",
+  "Activando enlace Continental...",
 ];
 
-export function DebriefRoute() {
-  const navigate = useNavigate();
-  const [phase, setPhase] = useState<Phase>('SECURE_LINK');
+const AUTH_LINES = ["IDENTIDAD", "OPERATIVO", "CIFRADO", "CANAL"];
+
+const CLOSING_LINES = [
+  "CANAL SEGURO CERRADO âœ”",
+  "EXPEDIENTE ARCHIVADO âœ”",
+  "ACTIVO RECUPERADO âœ”",
+  "MISION COMPLETADA âœ”",
+];
+const FINAL_BEEP = "/sounds/shortbeep.mp3";
+
+const SFX = {
+  incomingCall: "/sounds/debrief/incoming_call.mp3",
+  interference: "/sounds/debrief/interference.mp3",
+  accept: "/sounds/debrief/accept_communication.mp3",
+  authenticate: "/sounds/debrief/authenticate.mp3",
+  secureLink: "/sounds/debrief/secure_link.mp3",
+  glitch: "/sounds/debrief/glitch.mp3",
+  ambience: "/sounds/debrief/ambience.mp3",
+  magistrada: "/sounds/debrief/magistrada.mp3",
+  archive: "/sounds/debrief/archive.mp3",
+  commission: "/sounds/debrief/comission.mp3",
+} as const;
+
+type Phase =
+  | "starting"
+  | "priority"
+  | "waiting"
+  | "auth"
+  | "link"
+  | "video"
+  | "finished";
+
+function Debrief() {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoLayerRef = useRef<HTMLDivElement | null>(null);
+  const videoTeardownRef = useRef<number | null>(null);
+  const callPulseClearRef = useRef<number | null>(null);
+  const ringIntervalRef = useRef<number | null>(null);
+  const [phase, setPhase] = useState<Phase>("starting");
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
-  const [videoEnded, setVideoEnded] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const beepIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const messageIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [globalGlitch, setGlobalGlitch] = useState(false);
+  const [waitingVisible, setWaitingVisible] = useState(false);
+  const [priorityRevealStep, setPriorityRevealStep] = useState(0);
+  const [callPulse, setCallPulse] = useState(false);
+  const [callSignalBoost, setCallSignalBoost] = useState(false);
+  const [preCallSignalLoss, setPreCallSignalLoss] = useState(false);
+  const [acceptFreeze, setAcceptFreeze] = useState(false);
+  const [showAcceptButton, setShowAcceptButton] = useState(false);
+  const [callCountdown, setCallCountdown] = useState(20);
+  const [waitingFlicker, setWaitingFlicker] = useState(false);
+
+  const [authStep, setAuthStep] = useState(-1);
+  const [authFlashIndex, setAuthFlashIndex] = useState<number | null>(null);
+  const [linkProgress, setLinkProgress] = useState(0);
+  const [linkStable, setLinkStable] = useState(false);
+  const [stableFlash, setStableFlash] = useState(false);
+
+  const [showVideoLayer, setShowVideoLayer] = useState(false);
+  const [videoFade, setVideoFade] = useState(false);
+  const [videoMicroGlitch, setVideoMicroGlitch] = useState(false);
+  const [videoFlicker, setVideoFlicker] = useState(false);
+  const [videoExposureKick, setVideoExposureKick] = useState(0);
+  const [videoBootNoise, setVideoBootNoise] = useState(true);
+  const [videoSignalLoss, setVideoSignalLoss] = useState(false);
+  const [videoEndingCut, setVideoEndingCut] = useState(false);
+  const [hudDate, setHudDate] = useState("");
+  const [hudTime, setHudTime] = useState("");
+
+  const [showTransmissionDone, setShowTransmissionDone] = useState(false);
+  const [typedClosingLines, setTypedClosingLines] = useState<string[]>(Array(CLOSING_LINES.length).fill(""));
+  const [activeClosingLine, setActiveClosingLine] = useState<number | null>(null);
+  const [showPermanentRecord, setShowPermanentRecord] = useState(false);
+  const [closingTime, setClosingTime] = useState("");
+  const [showCommissionMark, setShowCommissionMark] = useState(false);
+  const [showThanks, setShowThanks] = useState(false);
+  const [showCloseButton, setShowCloseButton] = useState(false);
+
+  const clearCallPulse = () => {
+    if (callPulseClearRef.current) {
+      window.clearTimeout(callPulseClearRef.current);
+      callPulseClearRef.current = null;
+    }
+    setCallPulse(false);
+  };
+
+  const triggerIncomingPulse = () => {
+    playControlledAudio("debrief-call", SFX.incomingCall, 0.24, false);
+    setCallPulse(true);
+    setCallSignalBoost(true);
+    if (callPulseClearRef.current) {
+      window.clearTimeout(callPulseClearRef.current);
+    }
+    callPulseClearRef.current = window.setTimeout(() => {
+      setCallPulse(false);
+      setCallSignalBoost(false);
+    }, 360);
+  };
+
+  const tickHudClock = () => {
+    const now = new Date();
+    const dateText = new Intl.DateTimeFormat("es-ES", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+      .format(now)
+      .replace(".", "")
+      .toUpperCase();
+
+    const timeText = new Intl.DateTimeFormat("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZoneName: "short",
+    })
+      .format(now)
+      .toUpperCase();
+
+    setHudDate(dateText);
+    setHudTime(timeText);
+  };
+
+  const isIPhone = () => {
+    if (typeof navigator === "undefined") return false;
+    return /iPhone/i.test(navigator.userAgent || "");
+  };
+
+  const requestVideoFullscreen = () => {
+    if (typeof document === "undefined") return;
+
+    const video = videoRef.current as (HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+    }) | null;
+
+    if (isIPhone()) {
+      if (video?.webkitEnterFullscreen) {
+        try {
+          video.webkitEnterFullscreen();
+        } catch {
+          // Ignore if Safari denies native fullscreen request.
+        }
+      }
+      return;
+    }
+
+    const target = videoLayerRef.current || video;
+    if (!target) return;
+
+    const node = target as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void;
+    };
+
+    if (!document.fullscreenElement) {
+      if (target.requestFullscreen) {
+        target.requestFullscreen().catch(() => {});
+      } else if (node.webkitRequestFullscreen) {
+        node.webkitRequestFullscreen();
+      }
+    }
+  };
+
+  const handleVideoEnded = () => {
+    const video = videoRef.current;
+
+    if (video) {
+      video.pause();
+      video.controls = false;
+      video.currentTime = 0;
+    }
+
+    stopControlledAudio("debrief-ambience");
+    setVideoEndingCut(true);
+
+    if (videoTeardownRef.current) {
+      window.clearTimeout(videoTeardownRef.current);
+    }
+
+    videoTeardownRef.current = window.setTimeout(() => {
+      playSfx(SFX.glitch, 0.16);
+      setVideoSignalLoss(true);
+      setVideoMicroGlitch(true);
+      setVideoBootNoise(true);
+      setVideoFlicker(true);
+
+      window.setTimeout(() => {
+        setVideoMicroGlitch(false);
+      }, 90);
+
+      window.setTimeout(() => {
+        setVideoFade(true);
+      }, 140);
+
+      window.setTimeout(() => {
+        playSfx(SFX.archive, 0.2);
+        setShowVideoLayer(false);
+
+        if (videoRef.current) {
+          videoRef.current.removeAttribute("src");
+          videoRef.current.load();
+        }
+
+        setVideoSignalLoss(false);
+        setVideoEndingCut(false);
+        setPhase("finished");
+      }, 280);
+    }, 400);
+  };
 
   // PHASE 1: Secure link establishment
   useEffect(() => {
-    if (phase !== 'SECURE_LINK') return;
+    if (phase !== "starting") return;
 
-    // Progress bar animation
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + Math.random() * 15;
-        if (next >= 100) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-        return next;
+    let progressValue = 0;
+    let messageValue = 0;
+    playSfx("/sounds/beep.mp3", 0.22);
+
+    const interval = window.setInterval(() => {
+      messageValue = Math.min(messageValue + 1, MESSAGES.length - 1);
+      progressValue = Math.min(100, progressValue + 8);
+      setMessageIndex(messageValue);
+      setProgress(progressValue);
+
+      if (progressValue >= 100) {
+        window.clearInterval(interval);
+
+        window.setTimeout(() => {
+          fadeMusicVolume(0.024, 900);
+
+          // Fase 1: silencio absoluto para generar tension.
+          window.setTimeout(() => {
+            // Fase 2: interferencia breve y elegante.
+            playSfx(SFX.interference, 0.22);
+            setGlobalGlitch(true);
+
+            window.setTimeout(() => {
+              setGlobalGlitch(false);
+              setPhase("priority");
+            }, 130);
+          }, 400);
+        }, 700);
+      }
+    }, 320);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "priority") return;
+
+    let cancelled = false;
+    const timers: number[] = [];
+
+    setWaitingVisible(false);
+    setPriorityRevealStep(0);
+
+    const wait = (ms: number) =>
+      new Promise<void>((resolve) => {
+        const id = window.setTimeout(() => resolve(), ms);
+        timers.push(id);
       });
-    }, 150);
 
-    // Message cycling every 400ms
-    const msgInterval = setInterval(() => {
-      setMessageIndex((prev) => (prev + 1) % ESTABLISHMENT_MESSAGES.length);
-      playSfx('/sounds/luxbeep.mp3', 0.12);
-    }, 400);
+    const runPrioritySequence = async () => {
+      await wait(80);
+      if (cancelled) return;
+      setWaitingVisible(true);
 
-    messageIntervalRef.current = msgInterval;
+      await wait(300);
+      if (cancelled) return;
+      setPriorityRevealStep(1);
 
-    // After ~3.5 seconds, transition to PHASE 2
-    const timer = setTimeout(() => {
-      clearInterval(progressInterval);
-      setProgress(100);
-      setPhase('INCOMING_SIGNAL');
-    }, 3500);
+      await wait(300);
+      if (cancelled) return;
+      setPriorityRevealStep(2);
 
-    timerRef.current = timer;
+      await wait(300);
+      if (cancelled) return;
+      setPriorityRevealStep(3);
+
+      // Mantener 3-4s visibles con locucion de magistrada sin otros sonidos.
+      const minVisible = wait(3200);
+      const magistradaVoice = playControlledAudioAndWait("debrief-magistrada", SFX.magistrada, 0.26);
+      await Promise.all([minVisible, magistradaVoice]);
+      if (cancelled) return;
+
+      await wait(300);
+      if (cancelled) return;
+
+      // Unico tono inicial antes del bucle.
+      triggerIncomingPulse();
+
+      await wait(320);
+      if (cancelled) return;
+      setPhase("waiting");
+    };
+
+    runPrioritySequence();
 
     return () => {
-      clearInterval(progressInterval);
-      if (messageIntervalRef.current) clearInterval(messageIntervalRef.current);
-      if (timerRef.current) clearTimeout(timerRef.current);
+      cancelled = true;
+      timers.forEach((id) => window.clearTimeout(id));
+      stopControlledAudio("debrief-magistrada");
     };
   }, [phase]);
 
-  // PHASE 2: Incoming signal
   useEffect(() => {
-    if (phase !== 'INCOMING_SIGNAL') return;
+    if (phase !== "waiting") return;
 
-    const timer = setTimeout(() => {
-      setPhase('CALL_REQUEST');
-    }, 2500);
+    tickHudClock();
+    setCallCountdown(20);
+    setShowAcceptButton(false);
+    setPreCallSignalLoss(false);
 
-    timerRef.current = timer;
+    const ringStartTimer = window.setTimeout(() => {
+      setShowAcceptButton(true);
+      playSfx(SFX.magistrada, 0.2);
+      ringIntervalRef.current = window.setInterval(() => {
+        triggerIncomingPulse();
+      }, 2000);
+    }, 1200);
+
+    const countInterval = window.setInterval(() => {
+      setCallCountdown((prev) => {
+        if (prev <= 1) {
+          triggerIncomingPulse();
+          return 20;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const clockId = window.setInterval(() => {
+      tickHudClock();
+    }, 1000);
+
+    let flickerTimer: number | null = null;
+    let flickerClear: number | null = null;
+
+    const scheduleFlicker = () => {
+      const delay = 12000 + Math.floor(Math.random() * 8000);
+      flickerTimer = window.setTimeout(() => {
+        setWaitingFlicker(true);
+        flickerClear = window.setTimeout(() => {
+          setWaitingFlicker(false);
+          scheduleFlicker();
+        }, 85);
+      }, delay);
+    };
+
+    scheduleFlicker();
 
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (ringIntervalRef.current) {
+        window.clearInterval(ringIntervalRef.current);
+        ringIntervalRef.current = null;
+      }
+      window.clearTimeout(ringStartTimer);
+      window.clearInterval(countInterval);
+      window.clearInterval(clockId);
+      if (flickerTimer) window.clearTimeout(flickerTimer);
+      if (flickerClear) window.clearTimeout(flickerClear);
+      stopControlledAudio("debrief-call");
+      clearCallPulse();
+      setWaitingFlicker(false);
     };
   }, [phase]);
 
-  // PHASE 4: Video auto-play when entering
   useEffect(() => {
-    if (phase !== 'VIDEO' || !videoRef.current) return;
+    if (phase !== "auth") return;
 
-    const playVideo = async () => {
-      try {
-        await videoRef.current?.play();
-      } catch (err) {
-        console.error('Video play failed:', err);
+    setAuthStep(-1);
+    playSfx(SFX.authenticate, 0.22);
+
+    let idx = -1;
+    const intro = window.setTimeout(() => {
+      const interval = window.setInterval(() => {
+        idx += 1;
+        setAuthStep(idx);
+        setAuthFlashIndex(idx);
+
+        window.setTimeout(() => {
+          setAuthFlashIndex((prev) => (prev === idx ? null : prev));
+        }, 100);
+
+        if (idx >= AUTH_LINES.length - 1) {
+          window.clearInterval(interval);
+          window.setTimeout(() => {
+            setPhase("link");
+          }, 340);
+        }
+      }, 290);
+    }, 60);
+
+    return () => {
+      window.clearTimeout(intro);
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "link") return;
+
+    setLinkProgress(0);
+    setLinkStable(false);
+    playSfx(SFX.secureLink, 0.24);
+
+    let value = 0;
+    const interval = window.setInterval(() => {
+      value = Math.min(100, value + 6);
+      setLinkProgress(value);
+
+      if (value >= 100) {
+        window.clearInterval(interval);
+        setLinkStable(true);
+        setStableFlash(true);
+
+        window.setTimeout(() => {
+          setStableFlash(false);
+        }, 100);
+
+        window.setTimeout(() => {
+          setPhase("video");
+        }, 560);
+      }
+    }, 85);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "video") return;
+
+    setShowVideoLayer(true);
+    setVideoFade(false);
+    setVideoBootNoise(true);
+    tickHudClock();
+    playControlledAudio("debrief-ambience", SFX.ambience, 0.08, true);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "video" || !showVideoLayer) return;
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.currentTime = 0;
+    video.muted = false;
+    video.volume = 1;
+    video.controls = false;
+
+    const bootNoiseTimer = window.setTimeout(() => {
+      setVideoBootNoise(false);
+    }, 500);
+
+    const startPlayback = window.setTimeout(() => {
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    }, 140);
+
+    return () => {
+      window.clearTimeout(bootNoiseTimer);
+      window.clearTimeout(startPlayback);
+    };
+  }, [phase, showVideoLayer]);
+
+  useEffect(() => {
+    if (phase !== "video") return;
+
+    const clockId = window.setInterval(() => {
+      const shouldLagHud = Math.random() < 0.34;
+      if (!shouldLagHud) {
+        tickHudClock();
+        return;
+      }
+
+      window.setTimeout(() => {
+        tickHudClock();
+      }, 50);
+    }, 1000);
+
+    let flickerTimer: number | null = null;
+    let flickerClear: number | null = null;
+
+    const scheduleFlicker = () => {
+      const delay = 12000 + Math.floor(Math.random() * 8000);
+      flickerTimer = window.setTimeout(() => {
+        setVideoFlicker(true);
+        flickerClear = window.setTimeout(() => {
+          setVideoFlicker(false);
+          scheduleFlicker();
+        }, 80);
+      }, delay);
+    };
+
+    scheduleFlicker();
+
+    let glitchTimer: number | null = null;
+    let glitchClear: number | null = null;
+
+    const scheduleGlitch = () => {
+      const delay = 20000 + Math.floor(Math.random() * 10000);
+      glitchTimer = window.setTimeout(() => {
+        playSfx(SFX.glitch, 0.16);
+        setVideoSignalLoss(true);
+        setVideoMicroGlitch(true);
+        glitchClear = window.setTimeout(() => {
+          setVideoMicroGlitch(false);
+          setVideoSignalLoss(false);
+          scheduleGlitch();
+        }, 80);
+      }, delay);
+    };
+
+    scheduleGlitch();
+
+    let exposureTimer: number | null = null;
+    let exposureClear: number | null = null;
+
+    const scheduleExposureKick = () => {
+      const delay = 14000 + Math.floor(Math.random() * 12000);
+      exposureTimer = window.setTimeout(() => {
+        const delta = Math.random() > 0.5 ? 0.02 : -0.02;
+        setVideoExposureKick(delta);
+        exposureClear = window.setTimeout(() => {
+          setVideoExposureKick(0);
+          scheduleExposureKick();
+        }, 120);
+      }, delay);
+    };
+
+    scheduleExposureKick();
+
+    return () => {
+      window.clearInterval(clockId);
+      if (flickerTimer) window.clearTimeout(flickerTimer);
+      if (flickerClear) window.clearTimeout(flickerClear);
+      if (glitchTimer) window.clearTimeout(glitchTimer);
+      if (glitchClear) window.clearTimeout(glitchClear);
+      if (exposureTimer) window.clearTimeout(exposureTimer);
+      if (exposureClear) window.clearTimeout(exposureClear);
+      setVideoMicroGlitch(false);
+      setVideoFlicker(false);
+      setVideoExposureKick(0);
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    return () => {
+      stopControlledAudio("debrief-call");
+      stopControlledAudio("debrief-ambience");
+      clearCallPulse();
+
+      if (videoTeardownRef.current) {
+        window.clearTimeout(videoTeardownRef.current);
       }
     };
+  }, []);
 
-    playVideo();
+  useEffect(() => {
+    if (phase !== "finished") return;
+
+    let cancelled = false;
+    const timers: Array<number | ReturnType<typeof setTimeout>> = [];
+
+    const wait = (ms: number) =>
+      new Promise<void>((resolve) => {
+        const id = window.setTimeout(() => resolve(), ms);
+        timers.push(id);
+      });
+
+    const typeLine = async (lineIndex: number, text: string) => {
+      setActiveClosingLine(lineIndex);
+      for (let i = 1; i <= text.length; i += 1) {
+        if (cancelled) return;
+        setTypedClosingLines((prev) => {
+          const next = [...prev];
+          next[lineIndex] = text.slice(0, i);
+          return next;
+        });
+        await wait(34);
+      }
+      setActiveClosingLine(null);
+    };
+
+    const runClosingSequence = async () => {
+      stopMusic();
+      setVideoFade(false);
+      setVideoEndingCut(false);
+      setVideoSignalLoss(false);
+      setShowTransmissionDone(false);
+      setTypedClosingLines(Array(CLOSING_LINES.length).fill(""));
+      setShowPermanentRecord(false);
+      setShowCommissionMark(false);
+      setShowThanks(false);
+      setShowCloseButton(false);
+
+      await wait(500);
+      if (cancelled) return;
+
+      setVideoFade(true);
+      playSfx(FINAL_BEEP, 0.24);
+
+      await wait(600);
+      if (cancelled) return;
+
+      setShowTransmissionDone(true);
+
+      await wait(420);
+      if (cancelled) return;
+
+      for (let lineIndex = 0; lineIndex < CLOSING_LINES.length; lineIndex += 1) {
+        await typeLine(lineIndex, CLOSING_LINES[lineIndex]);
+        if (cancelled) return;
+
+        if (lineIndex === 1 || lineIndex === 3) {
+          playSfx(FINAL_BEEP, 0.2);
+        }
+
+        await wait(220);
+        if (cancelled) return;
+      }
+
+      await wait(1000);
+      if (cancelled) return;
+
+      setClosingTime(
+        new Intl.DateTimeFormat("es-ES", {
+          timeZone: "Europe/Madrid",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).format(new Date())
+      );
+      setShowPermanentRecord(true);
+      playSfx(FINAL_BEEP, 0.2);
+
+      await wait(1000);
+      if (cancelled) return;
+
+      setShowCommissionMark(true);
+      playSfx(SFX.commission, 0.12);
+
+      await wait(2000);
+      if (cancelled) return;
+
+      setShowThanks(true);
+
+      await wait(1300);
+      if (cancelled) return;
+
+      await wait(1000);
+      if (cancelled) return;
+
+      setShowCloseButton(true);
+    };
+
+    runClosingSequence();
+
+    return () => {
+      cancelled = true;
+      timers.forEach((id) => window.clearTimeout(id));
+    };
   }, [phase]);
 
-  // Video ended handler
-  const handleVideoEnded = useCallback(() => {
-    setVideoEnded(true);
-    setPhase('FINALE');
-  }, []);
-
-  // Handle accept call button
-  const handleAcceptCall = useCallback(() => {
-    playSfx('/sounds/luxbeep.mp3', 0.15);
-    setPhase('VIDEO');
-  }, []);
-
-  // Handle close expedient button
-  const handleCloseExpedient = useCallback(() => {
-    navigate({ to: '/' });
-  }, [navigate]);
-
   return (
-    <AppShell title="Debrief" latin="Recessus">
-      <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden relative">
-        {/* Vignette effect */}
-        <div className="fixed inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.4) 100%)',
-          zIndex: 10,
-        }} />
+    <AppShell title="Transmision Final" latin="Alta Mesa Â· Informe">
+      <div className="min-h-[75vh] flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-[1240px]">
+          <Panel className="relative overflow-hidden border border-gold-dim/60 bg-black/95">
+            <div className={`pointer-events-none absolute inset-0 transition-opacity duration-200 ${globalGlitch ? "opacity-100 bg-white/10" : "opacity-0"}`} />
+            <div className={`pointer-events-none absolute inset-0 bg-black/30 transition-opacity duration-100 ${preCallSignalLoss ? "opacity-100" : "opacity-0"}`} />
+            <div className={`pointer-events-none absolute inset-0 bg-white/20 transition-opacity duration-100 ${stableFlash ? "opacity-100" : "opacity-0"}`} />
 
-        {/* Scanlines */}
-        <div className="fixed inset-0 pointer-events-none scanlines" style={{
-          zIndex: 11,
-          opacity: 0.08,
-        }} />
+            <div className={`relative flex min-h-[70vh] flex-col justify-center overflow-hidden transition-[transform,opacity,filter] duration-150 ${globalGlitch ? "-translate-y-[1px] opacity-95" : "translate-y-0 opacity-100"} ${acceptFreeze ? "pointer-events-none brightness-[0.97] saturate-[0.95]" : ""}`}>
+              {(phase === "starting" || phase === "priority" || phase === "waiting" || phase === "auth" || phase === "link") && (
+                <div className={`relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 md:px-8 py-12 text-center ${waitingFlicker ? "brightness-[1.03]" : "brightness-100"}`}>
+                  <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_3px,rgba(255,255,255,0.88)_3px,rgba(255,255,255,0.88)_5px)] mix-blend-overlay" />
+                  <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/20 [animation:debrief-video-scan_13s_linear_infinite]" />
 
-        {/* PHASE 1: Secure Link Establishment */}
-        {phase === 'SECURE_LINK' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 animate-in fade-in">
-            <div className="space-y-8 max-w-xl">
-              {/* Title */}
-              <div className="text-center space-y-2">
-                <h1 className="font-display text-3xl md:text-4xl tracking-wider text-gold">
-                  ESTABLECIENDO ENLACE SEGURO
-                </h1>
-                <p className="font-mono text-sm text-gold-dim tracking-[0.2em]">
-                  ROMA
-                </p>
-                <p className="font-mono text-sm text-gold-dim tracking-[0.2em]">
-                  CONSEJO MAGISTRAL
-                </p>
-              </div>
+                  {phase === "starting" && (
+                    <div className="w-full space-y-6">
+                      <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">DESBLOQUEO DE CONSOLA SEGURA</p>
+                      <div className="h-4 w-full overflow-hidden rounded-full border border-gold/70 bg-white/10 shadow-[0_0_18px_rgba(212,175,55,0.22)]">
+                        <div
+                          className="h-full rounded-full bg-[linear-gradient(90deg,oklch(0.55_0.08_80)_0%,oklch(0.78_0.13_85)_35%,oklch(0.9_0.1_88_/_0.65)_50%,oklch(0.78_0.13_85)_65%,oklch(0.55_0.08_80)_100%)] bg-[length:200%_100%] animate-progress-flow transition-all duration-300 shadow-[0_0_14px_rgba(212,175,55,0.48)]"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-gold-dim">
+                        <span>{progress}%</span>
+                        <span>{MESSAGES[messageIndex]}</span>
+                      </div>
+                    </div>
+                  )}
 
-              {/* Progress bar */}
-              <div className="space-y-4">
-                <div className="relative h-1 bg-gold-dim/20 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-transparent via-gold to-transparent transition-all duration-300"
+                  {phase === "priority" && (
+                    <div className={`space-y-4 transition-all duration-700 ${waitingVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+                      <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim transition-opacity duration-500">COMUNICACION PRIORITARIA</p>
+                      <p className={`font-mono text-sm tracking-[0.35em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)] transition-opacity duration-500 ${priorityRevealStep >= 1 ? "opacity-100" : "opacity-0"}`}>ORIGEN</p>
+                      <p className={`font-mono text-4xl md:text-5xl tracking-[0.35em] uppercase text-gold [text-shadow:0_0_8px_rgba(214,173,74,0.24)] transition-opacity duration-500 ${priorityRevealStep >= 2 ? "opacity-100" : "opacity-0"}`}>ROMA</p>
+                      <p className={`font-mono text-sm tracking-[0.35em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)] transition-opacity duration-500 ${priorityRevealStep >= 3 ? "opacity-100" : "opacity-0"}`}>ALTA MESA</p>
+
+                      <div className="pointer-events-none absolute inset-x-6 top-[52%] h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.45),transparent)] opacity-45 [animation:comm-top-sweep_4.6s_ease-in-out_infinite]" />
+                    </div>
+                  )}
+
+                  {phase === "waiting" && (
+                    <div className="relative z-10 w-full max-w-2xl space-y-8 text-center">
+                      <div className="space-y-3">
+                        <p className="font-mono text-[10px] tracking-[0.38em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)]">COMUNICACION PRIORITARIA</p>
+                        <p className="font-display text-3xl md:text-4xl uppercase text-gold [text-shadow:0_0_10px_rgba(214,173,74,0.28)]">ORIGEN Â· ROMA Â· ALTA MESA</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2 font-mono text-[11px] tracking-[0.28em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)]">
+                        <p>ROMA</p>
+                        <p>ALTA MESA</p>
+                        <p>CANAL PRIORITARIO</p>
+                      </div>
+
+                      <div className="pointer-events-none absolute inset-x-6 top-[44%] h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.35),transparent)] opacity-40 [animation:comm-top-sweep_5.4s_ease-in-out_infinite]" />
+                      <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/15 [animation:debrief-video-scan_14s_linear_infinite]" />
+
+                      <div className="space-y-2">
+                        <p className="font-mono text-[10px] tracking-[0.24em] uppercase text-gold-dim">La comunicacion permanecera disponible durante:</p>
+                        <p className="font-mono text-3xl text-gold tracking-[0.28em] [text-shadow:0_0_8px_rgba(214,173,74,0.3)]">{callCountdown}s</p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          stopControlledAudio("debrief-call");
+                          clearCallPulse();
+                          setAcceptFreeze(true);
+
+                          flushSync(() => {
+                            setShowVideoLayer(true);
+                            setVideoFade(false);
+                            setVideoBootNoise(true);
+                          });
+
+                          const video = videoRef.current;
+                          if (video) {
+                            video.pause();
+                            video.currentTime = 0;
+                            video.controls = false;
+                          }
+
+                          requestVideoFullscreen();
+
+                          window.setTimeout(() => {
+                            setAcceptFreeze(false);
+                            playSfx(SFX.accept, 0.24);
+                          }, 200);
+
+                          window.setTimeout(() => {
+                            setPhase("auth");
+                          }, 260);
+                        }}
+                        className={`inline-flex items-center justify-center border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.34em] text-gold transition-all duration-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold ${callPulse ? "shadow-[0_0_22px_rgba(212,175,55,0.32)] bg-gold/16" : "shadow-[0_0_10px_rgba(212,175,55,0.15)]"} ${showAcceptButton ? "opacity-100" : "opacity-0"}`}
+                        style={{ pointerEvents: showAcceptButton ? "auto" : "none" }}
+                      >
+                        ACEPTAR COMUNICACION
+                      </button>
+
+                      <div className="mx-auto flex w-full max-w-lg items-center justify-between font-mono text-[9px] tracking-[0.2em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)]">
+                        <div className="inline-flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full bg-red-500 [animation:debrief-live-led_1.9s_ease-in-out_infinite] transition-all duration-150 ${callPulse ? "scale-[1.16] brightness-105" : "scale-100"}`} />
+                          <span>EN DIRECTO</span>
+                        </div>
+                        <div className="inline-flex items-end gap-[2px] h-4">
+                          {Array.from({ length: 7 }).map((_, i) => (
+                            <span
+                              key={`waiting-signal-${i}`}
+                              className={`w-[3px] bg-gold/70 origin-bottom [animation:debrief-signal-bar_1.9s_ease-in-out_infinite] transition-[filter,opacity] duration-150 ${callSignalBoost ? "brightness-[1.12] opacity-95" : "brightness-100 opacity-80"}`}
+                              style={{
+                                animationDelay: `${i * 0.1}s`,
+                                animationDuration: `${1.6 + (i % 3) * 0.25}s`,
+                                height: `${7 + (i % 3)}px`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <div className="text-right">
+                          <p>{hudDate}</p>
+                          <p>{hudTime}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {phase === "auth" && (
+                    <div className="space-y-6">
+                      <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)]">AUTENTICANDO OPERATIVO</p>
+                      <div className="space-y-2 font-mono text-[13px] tracking-[0.26em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)]">
+                        {AUTH_LINES.map((line, idx) => (
+                          <p
+                            key={line}
+                            className={`transition-[opacity,filter,color] duration-200 ${authStep >= idx ? "opacity-100 text-gold" : "opacity-30"} ${authFlashIndex === idx ? "brightness-[1.12] [text-shadow:0_0_8px_rgba(214,173,74,0.28)]" : ""}`}
+                          >
+                            {line} {authStep >= idx ? "âœ”" : ""}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {phase === "link" && (
+                    <div className="w-full max-w-xl space-y-5">
+                      <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)]">ESTABLECIENDO ENLACE...</p>
+                      <div className="h-3 w-full border border-gold-dim/60 bg-black/35">
+                        <div
+                          className="h-full bg-[linear-gradient(90deg,oklch(0.55_0.08_80),oklch(0.88_0.16_88),oklch(0.55_0.08_80))] bg-[length:200%_100%] animate-progress-flow transition-all duration-150"
+                          style={{ width: `${linkProgress}%` }}
+                        />
+                      </div>
+                      <p className="font-mono text-sm tracking-[0.28em] uppercase text-gold [text-shadow:0_0_8px_rgba(214,173,74,0.28)]">
+                        {linkStable ? "SENAL ESTABLE" : `${linkProgress}%`}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {showVideoLayer && (
+                <div ref={videoLayerRef} className="fixed inset-0 z-[140] w-screen h-screen bg-black overflow-hidden isolate" style={{ height: "100dvh" }}>
+                  <video
+                    ref={videoRef}
+                    src="/videos/oldwoman.mp4"
+                    onEnded={handleVideoEnded}
+                    playsInline
+                    preload="auto"
+                    controls={false}
+                    disablePictureInPicture
+                    className={`absolute inset-0 z-0 h-screen w-screen object-cover transition-[transform,filter] duration-100 ${videoMicroGlitch ? "translate-x-[1px] -translate-y-[1px]" : ""}`}
                     style={{
-                      width: `${progress}%`,
+                      height: "100dvh",
+                      filter: [
+                        `brightness(${(videoFlicker ? 0.99 : 1) + videoExposureKick + (videoSignalLoss ? -0.04 : 0)})`,
+                        `contrast(${videoSignalLoss ? 1.05 : videoBootNoise ? 1.04 : 1})`,
+                        `saturate(${videoSignalLoss ? 0.93 : videoBootNoise ? 0.92 : 1})`,
+                        videoMicroGlitch ? "drop-shadow(-1px 0 rgba(255,52,52,0.13)) drop-shadow(1px 0 rgba(70,120,255,0.13))" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" "),
                     }}
                   />
+
+                  {phase === "video" && (
+                    <>
+                      <div className="pointer-events-none absolute inset-0 z-10 opacity-[0.038] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_3px,rgba(255,255,255,0.86)_3px,rgba(255,255,255,0.86)_5px)] mix-blend-overlay" />
+                      <div
+                        className="pointer-events-none absolute inset-0 z-10 [background-image:radial-gradient(circle,rgba(255,255,255,0.45)_0.8px,transparent_1.2px)] [background-size:3px_3px] [animation:debrief-noise-drift_1.8s_steps(2,end)_infinite]"
+                        style={{ opacity: videoBootNoise ? 0.028 : 0.014 }}
+                      />
+                      <div className="pointer-events-none absolute left-0 right-0 z-10 h-px bg-white/20 [animation:debrief-video-scan_10.5s_linear_infinite]" />
+                      <div className={`pointer-events-none absolute inset-0 z-10 bg-black/28 transition-opacity duration-120 ${videoSignalLoss ? "opacity-100" : "opacity-0"}`} />
+                      <div className={`pointer-events-none absolute inset-0 z-10 transition-opacity duration-120 ${videoSignalLoss ? "opacity-[0.06]" : "opacity-0"} [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_2px,rgba(255,255,255,0.9)_2px,rgba(255,255,255,0.9)_4px)] mix-blend-overlay`} />
+                      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,transparent_58%,rgba(0,0,0,0.35)_100%)]" />
+
+                      <div
+                        className="pointer-events-none absolute left-2 right-2 z-20 md:left-4 md:right-4 flex items-start justify-between font-mono text-[8px] md:text-[10px] leading-[1.1] tracking-[0.14em] md:tracking-[0.22em] uppercase text-gold-bright [text-shadow:0_0_8px_rgba(214,173,74,0.24)]"
+                        style={{ top: "max(0.5rem, env(safe-area-inset-top))" }}
+                      >
+                        <div className="absolute left-[-4px] top-[-4px] h-16 w-28 md:h-20 md:w-36 bg-gradient-to-b from-black/24 via-black/10 to-transparent" />
+                        <div className="absolute right-[-4px] top-[-4px] h-20 w-32 md:h-24 md:w-40 bg-gradient-to-b from-black/24 via-black/10 to-transparent" />
+                        <div className="inline-flex max-w-[34vw] md:max-w-none flex-col gap-0.5 md:gap-1">
+                          <span>ROMA</span>
+                          <span>MAGISTRADA</span>
+                          <span>ALTA MESA</span>
+                        </div>
+
+                        <div className="inline-flex max-w-[44vw] md:max-w-none flex-col items-end gap-0.5 md:gap-1 text-right">
+                          <div className="inline-flex items-center gap-2 text-gold-bright">
+                            <span className="h-2 w-2 rounded-full bg-white/95 [animation:debrief-live-white_2.1s_ease-in-out_infinite]" />
+                            <span>EN DIRECTO</span>
+                          </div>
+                          <span>CANAL VII</span>
+                          <span>{hudDate}</span>
+                          <span>{hudTime}</span>
+                          <div className="inline-flex items-end gap-[2px] h-3 mt-0.5">
+                            {Array.from({ length: 7 }).map((_, i) => (
+                              <span
+                                key={`signal-${i}`}
+                                className="w-[2px] bg-gold/75 origin-bottom [animation:debrief-signal-bar_2.1s_ease-in-out_infinite]"
+                                style={{
+                                  animationDelay: `${i * 0.11}s`,
+                                  animationDuration: `${1.8 + (i % 4) * 0.28}s`,
+                                  height: `${6 + (i % 3)}px`,
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div
+                    className={`pointer-events-none absolute inset-0 z-30 bg-black transition-opacity ${videoEndingCut ? "duration-[220ms]" : "duration-[600ms]"} ${videoFade ? "opacity-100" : "opacity-0"}`}
+                  />
+
+                  <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-24 bg-gradient-to-b from-black/58 to-transparent" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-24 bg-gradient-to-t from-black/58 to-transparent" />
                 </div>
+              )}
 
-                {/* Status message */}
-                <div className="h-6 flex items-center justify-center">
-                  <p className="font-mono text-xs text-gold-dim text-center tracking-wide">
-                    {ESTABLISHMENT_MESSAGES[messageIndex]}
-                  </p>
+                  {phase === "finished" && (
+                <div className="relative z-[60] mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 md:px-8 py-16 text-center">
+                      <div className={`space-y-3 transition-opacity duration-700 ${showTransmissionDone ? "opacity-100" : "opacity-0"}`}>
+                        <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">TRANSMISION FINALIZADA</p>
+                      </div>
+
+                      <div className="w-full max-w-[700px] space-y-3">
+                        {typedClosingLines.map((line, idx) => (
+                          <p
+                            key={`closing-line-${idx}`}
+                            className="font-mono text-[11px] md:text-[12px] tracking-[0.2em] md:tracking-[0.3em] uppercase text-gold-dim text-center"
+                          >
+                            {line}
+                            {activeClosingLine === idx && <span className="animate-blink">â–ˆ</span>}
+                          </p>
+                        ))}
+                      </div>
+
+                      <div
+                        className={`w-full max-w-[560px] border border-gold-dim/45 bg-black/70 px-4 md:px-6 py-5 text-center md:text-left scanlines transition-all duration-700 ${
+                          showPermanentRecord ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                        }`}
+                      >
+                        <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold mb-4">REGISTRO PERMANENTE</p>
+                        <div className="grid grid-cols-1 md:grid-cols-[170px_1fr] gap-y-2 font-mono text-[11px] tracking-[0.14em] md:tracking-[0.18em] uppercase text-gold-dim">
+                          <span>ID</span>
+                          <span className="text-gold">AURUM VII Â· 0734</span>
+                          <span>HORA DE CIERRE</span>
+                          <span className="text-gold">{closingTime || "--/--/---- --:--:--"}</span>
+                          <span>ESTADO</span>
+                          <span className="text-gold">ARCHIVADO</span>
+                        </div>
+                      </div>
+
+                      <div className={`space-y-2 transition-all duration-1000 ${showCommissionMark ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+                        <p className="font-display text-3xl md:text-4xl text-gold uppercase">EX COMMISSIONE</p>
+                        <p className="font-display text-xl md:text-2xl text-gold-dim uppercase tracking-[0.2em]">ALTA MESA</p>
+                      </div>
+
+                      <div className={`space-y-2 transition-opacity duration-[1400ms] ${showThanks ? "opacity-100" : "opacity-0"}`}>
+                        <p className="font-mono text-[12px] tracking-[0.12em] text-gold-dim">La Comision agradece sus servicios.</p>
+                        <p className="font-mono text-[12px] tracking-[0.12em] text-gold-dim">Hasta la proxima mision.</p>
+                      </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
+              )}
 
-        {/* PHASE 2: Incoming Signal */}
-        {phase === 'INCOMING_SIGNAL' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 animate-in fade-in">
-            <div className="space-y-8 max-w-xl text-center">
-              {/* Top text */}
-              <div className="space-y-4">
-                <p className="font-mono text-xs text-gold-dim tracking-[0.3em]">
-                  CANAL SEGURO ESTABLECIDO
-                </p>
-
-                {/* Slight glitch effect text */}
-                <div className="relative h-16 flex items-center justify-center">
-                  <p
-                    className="font-display text-2xl tracking-wider text-gold"
-                    style={{
-                      animation: 'flicker 0.15s ease-in-out',
-                    }}
-                  >
-                    TRANSMISIÓN ENTRANTE
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="font-mono text-xs text-gold-dim tracking-[0.2em]">
-                    MAGISTRADA DE LA ALTA MESA
-                  </p>
-                </div>
-              </div>
-
-              {/* Decorative elements */}
-              <div className="flex justify-center gap-4">
-                <div className="w-1 h-8 bg-gold/30" />
-                <div className="w-1 h-12 bg-gold/50" />
-                <div className="w-1 h-8 bg-gold/30" />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* PHASE 3: Call Request */}
-        {phase === 'CALL_REQUEST' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 animate-in fade-in">
-            <div className="space-y-12 max-w-lg text-center">
-              <div>
-                <p className="font-display text-lg tracking-widest text-gold-bright mb-2">
-                  LA MAGISTRADA
-                </p>
-                <p className="font-mono text-sm text-gold-dim tracking-wider">
-                  solicita una comunicación privada
-                </p>
-              </div>
-
-              <button
-                onClick={handleAcceptCall}
-                className="px-8 py-4 border-2 border-gold text-gold font-display text-sm tracking-[0.2em] transition-all duration-300 hover:bg-gold/10 hover:shadow-lg active:scale-95"
-                style={{
-                  boxShadow: '0 0 20px rgba(178, 148, 69, 0.3)',
-                }}
-              >
-                ACEPTAR LLAMADA
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* PHASE 4: Video Call */}
-        {phase === 'VIDEO' && (
-          <div className="absolute inset-0 bg-black flex items-center justify-center">
-            <video
-              ref={videoRef}
-              src="/videos/oldwoman.mp4"
-              className="w-full h-full object-cover"
-              playsInline
-              onEnded={handleVideoEnded}
-            />
-
-            {/* Top Left Info */}
-            <div className="absolute top-4 left-4 font-mono text-[10px] text-gold-dim space-y-1 z-20 pointer-events-none">
-              <p>ROMA</p>
-              <p>MAGISTRADA</p>
-              <p>ALTA MESA</p>
-            </div>
-
-            {/* Top Right - Live indicator */}
-            <div className="absolute top-4 right-4 flex items-center gap-2 font-mono text-[10px] text-gold-dim z-20 pointer-events-none">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-              <span>EN DIRECTO</span>
-            </div>
-
-            {/* Bottom Left - Security Info */}
-            <div className="absolute bottom-4 left-4 font-mono text-[10px] text-gold-dim space-y-1 z-20 pointer-events-none">
-              <p>CANAL SEGURO</p>
-              <p>RSA-4096</p>
-            </div>
-
-            {/* Bottom Right - Latency Info */}
-            <div className="absolute bottom-4 right-4 font-mono text-[10px] text-gold-dim space-y-1 text-right z-20 pointer-events-none">
-              <p>LATENCIA 12 ms</p>
-              <p>AURUM VII</p>
-            </div>
-          </div>
-        )}
-
-        {/* PHASE 5: Finale */}
-        {phase === 'FINALE' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 animate-in fade-in">
-            <div className="space-y-8 max-w-xl text-center">
-              {/* Fade in text */}
-              <div className="space-y-6">
-                <p className="font-mono text-xs text-gold-dim tracking-[0.3em]">
-                  TRANSMISIÓN FINALIZADA
-                </p>
-
-                <p className="font-display text-2xl tracking-wider text-gold">
-                  OPERACIÓN MINERVA
-                </p>
-
-                <p className="font-mono text-sm text-gold-dim tracking-[0.15em]">
-                  ACTIVO RECUPERADO
-                </p>
-
-                <p className="font-display text-lg tracking-widest text-gold-bright">
-                  MISIÓN COMPLETADA
-                </p>
-              </div>
-
-              {/* Close button */}
-              <div className="pt-6">
-                <button
-                  onClick={handleCloseExpedient}
-                  className="px-8 py-4 border-2 border-gold text-gold font-display text-sm tracking-[0.2em] transition-all duration-300 hover:bg-gold/10 hover:shadow-lg active:scale-95"
-                  style={{
-                    boxShadow: '0 0 20px rgba(178, 148, 69, 0.3)',
-                  }}
+              {showCloseButton && (
+                <Link
+                  to="/"
+                  className="fixed z-[90] bottom-8 left-1/2 -translate-x-1/2 inline-flex border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.35em] text-gold transition hover:bg-gold/20"
                 >
                   CERRAR EXPEDIENTE
-                </button>
-              </div>
+                </Link>
+              )}
             </div>
-          </div>
-        )}
+          </Panel>
+        </div>
       </div>
     </AppShell>
   );
 }
+
+export default Debrief;

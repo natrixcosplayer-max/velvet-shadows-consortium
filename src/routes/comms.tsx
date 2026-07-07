@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 import ximoPortrait from "../assets/agents/ximo.jpg";
@@ -9,7 +9,7 @@ import altaPortrait from "../assets/alta.png";
 
 import {
   playEmailVoice,
-  fadeOutVoice,
+  stopEmailVoice,
 } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/comms")({
@@ -27,25 +27,48 @@ const THREADS: Msg[] = [
   { id: "4", from: "Adjudicador Vex · Osaka", subject: "Entrega autorizada", portrait: osakaPortrait, body: "Las Pitas de Kevlar procedentes de Osaka ya están listas para su recogida. Último modelo homologado por la Comisión. Desconozco para quién son, pero te aconsejo mantenerlas ocultas hasta el momento oportuno. Algunos regalos solo deben descubrirse una vez. Buena suerte.", at: "Hace 23 días", cipher: "RSA-4096" },
   { id: "5", from: "Mesa Alta · Concilium", subject: "Convocatoria", portrait: altaPortrait, body: "Se requiere su presencia. Casa capitular de Roma. Medianoche, el día tres del mes. Etiqueta. Sin excepciones.", at: "Hace 4 semanas", cipher: "Sello Imperium" },
 ];
-
-
-let ximoAutoplayed = false;
+const XIMO_AUTOPLAY_SESSION_KEY = "comms-ximo-autoplayed";
 
 function Comms() {
   const [open, setOpen] = useState(THREADS[0]);
+  const [unreadIds, setUnreadIds] = useState<string[]>(() =>
+    THREADS.filter((t) => t.unread || ["1", "2", "3"].includes(t.id))
+      .slice(0, 3)
+      .map((t) => t.id)
+  );
   const [draft, setDraft] = useState("");
   const [encrypted, setEncrypted] = useState("");
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   useEffect(() => {
-    if (!ximoAutoplayed) {
-      ximoAutoplayed = true;
+    // The currently opened message is considered read.
+    setUnreadIds((prev) => prev.filter((id) => id !== open.id));
+  }, [open.id]);
+
+  useEffect(() => {
+    if (pathname !== "/comms") return;
+
+    const alreadyAutoplayed =
+      typeof window !== "undefined" && window.sessionStorage.getItem(XIMO_AUTOPLAY_SESSION_KEY) === "1";
+
+    if (!alreadyAutoplayed) {
+      window.sessionStorage.setItem(XIMO_AUTOPLAY_SESSION_KEY, "1");
       playEmailVoice("1");
     }
 
-    return () => {
-      fadeOutVoice();
+    const handleVisibilityOrPageExit = () => {
+      stopEmailVoice(240);
     };
-  }, []);
+
+    document.addEventListener("visibilitychange", handleVisibilityOrPageExit);
+    window.addEventListener("pagehide", handleVisibilityOrPageExit);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityOrPageExit);
+      window.removeEventListener("pagehide", handleVisibilityOrPageExit);
+      stopEmailVoice(240);
+    };
+  }, [pathname]);
 
   const encrypt = () => {
     if (!draft) return;
@@ -60,26 +83,27 @@ function Comms() {
       <div className="grid lg:grid-cols-[320px_1fr] gap-6">
         <Panel className="!p-0">
           <div className="p-3 border-b border-gold-dim font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase flex justify-between">
-            <span>Bandeja</span><span>{THREADS.filter((t) => t.unread).length} nuevos</span>
+            <span>Bandeja</span><span>{unreadIds.length} nuevos</span>
           </div>
           <ul>
             {THREADS.map((t) => (
               <li key={t.id}>
                 <button
                   onClick={() => {
-                    if (open.id === t.id) return;
-
                     playEmailVoice(t.id);
-                    setOpen(t);
+
+                    if (open.id !== t.id) {
+                      setOpen(t);
+                    }
                   }}
-                  className={`w-full text-left p-4 border-b border-gold-dim/40 hover:bg-secondary/40 transition ${open.id === t.id ? "bg-secondary/60 border-l-2 border-l-gold" : ""}`}
+                  className={`w-full text-left p-4 border-b border-gold-dim/40 hover:bg-secondary/40 transition ${unreadIds.includes(t.id) ? "bg-gold/20" : ""} ${open.id === t.id ? "bg-secondary/60 border-l-2 border-l-gold" : ""}`}
                 >
                   <div className="flex justify-between items-baseline">
-                    <span className={`font-display ${t.unread ? "text-gold-bright" : "text-gold"}`}>{t.from}</span>
+                    <span className={`font-display ${unreadIds.includes(t.id) ? "text-gold-bright" : "text-gold"}`}>{t.from}</span>
                     <span className="font-mono text-[10px] text-gold-dim">{t.at}</span>
                   </div>
                   <p className="text-xs text-foreground/80 mt-1 truncate">{t.subject}</p>
-                  {t.unread && <span className="inline-block mt-1.5 w-1.5 h-1.5 bg-gold rounded-full" />}
+                  {unreadIds.includes(t.id) && <span className="inline-block mt-1.5 w-1.5 h-1.5 bg-gold rounded-full" />}
                 </button>
                   </li>
   ))}
@@ -99,15 +123,22 @@ function Comms() {
                 <p className="font-mono text-[10px] text-gold mt-2 border border-gold-dim px-2 py-0.5">⊙ {open.cipher}</p>
               </div>
             </div>
-            <div className="flex flex-col gap-4 md:gap-6 items-center text-center md:text-left">
-              <img
-                src={open.portrait}
-                alt={open.from}
-                className="w-24 md:w-44 shrink-0 border border-gold-dim grayscale object-cover"
-              />
+            <div className="relative overflow-hidden rounded-sm">
+              <div className="absolute inset-0 opacity-70 bg-[linear-gradient(rgba(214,173,74,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(214,173,74,0.12)_1px,transparent_1px)] bg-[size:18px_18px]" />
+              <div className="relative z-10 flex flex-col gap-4 md:gap-6 items-center text-center md:text-left px-2 py-2 md:px-3 md:py-3">
+                <div className="relative w-28 md:w-44 shrink-0 overflow-hidden">
+                  <div className="absolute inset-0 rounded-sm bg-gold/10 blur-[10px]" />
+                  <div className="absolute inset-x-0 top-0 h-[2px] bg-gold/80 shadow-[0_0_12px_rgba(214,173,74,0.9)] animate-scan pointer-events-none" />
+                  <img
+                    src={open.portrait}
+                    alt={open.from}
+                    className="relative z-10 w-full aspect-[3/4] border border-gold-dim grayscale object-cover animate-flicker"
+                  />
+                </div>
 
-              <div className="w-full font-mono text-sm leading-relaxed text-foreground/90 border-t border-gold pt-4 md:border-t-0 md:border-none md:pt-0 text-left space-y-4 whitespace-pre-line">
-                {open.body}
+                <div className="w-full font-mono text-sm leading-relaxed text-foreground/90 text-left space-y-4 whitespace-pre-line">
+                  {open.body}
+                </div>
               </div>
             </div>
             <div className="mt-6 font-mono text-[10px] text-gold-dim tracking-[0.3em] uppercase border-t border-gold-dim pt-3 flex justify-between">

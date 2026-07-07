@@ -1,7 +1,16 @@
 let music: HTMLAudioElement | null = null;
 let voice: HTMLAudioElement | null = null;
+let controlledAudio: HTMLAudioElement | null = null;
+let controlledAudioKey: string | null = null;
 
 let musicFade: ReturnType<typeof setInterval> | null = null;
+let voiceFade: ReturnType<typeof setInterval> | null = null;
+let hasUserGesture = false;
+let listenersAttached = false;
+let pendingMusicPlay = false;
+let pendingUnlockVolume: number | null = null;
+let emailVoiceRequestId = 0;
+
 const MUSIC_VOLUME = 0.08;
 const MUSIC_DUCK_VOLUME = 0.005;
 const EMAIL_VOICES: Record<string, string> = {
@@ -11,6 +20,39 @@ const EMAIL_VOICES: Record<string, string> = {
   "4": "/sounds/pitas.wav",
   "5": "/sounds/russian.wav",
 };
+
+function attachGestureUnlockListeners() {
+  if (listenersAttached || typeof window === "undefined") return;
+  listenersAttached = true;
+
+  const onGesture = () => {
+    hasUserGesture = true;
+
+    if (music && pendingMusicPlay) {
+      const retry = music.play();
+      if (retry) {
+        retry
+          .then(() => {
+            pendingMusicPlay = false;
+          })
+          .catch(() => {});
+      }
+    }
+
+    if (pendingUnlockVolume !== null) {
+      const volume = pendingUnlockVolume;
+      pendingUnlockVolume = null;
+      playUnlockSound(volume).catch(() => {});
+    }
+  };
+
+  window.addEventListener("pointerdown", onGesture, { passive: true });
+  window.addEventListener("touchstart", onGesture, { passive: true });
+  window.addEventListener("click", onGesture, { passive: true });
+  window.addEventListener("keydown", onGesture, { passive: true });
+}
+
+attachGestureUnlockListeners();
 
 export function playMusic(
   src: string,
@@ -27,16 +69,30 @@ export function playMusic(
   music.loop = loop;
   music.volume = volume;
 
-  music.addEventListener(
-    "loadedmetadata",
-    () => {
-      if (!music) return;
+  const startPlayback = () => {
+    if (!music) return;
 
-      music.currentTime = startTime;
-      music.play().catch(() => {});
-    },
-    { once: true }
-  );
+    music.currentTime = startTime;
+    const result = music.play();
+
+    if (result) {
+      result
+        .then(() => {
+          pendingMusicPlay = false;
+        })
+        .catch(() => {
+          // Safari iOS can block autoplay until a real user gesture.
+          pendingMusicPlay = true;
+          attachGestureUnlockListeners();
+        });
+    }
+  };
+
+  music.addEventListener("loadedmetadata", startPlayback, { once: true });
+
+  if (music.readyState >= 1) {
+    startPlayback();
+  }
 }
 
 export function stopMusic() {
@@ -45,6 +101,7 @@ export function stopMusic() {
   music.pause();
   music.currentTime = 0;
   music = null;
+  pendingMusicPlay = false;
 }
 
 export function seekMusic(seconds: number) {
@@ -97,8 +154,53 @@ export function duckMusic() {
   fadeMusicVolume(MUSIC_DUCK_VOLUME, 300);
 }
 
+function duckMusicImmediate() {
+  if (!music) return;
+
+  if (musicFade) {
+    clearInterval(musicFade);
+    musicFade = null;
+  }
+
+  music.volume = MUSIC_DUCK_VOLUME;
+}
+
 export function restoreMusic() {
   fadeMusicVolume(MUSIC_VOLUME, 1200);
+}
+
+function clearVoiceFade() {
+  if (!voiceFade) return;
+  clearInterval(voiceFade);
+  voiceFade = null;
+}
+
+function fadeInActiveVoice(targetVolume: number, ms = 140) {
+  if (!voice) return;
+
+  clearVoiceFade();
+
+  if (ms <= 0) {
+    voice.volume = targetVolume;
+    return;
+  }
+
+  const start = voice.volume;
+  const step = (targetVolume - start) / Math.max(1, ms / 20);
+
+  voiceFade = setInterval(() => {
+    if (!voice) {
+      clearVoiceFade();
+      return;
+    }
+
+    voice.volume = Math.max(0, Math.min(targetVolume, voice.volume + step));
+
+    if ((step >= 0 && voice.volume >= targetVolume) || (step < 0 && voice.volume <= targetVolume)) {
+      voice.volume = targetVolume;
+      clearVoiceFade();
+    }
+  }, 20);
 }
 
 export async function playVoice(
@@ -111,22 +213,29 @@ export async function playVoice(
 
   voice = new Audio(src);
   voice.preload = "auto";
-  voice.volume = volume;
+  voice.volume = 0;
 
   voice.onended = () => {
+    clearVoiceFade();
     voice = null;
     restoreMusic();
   };
 
+  // Force immediate duck before attempting playback; iOS can expose a loud transient otherwise.
+  duckMusicImmediate();
   const playPromise = voice.play();
 
   if (playPromise) {
+    duckMusicImmediate();
+
     playPromise
       .then(() => {
-        duckMusic();
+        duckMusicImmediate();
+        fadeInActiveVoice(volume, 140);
       })
       .catch(() => {
         restoreMusic();
+        clearVoiceFade();
         voice = null;
       });
 
@@ -137,6 +246,7 @@ export async function playVoice(
 export function stopVoice() {
   if (!voice) return;
 
+  clearVoiceFade();
   voice.pause();
   voice.currentTime = 0;
   voice = null;
@@ -146,6 +256,7 @@ export function stopVoice() {
 export function fadeOutVoice(ms = 300): Promise<void> {
 
   return new Promise((resolve) => {
+    clearVoiceFade();
 
     if (!voice) {
       restoreMusic();
@@ -194,6 +305,8 @@ let unlockSound: HTMLAudioElement | null = null;
 
 // Debe llamarse SÍNCRONAMENTE desde un gesto real del usuario (botón ACCEDER).
 export function primeUnlockSound() {
+  hasUserGesture = true;
+
   if (unlockSound) return;
 
   unlockSound = new Audio("/sounds/unlock.mp3");
@@ -221,6 +334,9 @@ export async function playUnlockSound(volume = 0.45) {
 
   if (!sound) return;
 
+  // iPhone can make short cues feel unducked if we only fade; force immediate duck.
+  duckMusicImmediate();
+
   sound.currentTime = 0;
   sound.volume = volume;
   sound.muted = false;
@@ -233,10 +349,8 @@ export async function playUnlockSound(volume = 0.45) {
   if (result) {
     result.catch(() => {
       restoreMusic();
-      if (sound !== unlockSound) {
-        stopMusic();
-        playMusic("/sounds/unlock.mp3", volume, false, 0);
-      }
+      pendingUnlockVolume = volume;
+      attachGestureUnlockListeners();
     });
   }
 }
@@ -250,9 +364,117 @@ export function restoreMusicAfterVoice() {
 }
 
 export function playSfx(src: string, volume = 1) {
+  if (!hasUserGesture) {
+    attachGestureUnlockListeners();
+  }
+
   const sfx = new Audio(src);
   sfx.volume = volume;
   sfx.play().catch(() => {});
+}
+
+export function playControlledAudio(
+  key: string,
+  src: string,
+  volume = 0.22,
+  loop = false
+) {
+  if (!hasUserGesture) {
+    attachGestureUnlockListeners();
+  }
+
+  if (controlledAudioKey === key && controlledAudio) {
+    controlledAudio.loop = loop;
+    controlledAudio.volume = volume;
+    controlledAudio.currentTime = 0;
+    const resume = controlledAudio.play();
+    if (resume) {
+      resume.catch(() => {});
+    }
+    return;
+  }
+
+  if (controlledAudio) {
+    controlledAudio.pause();
+    controlledAudio.currentTime = 0;
+    controlledAudio = null;
+    controlledAudioKey = null;
+  }
+
+  controlledAudio = new Audio(src);
+  controlledAudioKey = key;
+  controlledAudio.preload = "auto";
+  controlledAudio.loop = loop;
+  controlledAudio.volume = volume;
+
+  const playPromise = controlledAudio.play();
+  if (playPromise) {
+    playPromise.catch(() => {
+      if (controlledAudioKey === key) {
+        controlledAudio = null;
+        controlledAudioKey = null;
+      }
+    });
+  }
+}
+
+export function stopControlledAudio(key?: string) {
+  if (!controlledAudio) return;
+  if (key && controlledAudioKey !== key) return;
+
+  controlledAudio.pause();
+  controlledAudio.currentTime = 0;
+  controlledAudio = null;
+  controlledAudioKey = null;
+}
+
+export function playControlledAudioAndWait(
+  key: string,
+  src: string,
+  volume = 0.22
+): Promise<void> {
+  return new Promise((resolve) => {
+    if (!hasUserGesture) {
+      attachGestureUnlockListeners();
+    }
+
+    if (controlledAudio) {
+      controlledAudio.pause();
+      controlledAudio.currentTime = 0;
+      controlledAudio = null;
+      controlledAudioKey = null;
+    }
+
+    const audio = new Audio(src);
+    controlledAudio = audio;
+    controlledAudioKey = key;
+    audio.preload = "auto";
+    audio.loop = false;
+    audio.volume = volume;
+
+    let finished = false;
+    const cleanup = () => {
+      if (finished) return;
+      finished = true;
+      audio.onended = null;
+      audio.onerror = null;
+      if (controlledAudio === audio) {
+        controlledAudio = null;
+        controlledAudioKey = null;
+      }
+      resolve();
+    };
+
+    audio.onended = cleanup;
+    audio.onerror = cleanup;
+
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        cleanup();
+      });
+    }
+  });
 }
 export function playVoiceQueue(
   files: string[],
@@ -265,7 +487,7 @@ export function playVoiceQueue(
 
    await fadeOutVoice();
 
-duckMusic();
+duckMusicImmediate();
 
 voice = new Audio(files[index]);
 
@@ -296,5 +518,18 @@ export async function playEmailVoice(id: string) {
   const voiceSrc = EMAIL_VOICES[id];
 
   if (!voiceSrc) return;
+
+  const requestId = ++emailVoiceRequestId;
+
+  await fadeOutVoice(260);
+
+  // If a newer email was requested while fading, cancel this older request.
+  if (requestId !== emailVoiceRequestId) return;
+
   await playVoice(voiceSrc);
+}
+
+export function stopEmailVoice(ms = 300) {
+  emailVoiceRequestId += 1;
+  return fadeOutVoice(ms);
 }

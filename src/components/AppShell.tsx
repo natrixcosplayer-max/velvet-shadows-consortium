@@ -2,9 +2,12 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import altaLogo from "../assets/alta.png";
 import {
-  playMusic,
   playSfx,
 } from "../audio/audiomanager";
+
+const SKIP_COMMISSION_GATES_KEY = "skip-commission-gates-once";
+const UNLOCK_SOUND_PLAYED_KEY = "unlock-sound-played";
+const COMMUNICADO_SEEN_KEY = "comunicado-seen";
 
 const NAV = [
   { to: "/", label: "Comisión", latin: "Comissio" },
@@ -19,27 +22,83 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [now, setNow] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hudChannel, setHudChannel] = useState("CANAL SEGURO");
+  const [hudCipher, setHudCipher] = useState("AES-512");
+  const [hudGlitch, setHudGlitch] = useState(false);
 
   useEffect(() => {
     const tick = () => {
       const d = new Date();
-      setNow(d.toISOString().replace("T", " ").slice(0, 19) + " UTC");
+      const formatted = new Intl.DateTimeFormat("es-ES", {
+        timeZone: "Europe/Madrid",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).format(d);
+
+      setNow(`${formatted} CEST`);
     };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
-   
-  useEffect(() => {
-  playMusic("/sounds/john.mp3", 0.08, true, 42);
-}, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    const channelId = setInterval(() => {
+      setHudChannel((prev) => (prev === "CANAL SEGURO" ? "CANAL ESTABLE" : "CANAL SEGURO"));
+    }, 9000);
+
+    const cipherId = setInterval(() => {
+      setHudCipher((prev) => (prev === "AES-512" ? "AES-1024" : "AES-512"));
+    }, 10500);
+
+    const scheduleGlitch = () => {
+      const delay = 45000 + Math.floor(Math.random() * 15000);
+      const id = setTimeout(() => {
+        if (cancelled) return;
+        setHudGlitch(true);
+        const clearId = setTimeout(() => {
+          if (!cancelled) setHudGlitch(false);
+        }, 85);
+        timeouts.push(clearId);
+        scheduleGlitch();
+      }, delay);
+      timeouts.push(id);
+    };
+
+    scheduleGlitch();
+
+    return () => {
+      cancelled = true;
+      clearInterval(channelId);
+      clearInterval(cipherId);
+      timeouts.forEach((id) => clearTimeout(id));
+    };
+  }, []);
+   
   return (
     <div className="min-h-screen flex flex-col font-sans">
       {/* Top bar */}
       <header className="border-b border-gold-dim bg-background/80 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center justify-between px-4 md:px-8 h-14">
-          <div className="flex items-center gap-3">
+          <Link
+            to="/"
+            onClick={() => {
+              window.sessionStorage.removeItem(SKIP_COMMISSION_GATES_KEY);
+              window.sessionStorage.removeItem(UNLOCK_SOUND_PLAYED_KEY);
+              window.sessionStorage.removeItem(COMMUNICADO_SEEN_KEY);
+              setMobileOpen(false);
+            }}
+            className="flex items-center gap-3"
+            aria-label="Reiniciar secuencia de acceso"
+          >
             <img
   src={altaLogo}
   alt="Alta Mesa"
@@ -49,11 +108,11 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
               <p className="font-display text-gold text-sm tracking-[0.25em]">EX COMISSIO</p>
               <p className="font-mono text-[10px] text-gold-dim tracking-[0.3em]">ALTA MESA</p>
             </div>
-          </div>
+          </Link>
           <div className="hidden md:flex items-center gap-6 font-mono text-[11px] text-gold-dim">
-            <span className="flex items-center gap-2">
+            <span className={`flex items-center gap-2 ${hudGlitch ? "animate-hud-micro-glitch" : ""}`}>
               <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse-gold" />
-              CANAL SEGURO · AES-512
+              {hudChannel} · {hudCipher}
             </span>
             <span>{now}</span>
             <span className="text-gold">AGENTE · {AGENT_ID}</span>
@@ -101,9 +160,17 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
 
  playSfx(sound, 0.45);
 
+  if (item.to === "/missions") {
+    navigator.vibrate?.(20);
+  }
+
   setMobileOpen(false);
+
+  if (item.to === "/") {
+    window.sessionStorage.setItem(SKIP_COMMISSION_GATES_KEY, "1");
+  }
 }}
-                  className={`relative font-mono text-[11px] tracking-[0.25em] uppercase py-3 md:py-2.5 md:mr-8 transition-colors ${active ? "text-gold" : "text-gold-dim hover:text-gold"}`}
+                  className={`relative font-mono text-base md:text-[11px] font-normal tracking-[0.18em] md:tracking-[0.25em] uppercase py-3 md:py-2.5 md:mr-8 transition-colors ${active ? "text-gold font-bold border border-gold/60 bg-secondary/35 px-2 md:px-3" : "text-gold-dim hover:text-gold"}`}
                 >
                   {item.label}
                   <span className="ml-2 text-[9px] opacity-60 font-display">· {item.latin}</span>
@@ -119,7 +186,7 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
         <div className="mb-10 animate-fade-up">
           <p className="font-mono text-[10px] tracking-[0.4em] text-gold-dim uppercase">{latin}</p>
           <h1 className="font-display text-4xl md:text-5xl text-gold mt-2">{title}</h1>
-          <div className="mt-4 h-px w-24 bg-gradient-to-r from-gold to-transparent" />
+          <div className="mt-4 h-px w-56 bg-gradient-to-r from-gold to-transparent" />
         </div>
         {children}
       </main>

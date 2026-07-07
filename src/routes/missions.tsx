@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 import { playSfx } from "../audio/audiomanager";
 import mercado from "../assets/graphics/mercado.jpg";
@@ -29,6 +29,87 @@ const OPERATION = {
 };
 
 function Missions() {
+  const [nowCest, setNowCest] = useState("");
+  const navigateButtonRef = useRef<HTMLAnchorElement | null>(null);
+  const [objectiveElapsed, setObjectiveElapsed] = useState(17);
+  const [reliability, setReliability] = useState("99.8 %");
+  const [originIndex, setOriginIndex] = useState(0);
+  const [signalPhase, setSignalPhase] = useState(0);
+
+  const ORIGIN_STATES = [
+    "SAT-COM VII",
+    "SAT-COM VII · LOCK",
+    "SAT-COM VII · TRACKING",
+  ] as const;
+
+  const formatElapsed = (totalSeconds: number) => {
+    if (totalSeconds < 60) return `${totalSeconds} s`;
+
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, "0")} min ${String(seconds).padStart(2, "0")} s`;
+  };
+
+  const jumpToNavigationButton = () => {
+    if (!navigateButtonRef.current) return;
+
+    navigateButtonRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => {
+      navigateButtonRef.current?.focus({ preventScroll: true });
+    }, 320);
+  };
+
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      const formatted = new Intl.DateTimeFormat("es-ES", {
+        timeZone: "Europe/Madrid",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).format(d);
+
+      setNowCest(`${formatted} CEST`);
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setObjectiveElapsed((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const next = (95 + Math.random() * 5).toFixed(1);
+      setReliability(`${next} %`);
+    }, 2600);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setOriginIndex((prev) => (prev + 1) % ORIGIN_STATES.length);
+    }, 5500);
+    return () => clearInterval(id);
+  }, [ORIGIN_STATES.length]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setSignalPhase((prev) => (prev + 1) % 6);
+    }, 1200);
+    return () => clearInterval(id);
+  }, []);
+
   return (
   <AppShell title="Operativo" latin="Missio Activa">
 
@@ -43,28 +124,42 @@ function Missions() {
       <Panel title="Estado" latin="Status">
         <div className="flex items-center gap-3">
 
-          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+          <span className="relative inline-flex h-4 w-4">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-green-400/80 animate-ping" />
+            <span className="relative inline-flex h-4 w-4 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.9)]" />
+          </span>
 
           <p className="font-display text-3xl text-gold">
             {OPERATION.status}
           </p>
 
         </div>
+
+        <div className="mt-4 h-1 bg-secondary border border-gold-dim">
+          <div className="h-full w-[65%] animate-progress-flow bg-[linear-gradient(90deg,oklch(0.55_0.08_80)_0%,oklch(0.78_0.13_85)_35%,oklch(0.9_0.1_88_/_0.55)_50%,oklch(0.78_0.13_85)_65%,oklch(0.55_0.08_80)_100%)] bg-[length:200%_100%] shadow-[0_0_8px_oklch(0.88_0.16_88_/_0.42)]" />
+        </div>
       </Panel>
 
       <Panel title="Destino" latin="Locus">
-        <p className="font-display text-2xl text-gold">
+        <p className="font-display text-2xl text-gold text-center">
           {OPERATION.location}
         </p>
 
-        <p className="text-gold-dim mt-2">
-          {OPERATION.address}
-        </p>
+        <button
+          type="button"
+          onClick={jumpToNavigationButton}
+          className="mt-3 flex w-fit mx-auto items-center gap-2 border border-gold-dim bg-background/50 px-3 py-2 font-mono text-[11px] tracking-[0.2em] uppercase text-gold hover:border-gold hover:bg-gold/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold transition animate-pulse-gold"
+        >
+          PULSE PARA CONSULTAR UBICACION
+        </button>
       </Panel>
 
       <Panel title="Ventana Operativa" latin="Tempus">
-        <p className="font-display text-2xl text-gold">
+        <p className="font-display font-bold text-2xl text-gold text-center">
           {OPERATION.window}
+        </p>
+        <p className="mt-3 font-mono text-base md:text-lg tracking-[0.18em] text-gold uppercase text-center">
+          {nowCest}
         </p>
       </Panel>
 
@@ -72,23 +167,113 @@ function Missions() {
         <p className="font-display text-2xl text-red-400">
           {OPERATION.risk}
         </p>
+
+        <div className="mt-4 h-px bg-gold-dim/60" />
+
+        <p className="mt-4 font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">
+          Amenazas Activas
+        </p>
+
+        <div className="mt-3 space-y-3">
+          <div>
+            <p className="font-mono text-xs tracking-[0.2em] text-gold uppercase flex items-center gap-2">
+              <span className="inline-block h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              CONSORCIO OBSIDIANA
+            </p>
+            <p className="ml-4 text-[11px] text-muted-foreground">Actividad confirmada</p>
+          </div>
+
+          <div>
+            <p className="font-mono text-xs tracking-[0.2em] text-gold uppercase flex items-center gap-2">
+              <span className="inline-block h-2 w-2 rounded-full bg-gold-dim" />
+              OPERATIVOS HOSTILES
+            </p>
+            <p className="ml-4 text-[11px] text-muted-foreground">3 detectados</p>
+          </div>
+
+          <div>
+            <p className="font-mono text-xs tracking-[0.2em] text-gold uppercase flex items-center gap-2">
+              <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
+              OBJETIVO PROTEGIDO
+            </p>
+            <p className="ml-4 text-[11px] text-muted-foreground">Seguimiento activo</p>
+          </div>
+        </div>
+
+        <div className="mt-4 h-px bg-gold-dim/60" />
+
+        <div className="mt-4 space-y-1">
+          <p className="font-mono text-[11px] tracking-[0.12em] text-gold-dim">
+            Probabilidad de contacto: <span className="text-gold">47%</span>
+          </p>
+          <p className="font-mono text-[10px] tracking-[0.14em] text-gold-dim uppercase animate-pulse">
+            Actualizado hace menos de 30 segundos
+          </p>
+        </div>
       </Panel>
 
       <Panel title="Estado del Objetivo" latin="Objectivum">
+        <div className="relative overflow-hidden">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent opacity-70 shadow-[0_0_10px_rgba(212,175,55,0.6)] [animation:scan-objective_6s_linear_infinite]"
+          />
 
-        <div className="flex items-center gap-3">
+          <div className="relative z-10">
+            <div className="flex items-center gap-3">
+              <span className="relative inline-flex h-4 w-4">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-green-400/70 animate-pulse" />
+                <span className="relative inline-flex h-4 w-4 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.65)]" />
+              </span>
 
-          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="font-display text-xl text-gold">
+                ACTIVO LOCALIZADO
+              </span>
+            </div>
 
-          <span className="font-display text-xl text-gold">
-            ACTIVO LOCALIZADO
-          </span>
+            <div className="mt-5 space-y-4">
+              <div>
+                <p className="font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim">SEÑAL GPS</p>
+                <div className="mt-2 flex items-end gap-1">
+                  {Array.from({ length: 10 }).map((_, i) => {
+                    const base = [0.34, 0.45, 0.56, 0.68, 0.8, 0.7, 0.6, 0.52, 0.44, 0.38][i];
+                    const intensity = ((signalPhase + i) % 6) / 12;
+                    return (
+                      <span
+                        key={i}
+                        className="w-2 bg-gold transition-all duration-700"
+                        style={{
+                          height: `${10 + Math.round(base * 16)}px`,
+                          opacity: Math.min(1, base + intensity),
+                          transitionDelay: `${i * 70}ms`,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
 
+              <div className="h-px bg-gold-dim/40" />
+
+              <div>
+                <p className="font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim">ÚLTIMA ACTUALIZACIÓN</p>
+                <p className="mt-1 font-display text-2xl text-gold">{formatElapsed(objectiveElapsed)}</p>
+              </div>
+
+              <div>
+                <p className="font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim">FIABILIDAD</p>
+                <p className="mt-1 font-display text-2xl text-gold transition-opacity duration-700">{reliability}</p>
+              </div>
+
+              <div>
+                <p className="font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim">ORIGEN</p>
+                <p className="mt-1 font-mono text-sm tracking-[0.2em] uppercase text-gold transition-all duration-700">
+                  {ORIGIN_STATES[originIndex]}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <p className="mt-4 text-gold-dim text-sm">
-          Última posición confirmada hace menos de 2 minutos.
-        </p>
 
       </Panel>
 
@@ -104,11 +289,13 @@ function Missions() {
 
         <p>• Desplácese junto a la Agente Minerva y mantenga vigilancia permanente durante el trayecto.</p>
         
-        <p>•  En caso de detectar seguimiento o actividad sospechosa, interrumpa temporalmente la operación. Adopte una cobertura civil y permanezca integrado en el entorno tomando un Cocktail.</p>
+        <p>• En caso de detectar seguimiento o actividad sospechosa, interrumpa temporalmente la operación. Adopte una cobertura civil y permanezca integrado en el entorno tomando un Cocktail.</p>
+
+        <p>• Descifre las credenciales proporcionadas más abajo.</p>
 
         <p>• Recupere el activo sin comprometer la misión.</p>
 
-        <p>• Abandone la zona utilizando el vehículo asignado y espere nuevas instrucciones a través del canal cifrado.</p>
+        <p>• Confirme la recuperación del activo.</p>
 
       </div>
 
@@ -146,16 +333,17 @@ function Missions() {
     href="https://maps.app.goo.gl/huh44bQw9ePxUGBx9"
     target="_blank"
     rel="noopener noreferrer"
-    className="border border-gold p-4 text-center uppercase font-mono tracking-[0.25em] text-gold hover:bg-gold hover:text-primary-foreground transition"
+    className="border border-gold p-4 text-center uppercase font-mono tracking-[0.25em] text-gold hover:bg-gold hover:text-primary-foreground transition animate-pulse-gold"
   >
     📍 Ver ubicación
   </a>
 
   <a
+    ref={navigateButtonRef}
     href="https://www.google.com/maps/dir/?api=1&destination=C%2F+de+Ciril+Amor%C3%B3s%2C+62%2C+46004+Val%C3%A8ncia&travelmode=walking"
     target="_blank"
     rel="noopener noreferrer"
-    className="border border-gold p-4 text-center uppercase font-mono tracking-[0.25em] text-gold hover:bg-gold hover:text-primary-foreground transition"
+    className="border border-gold p-4 text-center uppercase font-mono tracking-[0.25em] text-gold hover:bg-gold hover:text-primary-foreground transition animate-pulse-gold"
   >
     🧭 Iniciar navegación
   </a>
@@ -166,11 +354,13 @@ function Missions() {
 
       </div>
 
-      <figure className="mt-8 relative scanlines">
+      <figure className="mt-8 relative overflow-hidden scanlines">
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-gold/95 shadow-[0_0_20px_rgba(214,173,74,1)] animate-scan pointer-events-none" />
+        <div className="absolute inset-0 z-10 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,transparent_45%,rgba(0,0,0,0.55)_100%)]" />
         <img
           src={mercado}
           alt="Punto de recuperación · Mercado de Colón"
-          className="w-full h-56 md:h-80 object-cover object-center border border-gold grayscale contrast-125 brightness-90 opacity-80"
+          className="relative z-0 w-full h-56 md:h-80 object-cover object-center grayscale contrast-125 brightness-80 opacity-90 animate-flicker animate-surveillance-pan"
         />
         <figcaption className="mt-2 font-mono text-[10px] tracking-[0.3em] uppercase text-gold-dim text-center">
           · Punto de recuperación · Vigilancia activa ·
@@ -205,14 +395,36 @@ function SealedCode() {
   const [typed, setTyped] = useState("");
   const [progress, setProgress] = useState(0);
   const [flash, setFlash] = useState(false);
+  const [isAgentPromptOpen, setIsAgentPromptOpen] = useState(false);
+  const [agentName, setAgentName] = useState("");
+  const [agentError, setAgentError] = useState("");
 
   const start = () => {
     if (phase === "decrypting") return;
-    playSfx("/sounds/shortbeep.mp3");
+    playSfx("/sounds/luxbeep.mp3", 0.3);
     setTyped("");
     setProgress(0);
     setPhase("decrypting");
     setFlash(true);
+  };
+
+  const openAgentPrompt = () => {
+    if (phase === "decrypting") return;
+    setAgentError("");
+    setAgentName("");
+    setIsAgentPromptOpen(true);
+  };
+
+  const confirmAgent = () => {
+    if (agentName.trim().toLowerCase() === "mandarin") {
+      setAgentError("");
+      setIsAgentPromptOpen(false);
+      setAgentName("");
+      start();
+      return;
+    }
+
+    setAgentError("Acceso denegado. Introduce el nombre de agente correcto.");
   };
 
   // Parpadeo de pantalla al iniciar
@@ -265,13 +477,68 @@ function SealedCode() {
 
         <p className="text-gold-dim tracking-[0.15em] select-none overflow-hidden">{RULE}</p>
 
+        {isAgentPromptOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 px-4">
+            <div className="w-full max-w-md border border-gold bg-[#0b0b0b]/95 p-6 text-left shadow-[0_0_30px_rgba(214,173,74,0.25)]">
+              <p className="font-mono text-[10px] tracking-[0.3em] uppercase text-gold-dim">
+                Autenticación de acceso
+              </p>
+              <p className="mt-3 text-gold tracking-[0.2em] uppercase">
+                Introduce el identificador de acceso
+              </p>
+              <input
+                autoFocus
+                value={agentName}
+                onChange={(event) => {
+                  setAgentName(event.target.value);
+                  if (agentError) setAgentError("");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    confirmAgent();
+                  }
+                }}
+                placeholder=""
+                className="mt-4 w-full border border-gold/70 bg-background/70 px-3 py-2 font-mono text-sm uppercase tracking-[0.2em] text-gold outline-none"
+              />
+              {agentError && (
+                <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-red-400">
+                  {agentError}
+                </p>
+              )}
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <button
+                  onClick={() => {
+                    setIsAgentPromptOpen(false);
+                    setAgentError("");
+                    setAgentName("");
+                  }}
+                  className="border border-gold/70 px-4 py-2 text-[10px] tracking-[0.3em] uppercase text-gold transition hover:bg-gold hover:text-primary-foreground"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmAgent}
+                  className="border border-gold px-4 py-2 text-[10px] tracking-[0.3em] uppercase text-gold transition hover:bg-gold hover:text-primary-foreground"
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {phase === "idle" && (
           <div className="py-6 animate-fade-up">
             <p className="text-gold tracking-[0.3em] uppercase">
               Acceso a Depósito Continental
             </p>
             <button
-              onClick={start}
+              onClick={() => {
+                playSfx("/sounds/beep.mp3", 0.28);
+                openAgentPrompt();
+              }}
               className="mt-6 border border-gold px-8 py-3 text-gold tracking-[0.3em] uppercase hover:bg-gold hover:text-primary-foreground transition animate-pulse-gold"
             >
               [ Desclasificar Credenciales ]
