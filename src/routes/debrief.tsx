@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { AppShell, Panel } from "../components/AppShell";
 import {
   fadeMusicVolume,
@@ -89,7 +90,6 @@ function Debrief() {
   const videoTeardownRef = useRef<number | null>(null);
   const callPulseClearRef = useRef<number | null>(null);
   const ringIntervalRef = useRef<number | null>(null);
-  const pendingFullscreenRef = useRef(false);
   const [phase, setPhase] = useState<Phase>("starting");
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
@@ -188,8 +188,24 @@ function Debrief() {
   const requestVideoFullscreen = () => {
     if (typeof document === "undefined") return;
 
-    const layer = videoLayerRef.current;
-    const target = layer || document.documentElement;
+    const video = videoRef.current as (HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+    }) | null;
+
+    if (isIPhone()) {
+      if (video?.webkitEnterFullscreen) {
+        try {
+          video.webkitEnterFullscreen();
+        } catch {
+          // Ignore if Safari denies native fullscreen request.
+        }
+      }
+      return;
+    }
+
+    const target = videoLayerRef.current || video;
+    if (!target) return;
+
     const node = target as HTMLElement & {
       webkitRequestFullscreen?: () => Promise<void> | void;
     };
@@ -498,25 +514,8 @@ function Debrief() {
     }, 500);
 
     const startPlayback = window.setTimeout(() => {
-      if (pendingFullscreenRef.current) {
-        requestVideoFullscreen();
-      }
-
+      video.currentTime = 0;
       video.play().catch(() => {});
-
-      const iOSVideo = video as HTMLVideoElement & {
-        webkitEnterFullscreen?: () => void;
-      };
-
-      if (pendingFullscreenRef.current && isIPhone() && iOSVideo.webkitEnterFullscreen) {
-        try {
-          iOSVideo.webkitEnterFullscreen();
-        } catch {
-          // Ignore if Safari denies native fullscreen request.
-        }
-      }
-
-      pendingFullscreenRef.current = false;
     }, 140);
 
     return () => {
@@ -865,7 +864,20 @@ function Debrief() {
                           stopControlledAudio("debrief-call");
                           clearCallPulse();
                           setAcceptFreeze(true);
-                          pendingFullscreenRef.current = true;
+
+                          flushSync(() => {
+                            setShowVideoLayer(true);
+                            setVideoFade(true);
+                            setVideoBootNoise(true);
+                          });
+
+                          const video = videoRef.current;
+                          if (video) {
+                            video.pause();
+                            video.currentTime = 0;
+                            video.controls = false;
+                          }
+
                           requestVideoFullscreen();
 
                           window.setTimeout(() => {
