@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { AppShell, Panel } from "../components/AppShell";
@@ -13,6 +13,7 @@ import {
 import { Authentication } from "../components/debrief/Authentication";
 import { ClosingSequence } from "../components/debrief/ClosingSequence";
 import { ConnectionSequence } from "../components/debrief/ConnectionSequence";
+import { CreditsSequence } from "../components/debrief/CreditsSequence";
 import { IncomingCall } from "../components/debrief/IncomingCall";
 import { VideoCall } from "../components/debrief/VideoCall";
 import { AUTH_LINES, CLOSING_LINES, DebriefPhase } from "../components/debrief/types";
@@ -257,6 +258,7 @@ function Debrief() {
   const handlePriorityAccept = useCallback(() => {
     if (priorityAcceptedRef.current) return;
     priorityAcceptedRef.current = true;
+    playSfx("/sounds/beep.mp3", 0.22);
 
     // Ensure magistrada is heard alone: stop any background controlled tracks first.
     stopControlledAudio("debrief-progress");
@@ -306,6 +308,14 @@ function Debrief() {
       }, 280);
     }, 400);
   }, [queueAudio]);
+
+  const handleStartCredits = useCallback(() => {
+    stopControlledAudio("debrief-call");
+    stopControlledAudio("debrief-ambience");
+    stopControlledAudio("debrief-progress");
+    clearCallPulse();
+    setPhase("credits");
+  }, [clearCallPulse]);
 
   useEffect(() => {
     const timers: number[] = [];
@@ -659,7 +669,7 @@ function Debrief() {
             <div className={`pointer-events-none absolute inset-0 bg-black/30 transition-opacity duration-100 ${call.preSignalLoss ? "opacity-100" : "opacity-0"}`} />
             <div className={`pointer-events-none absolute inset-0 bg-white/20 transition-opacity duration-100 ${link.flash ? "opacity-100" : "opacity-0"}`} />
 
-            <div className={`relative flex min-h-[70vh] flex-col justify-center overflow-hidden transition-[transform,opacity,filter] duration-150 ${startup.globalGlitch ? "-translate-y-[1px] opacity-95" : "translate-y-0 opacity-100"} ${call.acceptFreeze ? "pointer-events-none brightness-[0.97] saturate-[0.95]" : ""}`}>
+            <div className={`relative flex min-h-[70vh] flex-col justify-center overflow-hidden transition-[transform,opacity,filter] duration-150 ${startup.globalGlitch ? "-translate-y-[1px] opacity-95" : "translate-y-0 opacity-100"} ${call.acceptFreeze ? "pointer-events-none brightness-[0.97] saturate-[0.95]" : ""} ${phase === "credits" ? "pointer-events-none" : ""}`}>
               {(phase === "starting" || phase === "priority" || phase === "link") && (
                 <ConnectionSequence
                   phase={phase}
@@ -706,18 +716,21 @@ function Debrief() {
               )}
 
               {phase === "finished" && closing.showCloseButton && (
-                <Link
-                  to="/"
-                  className="relative z-[90] mx-auto mt-2 inline-flex border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.35em] text-gold transition hover:bg-gold/20"
+                <button
+                  type="button"
+                  onClick={handleStartCredits}
+                  className="relative z-[90] mx-auto -mt-1 inline-flex border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.35em] text-gold transition hover:bg-gold/20"
                 >
                   CERRAR EXPEDIENTE
-                </Link>
+                </button>
               )}
             </div>
             </Panel>
           </div>
         </div>
       </AppShell>
+
+      <CreditsSequence active={phase === "credits"} />
 
       {video.showLayer &&
         typeof document !== "undefined" &&

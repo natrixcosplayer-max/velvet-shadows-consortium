@@ -1,4 +1,4 @@
-export type DebriefPhase = "starting" | "priority" | "waiting" | "auth" | "link" | "video" | "finished";
+export type DebriefPhase = "starting" | "priority" | "waiting" | "auth" | "link" | "video" | "finished" | "credits";
 
 export const MESSAGES = [
   "Verificando identidad...",

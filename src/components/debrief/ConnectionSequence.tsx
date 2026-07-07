@@ -1,5 +1,7 @@
 import { MESSAGES } from "./types";
 
+import { useEffect, useState } from "react";
+
 type ConnectionSequenceProps = {
   phase: "starting" | "priority" | "link";
   progress: number;
@@ -21,6 +23,20 @@ export function ConnectionSequence({
   linkStable,
   onPriorityAccept,
 }: ConnectionSequenceProps) {
+  const [priorityAccepted, setPriorityAccepted] = useState(false);
+
+  useEffect(() => {
+    if (phase !== "priority") {
+      setPriorityAccepted(false);
+    }
+  }, [phase]);
+
+  const handlePriorityAccept = () => {
+    if (priorityAccepted) return;
+    setPriorityAccepted(true);
+    onPriorityAccept();
+  };
+
   return (
     <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 py-12 text-center md:px-8">
       <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_3px,rgba(255,255,255,0.88)_3px,rgba(255,255,255,0.88)_5px)] mix-blend-overlay" />
@@ -49,8 +65,9 @@ export function ConnectionSequence({
           <p className={`font-mono text-4xl md:text-5xl tracking-[0.35em] uppercase text-gold [text-shadow:0_0_8px_rgba(214,173,74,0.24)] transition-opacity duration-500 ${priorityRevealStep >= 2 ? "opacity-100" : "opacity-0"}`}>ROMA</p>
           <p className={`font-mono text-sm tracking-[0.35em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.2)] transition-opacity duration-500 ${priorityRevealStep >= 3 ? "opacity-100" : "opacity-0"}`}>ALTA MESA</p>
           <button
-            onClick={onPriorityAccept}
-            className={`mx-auto inline-flex items-center justify-center border border-gold/85 bg-gold/12 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.34em] text-gold shadow-[0_0_18px_rgba(212,175,55,0.22)] transition-all duration-250 hover:scale-[1.03] hover:bg-gold/20 hover:shadow-[0_0_24px_rgba(212,175,55,0.35)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold [animation:pulse-gold_1.7s_ease-in-out_infinite] ${priorityRevealStep >= 3 ? "opacity-100" : "pointer-events-none opacity-0"}`}
+            onClick={handlePriorityAccept}
+            className={`mx-auto inline-flex items-center justify-center border border-gold/85 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.34em] text-gold transition-all duration-250 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold ${priorityAccepted ? "bg-gold/35 shadow-[0_0_30px_rgba(212,175,55,0.55)]" : "bg-gold/12 shadow-[0_0_18px_rgba(212,175,55,0.22)] hover:scale-[1.03] hover:bg-gold/20 hover:shadow-[0_0_24px_rgba(212,175,55,0.35)] [animation:pulse-gold_1.7s_ease-in-out_infinite]"} ${priorityRevealStep >= 3 ? "opacity-100" : "pointer-events-none opacity-0"}`}
+            style={{ pointerEvents: priorityRevealStep >= 3 && !priorityAccepted ? "auto" : "none" }}
           >
             ACEPTAR
           </button>
