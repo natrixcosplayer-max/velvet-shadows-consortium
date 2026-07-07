@@ -166,11 +166,13 @@ function Missions() {
 
       </div>
 
-      <figure className="mt-8 relative scanlines">
+      <figure className="mt-8 relative overflow-hidden scanlines">
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-gold/95 shadow-[0_0_20px_rgba(214,173,74,1)] animate-scan pointer-events-none" />
+        <div className="absolute inset-0 z-10 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,transparent_45%,rgba(0,0,0,0.55)_100%)]" />
         <img
           src={mercado}
           alt="Punto de recuperación · Mercado de Colón"
-          className="w-full h-56 md:h-80 object-cover object-center border border-gold grayscale contrast-125 brightness-90 opacity-80"
+          className="relative z-0 w-full h-56 md:h-80 object-cover object-center grayscale contrast-125 brightness-80 opacity-90 animate-flicker animate-surveillance-pan"
         />
         <figcaption className="mt-2 font-mono text-[10px] tracking-[0.3em] uppercase text-gold-dim text-center">
           · Punto de recuperación · Vigilancia activa ·
@@ -205,14 +207,36 @@ function SealedCode() {
   const [typed, setTyped] = useState("");
   const [progress, setProgress] = useState(0);
   const [flash, setFlash] = useState(false);
+  const [isAgentPromptOpen, setIsAgentPromptOpen] = useState(false);
+  const [agentName, setAgentName] = useState("");
+  const [agentError, setAgentError] = useState("");
 
   const start = () => {
     if (phase === "decrypting") return;
-    playSfx("/sounds/shortbeep.mp3");
+    playSfx("/sounds/luxbeep.mp3", 0.3);
     setTyped("");
     setProgress(0);
     setPhase("decrypting");
     setFlash(true);
+  };
+
+  const openAgentPrompt = () => {
+    if (phase === "decrypting") return;
+    setAgentError("");
+    setAgentName("");
+    setIsAgentPromptOpen(true);
+  };
+
+  const confirmAgent = () => {
+    if (agentName.trim().toLowerCase() === "mandarin") {
+      setAgentError("");
+      setIsAgentPromptOpen(false);
+      setAgentName("");
+      start();
+      return;
+    }
+
+    setAgentError("Acceso denegado. Introduce el nombre de agente correcto.");
   };
 
   // Parpadeo de pantalla al iniciar
@@ -265,13 +289,65 @@ function SealedCode() {
 
         <p className="text-gold-dim tracking-[0.15em] select-none overflow-hidden">{RULE}</p>
 
+        {isAgentPromptOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 px-4">
+            <div className="w-full max-w-md border border-gold bg-[#0b0b0b]/95 p-6 text-left shadow-[0_0_30px_rgba(214,173,74,0.25)]">
+              <p className="font-mono text-[10px] tracking-[0.3em] uppercase text-gold-dim">
+                Autenticación de acceso
+              </p>
+              <p className="mt-3 text-gold tracking-[0.2em] uppercase">
+                Introduce el identificador de acceso
+              </p>
+              <input
+                autoFocus
+                value={agentName}
+                onChange={(event) => {
+                  setAgentName(event.target.value);
+                  if (agentError) setAgentError("");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    confirmAgent();
+                  }
+                }}
+                placeholder=""
+                className="mt-4 w-full border border-gold/70 bg-background/70 px-3 py-2 font-mono text-sm uppercase tracking-[0.2em] text-gold outline-none"
+              />
+              {agentError && (
+                <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-red-400">
+                  {agentError}
+                </p>
+              )}
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <button
+                  onClick={() => {
+                    setIsAgentPromptOpen(false);
+                    setAgentError("");
+                    setAgentName("");
+                  }}
+                  className="border border-gold/70 px-4 py-2 text-[10px] tracking-[0.3em] uppercase text-gold transition hover:bg-gold hover:text-primary-foreground"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmAgent}
+                  className="border border-gold px-4 py-2 text-[10px] tracking-[0.3em] uppercase text-gold transition hover:bg-gold hover:text-primary-foreground"
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {phase === "idle" && (
           <div className="py-6 animate-fade-up">
             <p className="text-gold tracking-[0.3em] uppercase">
               Acceso a Depósito Continental
             </p>
             <button
-              onClick={start}
+              onClick={openAgentPrompt}
               className="mt-6 border border-gold px-8 py-3 text-gold tracking-[0.3em] uppercase hover:bg-gold hover:text-primary-foreground transition animate-pulse-gold"
             >
               [ Desclasificar Credenciales ]
