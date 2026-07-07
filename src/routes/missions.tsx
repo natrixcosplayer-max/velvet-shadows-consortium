@@ -535,7 +535,10 @@ function SealedCode() {
               Acceso a Depósito Continental
             </p>
             <button
-              onClick={openAgentPrompt}
+              onClick={() => {
+                playSfx("/sounds/beep.mp3", 0.28);
+                openAgentPrompt();
+              }}
               className="mt-6 border border-gold px-8 py-3 text-gold tracking-[0.3em] uppercase hover:bg-gold hover:text-primary-foreground transition animate-pulse-gold"
             >
               [ Desclasificar Credenciales ]

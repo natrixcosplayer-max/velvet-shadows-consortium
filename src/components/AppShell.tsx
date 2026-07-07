@@ -25,7 +25,6 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
   const [hudChannel, setHudChannel] = useState("CANAL SEGURO");
   const [hudCipher, setHudCipher] = useState("AES-512");
   const [hudGlitch, setHudGlitch] = useState(false);
-  const [operativoAttention, setOperativoAttention] = useState(false);
 
   useEffect(() => {
     const tick = () => {
@@ -76,25 +75,11 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
 
     scheduleGlitch();
 
-    const onOperativoAttention = () => {
-      setOperativoAttention(true);
-      playSfx("/sounds/luxbeep.mp3", 0.17);
-      const stopId = setTimeout(() => setOperativoAttention(false), 1800);
-      timeouts.push(stopId);
-    };
-
-    if (typeof window !== "undefined") {
-      window.addEventListener("operativo-attention", onOperativoAttention);
-    }
-
     return () => {
       cancelled = true;
       clearInterval(channelId);
       clearInterval(cipherId);
       timeouts.forEach((id) => clearTimeout(id));
-      if (typeof window !== "undefined") {
-        window.removeEventListener("operativo-attention", onOperativoAttention);
-      }
     };
   }, []);
    
@@ -144,8 +129,6 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
           <div className="flex flex-col md:flex-row md:items-center px-4 md:px-8 overflow-x-auto">
             {NAV.map((item) => {
               const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
-              const isPriority = item.to === "/missions";
-              const showOperativoPrompt = isPriority && operativoAttention && !active;
               return (
                 <Link
                   key={item.to}
@@ -187,11 +170,8 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
     window.sessionStorage.setItem(SKIP_COMMISSION_GATES_KEY, "1");
   }
 }}
-                  className={`relative font-mono text-base md:text-[11px] font-bold md:font-normal tracking-[0.18em] md:tracking-[0.25em] uppercase py-3 md:py-2.5 md:mr-8 transition-colors ${active ? "text-gold" : "text-gold-dim hover:text-gold"} ${isPriority && !active ? "text-gold border border-gold/60 px-2 md:px-3" : ""} ${showOperativoPrompt ? "animate-operativo-attention" : ""}`}
+                  className={`relative font-mono text-base md:text-[11px] font-normal tracking-[0.18em] md:tracking-[0.25em] uppercase py-3 md:py-2.5 md:mr-8 transition-colors ${active ? "text-gold font-bold border border-gold/60 bg-secondary/35 px-2 md:px-3" : "text-gold-dim hover:text-gold"}`}
                 >
-                  {isPriority && !active && (
-                    <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-gold" />
-                  )}
                   {item.label}
                   <span className="ml-2 text-[9px] opacity-60 font-display">· {item.latin}</span>
                   {active && <span className="hidden md:block absolute -bottom-px left-0 right-0 h-px bg-gold" />}
