@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
-import { playSfx, stopMusic } from "../audio/audiomanager";
+import { playMusic, playSfx, stopMusic } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/debrief")({
   head: () => ({
@@ -35,6 +35,19 @@ const CLOSING_LINES = [
   "ACTIVO RECUPERADO ✔",
   "MISION COMPLETADA ✔",
 ];
+
+const CREDIT_SEQUENCE: Array<{ type: "text" | "image"; title?: string; body?: string; src?: string }> = [
+  { type: "text", title: "ELENCO", body: "Los Michis" },
+  { type: "image", src: "/images/credits/01.jpg" },
+  { type: "text", title: "PRODUCCIÓN", body: "Hecho con mucho cariño para un agente muy especial." },
+  { type: "image", src: "/images/credits/02.jpg" },
+  { type: "text", title: "DEDICATORIA", body: "Que nunca nos falten las risas, las aventuras y los nuevos horizontes por descubrir." },
+  { type: "image", src: "/images/credits/03.jpg" },
+  { type: "text", title: "CIERRE", body: "Hasta la próxima misión, Agente Mandarin." },
+  { type: "text", title: "EX COMMISSIONE", body: "ALTA MESA" },
+];
+
+const CREDITS_DURATION_MS = 56000;
 const FINAL_BEEP = "/sounds/shortbeep.mp3";
 
 type Phase =
@@ -56,9 +69,10 @@ function Debrief() {
   const [glitch, setGlitch] = useState(false);
   const [videoFade, setVideoFade] = useState(false);
   const [showVideoLayer, setShowVideoLayer] = useState(false);
-  const [videoElapsed, setVideoElapsed] = useState(0);
   const [videoMicroGlitch, setVideoMicroGlitch] = useState(false);
   const [videoFlicker, setVideoFlicker] = useState(false);
+  const [hudDate, setHudDate] = useState("");
+  const [hudTime, setHudTime] = useState("");
   const [showTransmissionDone, setShowTransmissionDone] = useState(false);
   const [typedClosingLines, setTypedClosingLines] = useState<string[]>(Array(CLOSING_LINES.length).fill(""));
   const [activeClosingLine, setActiveClosingLine] = useState<number | null>(null);
@@ -67,6 +81,9 @@ function Debrief() {
   const [showCommissionMark, setShowCommissionMark] = useState(false);
   const [showThanks, setShowThanks] = useState(false);
   const [showCloseButton, setShowCloseButton] = useState(false);
+  const [showCreditsFade, setShowCreditsFade] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
+  const [showFinalSlate, setShowFinalSlate] = useState(false);
 
   const handleVideoEnded = () => {
     const video = videoRef.current;
@@ -91,13 +108,6 @@ function Debrief() {
         videoRef.current.load();
       }
     }, 620);
-  };
-
-  const formatClock = (totalSeconds: number) => {
-    const h = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-    const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-    const s = String(totalSeconds % 60).padStart(2, "0");
-    return `${h}:${m}:${s}`;
   };
 
   useEffect(() => {
@@ -150,7 +160,8 @@ function Debrief() {
 
   setShowVideoLayer(true);
   setVideoFade(false);
-  setVideoElapsed(0);
+  setHudDate("");
+  setHudTime("");
 
 }, [phase]);
 
@@ -172,17 +183,6 @@ function Debrief() {
 }, [phase, showVideoLayer]);
 
   useEffect(() => {
-    if (phase !== "video") return;
-
-    const id = window.setInterval(() => {
-      const t = Math.floor(videoRef.current?.currentTime ?? 0);
-      setVideoElapsed(t);
-    }, 1000);
-
-    return () => window.clearInterval(id);
-  }, [phase]);
-
-  useEffect(() => {
     return () => {
       if (videoTeardownRef.current) {
         window.clearTimeout(videoTeardownRef.current);
@@ -192,6 +192,37 @@ function Debrief() {
 
   useEffect(() => {
     if (phase !== "video") return;
+
+    const tick = () => {
+      const now = new Date();
+      const dateText = new Intl.DateTimeFormat("es-ES", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+        .format(now)
+        .replace(".", "")
+        .toUpperCase();
+
+      const timeText = new Intl.DateTimeFormat("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        timeZoneName: "short",
+      })
+        .format(now)
+        .toUpperCase();
+
+      setHudDate(dateText);
+      setHudTime(timeText);
+    };
+
+    tick();
+
+    const clockId = window.setInterval(() => {
+      tick();
+    }, 1000);
 
     let flickerTimer: number | null = null;
     let flickerClear: number | null = null;
@@ -230,6 +261,8 @@ function Debrief() {
         window.clearTimeout(videoGlitchTimeoutRef.current);
         videoGlitchTimeoutRef.current = null;
       }
+
+      window.clearInterval(clockId);
 
       if (flickerTimer) {
         window.clearTimeout(flickerTimer);
@@ -279,6 +312,9 @@ function Debrief() {
       setShowCommissionMark(false);
       setShowThanks(false);
       setShowCloseButton(false);
+      setShowCreditsFade(false);
+      setShowCredits(false);
+      setShowFinalSlate(false);
 
       await wait(500);
       if (cancelled) return;
@@ -337,7 +373,15 @@ function Debrief() {
       await wait(1300);
       if (cancelled) return;
 
-      setShowCloseButton(true);
+      await wait(1000);
+      if (cancelled) return;
+
+      setShowCreditsFade(true);
+
+      await wait(1500);
+      if (cancelled) return;
+
+      setShowCredits(true);
     };
 
     runClosingSequence();
@@ -347,6 +391,32 @@ function Debrief() {
       timers.forEach((id) => window.clearTimeout(id));
     };
   }, [phase]);
+
+  useEffect(() => {
+    if (!showCredits) return;
+
+    playMusic("/sounds/john.mp3", 0.04, true, 0);
+
+    const hideCredits = window.setTimeout(() => {
+      setShowCredits(false);
+    }, CREDITS_DURATION_MS);
+
+    const showSlate = window.setTimeout(() => {
+      setShowFinalSlate(true);
+    }, CREDITS_DURATION_MS + 2000);
+
+    const showButton = window.setTimeout(() => {
+      setShowCloseButton(true);
+      stopMusic();
+    }, CREDITS_DURATION_MS + 5200);
+
+    return () => {
+      window.clearTimeout(hideCredits);
+      window.clearTimeout(showSlate);
+      window.clearTimeout(showButton);
+      stopMusic();
+    };
+  }, [showCredits]);
 
   return (
     <AppShell title="Transmisión Final" latin="Alta Mesa · Informe">
@@ -482,47 +552,34 @@ function Debrief() {
                       <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/30 [animation:debrief-video-scan_8s_linear_infinite]" />
                       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_56%,rgba(0,0,0,0.33)_100%)]" />
 
-                      <div className="pointer-events-none absolute top-4 left-4 right-4 flex items-start justify-between font-mono text-xs md:text-[10px] tracking-[0.18em] md:tracking-[0.25em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.24)]">
-                        <div className="inline-flex flex-col gap-1 border border-gold-dim/60 bg-black/45 px-3 py-2 md:px-3 md:py-1.5">
+                      <div className="pointer-events-none absolute top-2 left-3 right-3 md:top-4 md:left-4 md:right-4 flex items-start justify-between font-mono text-[10px] md:text-[10px] leading-tight tracking-[0.12em] md:tracking-[0.2em] uppercase text-gold-bright [text-shadow:0_0_6px_rgba(214,173,74,0.28)]">
+                        <div className="inline-flex flex-col gap-1">
                           <span>ROMA</span>
                           <span>MAGISTRADA</span>
                           <span>ALTA MESA</span>
                         </div>
 
-                        <div className="inline-flex flex-col gap-2 border border-gold-dim/60 bg-black/45 px-3 py-2 md:px-3 md:py-1.5">
-                          <div className="inline-flex items-center gap-2 text-gold">
+                        <div className="inline-flex flex-col items-end gap-1 text-right">
+                          <div className="inline-flex items-center gap-2 text-gold-bright">
                             <span className="h-2 w-2 rounded-full bg-red-500 [animation:debrief-live-led_1.7s_ease-in-out_infinite]" />
                             <span>EN DIRECTO</span>
                           </div>
-                          <span className="text-gold-dim">CANAL VII</span>
-                          <div className="inline-flex items-end gap-[2px] h-4">
-                            {Array.from({ length: 10 }).map((_, i) => (
+                          <span>CANAL VII</span>
+                          <span>{hudDate}</span>
+                          <span>{hudTime}</span>
+                          <div className="inline-flex items-end gap-[2px] h-3 mt-0.5">
+                            {Array.from({ length: 7 }).map((_, i) => (
                               <span
                                 key={`signal-${i}`}
                                 className="w-[3px] md:w-[2px] bg-gold/75 origin-bottom [animation:debrief-signal-bar_1.8s_ease-in-out_infinite]"
                                 style={{
                                   animationDelay: `${i * 0.11}s`,
                                   animationDuration: `${1.6 + (i % 4) * 0.24}s`,
-                                  height: `${7 + (i % 3)}px`,
+                                  height: `${6 + (i % 2)}px`,
                                 }}
                               />
                             ))}
                           </div>
-                        </div>
-                      </div>
-
-                      <div className="pointer-events-none absolute top-[88px] right-4 md:top-[70px] md:right-4 font-mono text-sm md:text-[10px] tracking-[0.16em] md:tracking-[0.24em] uppercase text-gold-dim border border-gold-dim/60 bg-black/45 px-3 py-1.5 [text-shadow:0_0_6px_rgba(214,173,74,0.24)]">
-                        {formatClock(videoElapsed)}
-                      </div>
-
-                      <div className="pointer-events-none absolute bottom-6 left-4 right-4 flex items-end justify-between font-mono text-sm md:text-[10px] tracking-[0.16em] md:tracking-[0.24em] uppercase text-gold-dim [text-shadow:0_0_6px_rgba(214,173,74,0.24)]">
-                        <div className="border border-gold-dim/60 bg-black/45 px-3 py-2 md:px-3 md:py-1.5">
-                          <p>CANAL SEGURO</p>
-                          <p className="mt-1 text-gold">RSA-4096</p>
-                        </div>
-                        <div className="border border-gold-dim/60 bg-black/45 px-3 py-2 md:px-3 md:py-1.5 text-right">
-                          <p>LATENCIA</p>
-                          <p className="mt-1 text-gold">12 ms</p>
                         </div>
                       </div>
                     </>
@@ -541,6 +598,8 @@ function Debrief() {
 
               {phase === "finished" && (
                 <div className="relative z-[60] mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 md:px-8 py-16 text-center">
+                  {!showCredits && !showFinalSlate && (
+                    <>
                   <div className={`space-y-3 transition-opacity duration-700 ${showTransmissionDone ? "opacity-100" : "opacity-0"}`}>
                     <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">
                       TRANSMISION FINALIZADA
@@ -585,10 +644,56 @@ function Debrief() {
                     <p className="font-mono text-[12px] tracking-[0.12em] text-gold-dim">Hasta la proxima mision.</p>
                   </div>
 
+                  {showCreditsFade && (
+                    <div className="pointer-events-none fixed inset-0 z-[75] bg-black animate-[debrief-credits-fade_1.5s_ease_forwards]" />
+                  )}
+                    </>
+                  )}
+
+                  {showCredits && (
+                    <div className="fixed inset-0 z-[80] bg-black overflow-hidden">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.44)_100%)]" />
+                      <div className="absolute left-1/2 bottom-[-86%] w-[92%] max-w-3xl -translate-x-1/2 text-center [animation:debrief-credits-roll_56s_linear_forwards]">
+                        {CREDIT_SEQUENCE.map((item, idx) => (
+                          <div
+                            key={`credit-${idx}`}
+                            className="mb-28 md:mb-36 opacity-0 [animation:debrief-credit-block_9s_ease-in-out_forwards]"
+                            style={{ animationDelay: `${idx * 6.6}s` }}
+                          >
+                            {item.type === "text" ? (
+                              <div className="space-y-4">
+                                <p className="font-mono text-[10px] tracking-[0.32em] uppercase text-gold-dim">{item.title}</p>
+                                <p className="font-display text-2xl md:text-3xl text-gold leading-relaxed">{item.body}</p>
+                              </div>
+                            ) : (
+                              <div className="mx-auto max-w-xl px-6">
+                                <img
+                                  src={item.src}
+                                  alt="Crédito"
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                  }}
+                                  className="mx-auto w-full rounded-sm border border-gold-dim/50 object-cover opacity-85"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {showFinalSlate && (
+                    <div className="fixed inset-0 z-[85] bg-black flex flex-col items-center justify-center px-4 text-center">
+                      <p className="font-display text-3xl md:text-4xl text-gold uppercase">EX COMMISSIONE</p>
+                      <p className="mt-2 font-display text-xl md:text-2xl text-gold-dim uppercase tracking-[0.22em]">ALTA MESA</p>
+                    </div>
+                  )}
+
                   {showCloseButton && (
                     <Link
                       to="/"
-                      className="inline-flex border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.35em] text-gold transition hover:bg-gold/20"
+                      className="fixed z-[90] bottom-8 left-1/2 -translate-x-1/2 inline-flex border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.35em] text-gold transition hover:bg-gold/20"
                     >
                       CERRAR EXPEDIENTE
                     </Link>

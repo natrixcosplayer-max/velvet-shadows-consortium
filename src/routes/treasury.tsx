@@ -16,10 +16,26 @@ type CoinCheck = {
   shape: boolean;
   color: boolean;
   size: boolean;
+  centered: boolean;
   authenticity: boolean;
 };
 
 type ScanState = "camera" | "detected" | "verifying" | "result";
+
+type DebugTelemetry = {
+  circlesDetected: number;
+  maxDiameterPx: number;
+  goldPercent: number;
+  centered: boolean;
+  shapePoints: number;
+  colorPoints: number;
+  sizePoints: number;
+  centerPoints: number;
+  totalPoints: number;
+  centerX: number;
+  centerY: number;
+  radius: number;
+};
 
 declare global {
   interface Window {
@@ -86,6 +102,7 @@ function Treasury() {
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const liveCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
   const processTimeoutRef = useRef<number | null>(null);
@@ -100,8 +117,22 @@ function Treasury() {
   const [scanConfidence, setScanConfidence] = useState(0);
   const [scanFlash, setScanFlash] = useState(false);
   const [frozenFrame, setFrozenFrame] = useState<string | null>(null);
-  const [checks, setChecks] = useState<CoinCheck>({ shape: false, color: false, size: false, authenticity: false });
+  const [checks, setChecks] = useState<CoinCheck>({ shape: false, color: false, size: false, centered: false, authenticity: false });
   const [duplicateResult, setDuplicateResult] = useState(false);
+  const [debugTelemetry, setDebugTelemetry] = useState<DebugTelemetry>({
+    circlesDetected: 0,
+    maxDiameterPx: 0,
+    goldPercent: 0,
+    centered: false,
+    shapePoints: 0,
+    colorPoints: 0,
+    sizePoints: 0,
+    centerPoints: 0,
+    totalPoints: 0,
+    centerX: 0,
+    centerY: 0,
+    radius: 0,
+  });
 
   const spend = (n: number, reason: string) => {
     playSfx("/sounds/coin.mp3");
@@ -144,8 +175,22 @@ function Treasury() {
     setScanConfidence(0);
     setScanFlash(false);
     setFrozenFrame(null);
-    setChecks({ shape: false, color: false, size: false, authenticity: false });
+    setChecks({ shape: false, color: false, size: false, centered: false, authenticity: false });
     setDuplicateResult(false);
+    setDebugTelemetry({
+      circlesDetected: 0,
+      maxDiameterPx: 0,
+      goldPercent: 0,
+      centered: false,
+      shapePoints: 0,
+      colorPoints: 0,
+      sizePoints: 0,
+      centerPoints: 0,
+      totalPoints: 0,
+      centerX: 0,
+      centerY: 0,
+      radius: 0,
+    });
     setScannerError("");
     detectedRef.current = false;
   };
@@ -198,14 +243,15 @@ function Treasury() {
   const startVerificationSequence = () => {
     setScanState("verifying");
     setScanMessage("VERIFICANDO AUTENTICIDAD...");
-    setChecks({ shape: false, color: false, size: false, authenticity: false });
+    setChecks({ shape: false, color: false, size: false, centered: false, authenticity: false });
 
     const c1 = window.setTimeout(() => setChecks((prev) => ({ ...prev, shape: true })), 320);
     const c2 = window.setTimeout(() => setChecks((prev) => ({ ...prev, color: true })), 760);
     const c3 = window.setTimeout(() => setChecks((prev) => ({ ...prev, size: true })), 1190);
-    const c4 = window.setTimeout(() => setChecks((prev) => ({ ...prev, authenticity: true })), 1620);
-    const c5 = window.setTimeout(() => finalizeVerification(), 2020);
-    verifyTimeoutsRef.current.push(c1, c2, c3, c4, c5);
+    const c4 = window.setTimeout(() => setChecks((prev) => ({ ...prev, centered: true })), 1570);
+    const c5 = window.setTimeout(() => setChecks((prev) => ({ ...prev, authenticity: true })), 1940);
+    const c6 = window.setTimeout(() => finalizeVerification(), 2360);
+    verifyTimeoutsRef.current.push(c1, c2, c3, c4, c5, c6);
   };
 
   const handleDetected = () => {
@@ -228,6 +274,54 @@ function Treasury() {
   };
 
   const startDetectionLoop = () => {
+    const drawOverlay = (
+      width: number,
+      height: number,
+      detectedCircle?: { x: number; y: number; r: number }
+    ) => {
+      const overlay = overlayCanvasRef.current;
+      if (!overlay) return;
+
+      overlay.width = width;
+      overlay.height = height;
+      const octx = overlay.getContext("2d");
+      if (!octx) return;
+
+      octx.clearRect(0, 0, width, height);
+
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const guideRadius = Math.min(width, height) * 0.21;
+
+      octx.strokeStyle = "rgba(214, 173, 74, 0.85)";
+      octx.lineWidth = 2;
+      octx.beginPath();
+      octx.arc(centerX, centerY, guideRadius, 0, Math.PI * 2);
+      octx.stroke();
+
+      octx.fillStyle = "rgba(214, 173, 74, 0.95)";
+      octx.beginPath();
+      octx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+      octx.fill();
+
+      if (detectedCircle) {
+        octx.strokeStyle = "rgba(44, 212, 129, 0.95)";
+        octx.lineWidth = 3;
+        octx.beginPath();
+        octx.arc(detectedCircle.x, detectedCircle.y, detectedCircle.r, 0, Math.PI * 2);
+        octx.stroke();
+
+        octx.strokeStyle = "rgba(44, 212, 129, 0.95)";
+        octx.lineWidth = 2;
+        octx.beginPath();
+        octx.moveTo(detectedCircle.x - 12, detectedCircle.y);
+        octx.lineTo(detectedCircle.x + 12, detectedCircle.y);
+        octx.moveTo(detectedCircle.x, detectedCircle.y - 12);
+        octx.lineTo(detectedCircle.x, detectedCircle.y + 12);
+        octx.stroke();
+      }
+    };
+
     const step = () => {
       if (!isScannerOpen || !cameraReady || detectedRef.current) return;
 
@@ -245,6 +339,8 @@ function Treasury() {
         rafRef.current = requestAnimationFrame(step);
         return;
       }
+
+      drawOverlay(canvas.width, canvas.height);
 
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -279,18 +375,46 @@ function Treasury() {
 
         cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1, gray.rows / 8, 120, 30, minRadius, maxRadius);
 
-        if (!circles.cols || circles.cols < 1) {
-          setScanMessage("Buscando Continental Coin...");
-          setScanConfidence(0);
+        const count = circles.cols || 0;
+        if (count < 1) {
+          const breathing = 0.1 + Math.abs(Math.sin(Date.now() / 420)) * 0.16;
+          setScanMessage("ESCANEANDO ASSET...");
+          setScanConfidence(breathing);
+          setDebugTelemetry({
+            circlesDetected: 0,
+            maxDiameterPx: 0,
+            goldPercent: 0,
+            centered: false,
+            shapePoints: 0,
+            colorPoints: 0,
+            sizePoints: 0,
+            centerPoints: 0,
+            totalPoints: Math.round(breathing * 100),
+            centerX: 0,
+            centerY: 0,
+            radius: 0,
+          });
           processTimeoutRef.current = window.setTimeout(() => {
             rafRef.current = requestAnimationFrame(step);
           }, 130);
           return;
         }
 
-        const x = circles.data32F[0];
-        const y = circles.data32F[1];
-        const r = circles.data32F[2];
+        let maxIdx = 0;
+        let maxRadiusFound = 0;
+        for (let i = 0; i < count; i += 1) {
+          const radius = circles.data32F[i * 3 + 2] || 0;
+          if (radius > maxRadiusFound) {
+            maxRadiusFound = radius;
+            maxIdx = i;
+          }
+        }
+
+        const x = circles.data32F[maxIdx * 3];
+        const y = circles.data32F[maxIdx * 3 + 1];
+        const r = circles.data32F[maxIdx * 3 + 2];
+
+        drawOverlay(canvas.width, canvas.height, { x, y, r });
 
         cv.cvtColor(src, hsv, cv.COLOR_RGBA2RGB);
         cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
@@ -313,31 +437,58 @@ function Treasury() {
         const dy = Math.abs(y - src.rows / 2);
         const normalizedCenterDistance = Math.sqrt(dx * dx + dy * dy) / (Math.min(src.cols, src.rows) / 2);
 
-        const shapeScore = 1;
-        const colorScore = Math.max(0, Math.min(1, (goldRatio - 0.34) / 0.24));
-        const sizeScore = Math.max(0, Math.min(1, (diameterRatio - 0.24) / 0.16));
+        const minDiameterRatio = 0.24;
+        const minGoldRatio = 0.34;
         const centered = normalizedCenterDistance <= 0.18;
-        const confidenceRaw = 0.4 * shapeScore + 0.35 * colorScore + 0.25 * sizeScore;
-        const confidence = centered ? confidenceRaw : confidenceRaw * 0.78;
+
+        const shapePoints = count === 1 ? 40 : count > 1 ? 14 : 0;
+        const colorPoints = Math.max(0, Math.min(30, Math.round(((goldRatio - 0.2) / (minGoldRatio - 0.2)) * 30)));
+        const sizePoints = Math.max(0, Math.min(20, Math.round(((diameterRatio - 0.12) / (minDiameterRatio - 0.12)) * 20)));
+        const centerPoints = centered ? 10 : 0;
+        const totalPoints = Math.max(0, Math.min(100, shapePoints + colorPoints + sizePoints + centerPoints));
+        const confidence = totalPoints / 100;
+
+        setDebugTelemetry({
+          circlesDetected: count,
+          maxDiameterPx: Math.round(2 * r),
+          goldPercent: Math.max(0, Math.min(100, Math.round(goldRatio * 100))),
+          centered,
+          shapePoints,
+          colorPoints,
+          sizePoints,
+          centerPoints,
+          totalPoints,
+          centerX: x,
+          centerY: y,
+          radius: r,
+        });
 
         setScanConfidence(confidence);
 
-        if (!centered) {
+        if (count !== 1) {
+          setScanMessage("Buscando Continental Coin...");
+        } else if (!centered) {
           setScanMessage("Centre el asset dentro del marco.");
-        } else if (diameterRatio < 0.24) {
+        } else if (diameterRatio < minDiameterRatio) {
           setScanMessage("Mantenga una distancia de 15-20 cm.");
-        } else if (goldRatio < 0.34) {
+        } else if (goldRatio < minGoldRatio) {
           setScanMessage("Evite reflejos intensos.");
         } else {
           setScanMessage("No mueva la moneda.");
         }
 
-        if (confidence >= 0.9 && centered && diameterRatio >= 0.24 && goldRatio >= 0.34) {
+        if (
+          confidence > 0.9 &&
+          count === 1 &&
+          centered &&
+          diameterRatio >= minDiameterRatio &&
+          goldRatio >= minGoldRatio
+        ) {
           handleDetected();
           return;
         }
       } catch {
-        setScanMessage("Buscando Continental Coin...");
+        setScanMessage("ESCANEANDO ASSET...");
       } finally {
         src?.delete();
         gray?.delete();
@@ -360,9 +511,9 @@ function Treasury() {
     setIsScannerOpen(true);
     setScannerError("");
     setScanState("camera");
-    setScanMessage("Buscando Continental Coin...");
+    setScanMessage("ESCANEANDO ASSET...");
     setScanConfidence(0);
-    setChecks({ shape: false, color: false, size: false, authenticity: false });
+    setChecks({ shape: false, color: false, size: false, centered: false, authenticity: false });
     setFrozenFrame(null);
     setDuplicateResult(false);
     detectedRef.current = false;
@@ -477,6 +628,7 @@ function Treasury() {
         <div className="fixed inset-0 z-[120] bg-black">
           <video ref={videoRef} playsInline muted className="absolute inset-0 h-full w-full object-cover" />
           <canvas ref={liveCanvasRef} className="hidden" />
+          <canvas ref={overlayCanvasRef} className="pointer-events-none absolute inset-0 h-full w-full" />
 
           {frozenFrame && (
             <img src={frozenFrame} alt="frame congelado" className="absolute inset-0 h-full w-full object-cover" />
@@ -513,48 +665,69 @@ function Treasury() {
             </div>
           </div>
 
-          <div className="pointer-events-none absolute inset-0 grid place-items-center px-5">
-            <div className="w-full max-w-md border border-gold/70 bg-black/30 backdrop-blur-[2px] px-4 py-4 text-center">
-              <p className="font-mono text-[11px] tracking-[0.26em] uppercase text-gold">{scanMessage}</p>
-              {scanState === "camera" && (
-                <>
-                  <p className="mt-2 font-mono text-[10px] tracking-[0.18em] uppercase text-gold-dim">Mantenga una distancia de 15-20 cm.</p>
-                  <p className="mt-1 font-mono text-[10px] tracking-[0.18em] uppercase text-gold-dim">Evite reflejos intensos.</p>
-                  <p className="mt-1 font-mono text-[10px] tracking-[0.18em] uppercase text-gold-dim">No mueva la moneda.</p>
-                </>
-              )}
+          <div className="pointer-events-none absolute left-1/2 top-[50%] z-20 w-[94%] max-w-lg -translate-x-1/2 -translate-y-1/2 border border-gold/70 bg-black/35 backdrop-blur-[2px] px-4 py-4">
+            <p className="font-mono text-[11px] tracking-[0.26em] uppercase text-gold text-center">CONTINENTAL SCANNER</p>
+            <p className="mt-2 font-mono text-[10px] tracking-[0.2em] uppercase text-gold-dim text-center">Estado</p>
+            <p className="font-mono text-[11px] tracking-[0.24em] uppercase text-gold text-center">{scanState === "camera" ? "ESCANEANDO..." : scanMessage}</p>
 
-              {scanState !== "camera" && (
-                <div className="mt-3 space-y-1 font-mono text-[10px] tracking-[0.2em] uppercase text-gold-dim">
-                  <p>FORMA {checks.shape ? "✔" : ""}</p>
-                  <p>COLOR {checks.color ? "✔" : ""}</p>
-                  <p>TAMAÑO {checks.size ? "✔" : ""}</p>
-                  <p>AUTENTICIDAD {checks.authenticity ? "✔" : ""}</p>
-                </div>
-              )}
+            <div className="my-3 h-px bg-gold-dim/40" />
 
-              {scanState === "camera" && (
-                <p className="mt-3 font-mono text-[10px] tracking-[0.2em] uppercase text-gold-dim">
-                  Confianza: {Math.round(scanConfidence * 100)}%
-                </p>
-              )}
+            <dl className="grid grid-cols-[1fr_auto] gap-y-1 font-mono text-[10px] tracking-[0.18em] uppercase text-gold-dim">
+              <dt>Círculos detectados</dt><dd>{debugTelemetry.circlesDetected}</dd>
+              <dt>Diámetro mayor</dt><dd>{debugTelemetry.maxDiameterPx > 0 ? `${debugTelemetry.maxDiameterPx}px` : "--"}</dd>
+              <dt>Color dorado</dt><dd>{debugTelemetry.goldPercent}%</dd>
+              <dt>Posición</dt><dd>{debugTelemetry.centered ? "Centrado" : "Fuera del centro"}</dd>
+              <dt>Forma</dt><dd>{debugTelemetry.shapePoints}%</dd>
+              <dt>Color</dt><dd>{debugTelemetry.colorPoints}%</dd>
+              <dt>Tamaño</dt><dd>{debugTelemetry.sizePoints}%</dd>
+              <dt>Centrado</dt><dd>{debugTelemetry.centerPoints}%</dd>
+            </dl>
 
-              {scanState === "result" && !duplicateResult && (
-                <div className="mt-3 space-y-1 font-mono text-[10px] tracking-[0.2em] uppercase text-gold-dim">
-                  <p className="text-gold">ORIGEN · HOTEL WESTIN CONTINENTAL</p>
-                  <p>VALENCIA</p>
-                  <p className="text-gold">MISIÓN · RECUPERAR ASSET</p>
-                  <p>TRAZABILIDAD · ALTA MESA · ROMA</p>
-                </div>
-              )}
-
-              {scanState === "result" && duplicateResult && (
-                <div className="mt-3 space-y-1 font-mono text-[10px] tracking-[0.2em] uppercase text-gold-dim">
-                  <p className="text-gold">ID · {COIN_ID}</p>
-                  <p>Esta moneda ya figura en los registros de la Alta Mesa.</p>
-                </div>
-              )}
+            <div className="mt-4">
+              <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-gold-dim text-center">CONFIANZA TOTAL</p>
+              <p className="font-mono text-base tracking-[0.2em] uppercase text-gold text-center">{Math.round(scanConfidence * 100)}%</p>
+              <div className="mt-2 h-2 w-full border border-gold-dim/70 bg-black/30">
+                <div
+                  className="h-full bg-[linear-gradient(90deg,oklch(0.55_0.08_80),oklch(0.88_0.16_88),oklch(0.55_0.08_80))] bg-[length:200%_100%] animate-progress-flow"
+                  style={{ width: `${Math.min(100, Math.max(2, Math.round(scanConfidence * 100)))}%` }}
+                />
+              </div>
             </div>
+
+            {(scanState === "detected" || scanState === "verifying" || scanState === "result") && (
+              <div className="mt-4 space-y-1 font-mono text-[10px] tracking-[0.2em] uppercase text-gold-dim text-center">
+                <p>FORMA {checks.shape ? "✔" : ""}</p>
+                <p>COLOR {checks.color ? "✔" : ""}</p>
+                <p>TAMAÑO {checks.size ? "✔" : ""}</p>
+                <p>CENTRADO {checks.centered ? "✔" : ""}</p>
+                <p>AUTENTICIDAD {checks.authenticity ? "VERIFICADA" : ""}</p>
+              </div>
+            )}
+
+            {scanState === "result" && !duplicateResult && (
+              <div className="mt-3 space-y-1 font-mono text-[10px] tracking-[0.2em] uppercase text-gold-dim text-center">
+                <p className="text-gold">ORIGEN · HOTEL WESTIN CONTINENTAL</p>
+                <p>VALENCIA</p>
+                <p className="text-gold">MISIÓN · RECUPERAR ASSET</p>
+                <p>TRAZABILIDAD · ALTA MESA · ROMA</p>
+              </div>
+            )}
+
+            {scanState === "result" && duplicateResult && (
+              <div className="mt-3 space-y-1 font-mono text-[10px] tracking-[0.2em] uppercase text-gold-dim text-center">
+                <p className="text-gold">ID · {COIN_ID}</p>
+                <p>Esta moneda ya figura en los registros de la Alta Mesa.</p>
+              </div>
+            )}
+
+            {scanState === "camera" && (
+              <div className="mt-3 space-y-1 font-mono text-[10px] tracking-[0.2em] uppercase text-gold-dim text-center">
+                <p>Centre el asset dentro del marco.</p>
+                <p>Mantenga una distancia de 15-20 cm.</p>
+                <p>Evite reflejos intensos.</p>
+                <p>No mueva la moneda.</p>
+              </div>
+            )}
           </div>
 
           {scanFlash && <div className="pointer-events-none absolute inset-0 bg-gold/35" />}

@@ -9,7 +9,7 @@ import altaPortrait from "../assets/alta.png";
 
 import {
   playEmailVoice,
-  fadeOutVoice,
+  stopEmailVoice,
 } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/comms")({
@@ -56,8 +56,17 @@ function Comms() {
       playEmailVoice("1");
     }
 
+    const handleVisibilityOrPageExit = () => {
+      stopEmailVoice(240);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityOrPageExit);
+    window.addEventListener("pagehide", handleVisibilityOrPageExit);
+
     return () => {
-      fadeOutVoice();
+      document.removeEventListener("visibilitychange", handleVisibilityOrPageExit);
+      window.removeEventListener("pagehide", handleVisibilityOrPageExit);
+      stopEmailVoice(240);
     };
   }, [pathname]);
 

@@ -263,6 +263,20 @@
   45% { transform: scaleY(1); opacity: 0.96; }
   70% { transform: scaleY(0.75); opacity: 0.72; }
 }
+@keyframes debrief-credits-fade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes debrief-credits-roll {
+  0% { transform: translate(-50%, 0); }
+  100% { transform: translate(-50%, -178%); }
+}
+@keyframes debrief-credit-block {
+  0% { opacity: 0; transform: translateY(26px); }
+  20% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
 
 @utility animate-flicker { animation: flicker 4s infinite; }
 @utility animate-scan { animation: scan 3s linear infinite; }

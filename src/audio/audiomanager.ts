@@ -2,10 +2,12 @@ let music: HTMLAudioElement | null = null;
 let voice: HTMLAudioElement | null = null;
 
 let musicFade: ReturnType<typeof setInterval> | null = null;
+let voiceFade: ReturnType<typeof setInterval> | null = null;
 let hasUserGesture = false;
 let listenersAttached = false;
 let pendingMusicPlay = false;
 let pendingUnlockVolume: number | null = null;
+let emailVoiceRequestId = 0;
 
 const MUSIC_VOLUME = 0.08;
 const MUSIC_DUCK_VOLUME = 0.005;
@@ -165,6 +167,40 @@ export function restoreMusic() {
   fadeMusicVolume(MUSIC_VOLUME, 1200);
 }
 
+function clearVoiceFade() {
+  if (!voiceFade) return;
+  clearInterval(voiceFade);
+  voiceFade = null;
+}
+
+function fadeInActiveVoice(targetVolume: number, ms = 140) {
+  if (!voice) return;
+
+  clearVoiceFade();
+
+  if (ms <= 0) {
+    voice.volume = targetVolume;
+    return;
+  }
+
+  const start = voice.volume;
+  const step = (targetVolume - start) / Math.max(1, ms / 20);
+
+  voiceFade = setInterval(() => {
+    if (!voice) {
+      clearVoiceFade();
+      return;
+    }
+
+    voice.volume = Math.max(0, Math.min(targetVolume, voice.volume + step));
+
+    if ((step >= 0 && voice.volume >= targetVolume) || (step < 0 && voice.volume <= targetVolume)) {
+      voice.volume = targetVolume;
+      clearVoiceFade();
+    }
+  }, 20);
+}
+
 export async function playVoice(
   src: string,
   volume = 0.45
@@ -175,13 +211,16 @@ export async function playVoice(
 
   voice = new Audio(src);
   voice.preload = "auto";
-  voice.volume = volume;
+  voice.volume = 0;
 
   voice.onended = () => {
+    clearVoiceFade();
     voice = null;
     restoreMusic();
   };
 
+  // Force immediate duck before attempting playback; iOS can expose a loud transient otherwise.
+  duckMusicImmediate();
   const playPromise = voice.play();
 
   if (playPromise) {
@@ -190,9 +229,11 @@ export async function playVoice(
     playPromise
       .then(() => {
         duckMusicImmediate();
+        fadeInActiveVoice(volume, 140);
       })
       .catch(() => {
         restoreMusic();
+        clearVoiceFade();
         voice = null;
       });
 
@@ -203,6 +244,7 @@ export async function playVoice(
 export function stopVoice() {
   if (!voice) return;
 
+  clearVoiceFade();
   voice.pause();
   voice.currentTime = 0;
   voice = null;
@@ -212,6 +254,7 @@ export function stopVoice() {
 export function fadeOutVoice(ms = 300): Promise<void> {
 
   return new Promise((resolve) => {
+    clearVoiceFade();
 
     if (!voice) {
       restoreMusic();
@@ -369,5 +412,18 @@ export async function playEmailVoice(id: string) {
   const voiceSrc = EMAIL_VOICES[id];
 
   if (!voiceSrc) return;
+
+  const requestId = ++emailVoiceRequestId;
+
+  await fadeOutVoice(260);
+
+  // If a newer email was requested while fading, cancel this older request.
+  if (requestId !== emailVoiceRequestId) return;
+
   await playVoice(voiceSrc);
+}
+
+export function stopEmailVoice(ms = 300) {
+  emailVoiceRequestId += 1;
+  return fadeOutVoice(ms);
 }
