@@ -1,5 +1,7 @@
 let music: HTMLAudioElement | null = null;
 let voice: HTMLAudioElement | null = null;
+let controlledAudio: HTMLAudioElement | null = null;
+let controlledAudioKey: string | null = null;
 
 let musicFade: ReturnType<typeof setInterval> | null = null;
 let voiceFade: ReturnType<typeof setInterval> | null = null;
@@ -369,6 +371,61 @@ export function playSfx(src: string, volume = 1) {
   const sfx = new Audio(src);
   sfx.volume = volume;
   sfx.play().catch(() => {});
+}
+
+export function playControlledAudio(
+  key: string,
+  src: string,
+  volume = 0.22,
+  loop = false
+) {
+  if (!hasUserGesture) {
+    attachGestureUnlockListeners();
+  }
+
+  if (controlledAudioKey === key && controlledAudio) {
+    controlledAudio.loop = loop;
+    controlledAudio.volume = volume;
+    controlledAudio.currentTime = 0;
+    const resume = controlledAudio.play();
+    if (resume) {
+      resume.catch(() => {});
+    }
+    return;
+  }
+
+  if (controlledAudio) {
+    controlledAudio.pause();
+    controlledAudio.currentTime = 0;
+    controlledAudio = null;
+    controlledAudioKey = null;
+  }
+
+  controlledAudio = new Audio(src);
+  controlledAudioKey = key;
+  controlledAudio.preload = "auto";
+  controlledAudio.loop = loop;
+  controlledAudio.volume = volume;
+
+  const playPromise = controlledAudio.play();
+  if (playPromise) {
+    playPromise.catch(() => {
+      if (controlledAudioKey === key) {
+        controlledAudio = null;
+        controlledAudioKey = null;
+      }
+    });
+  }
+}
+
+export function stopControlledAudio(key?: string) {
+  if (!controlledAudio) return;
+  if (key && controlledAudioKey !== key) return;
+
+  controlledAudio.pause();
+  controlledAudio.currentTime = 0;
+  controlledAudio = null;
+  controlledAudioKey = null;
 }
 export function playVoiceQueue(
   files: string[],
