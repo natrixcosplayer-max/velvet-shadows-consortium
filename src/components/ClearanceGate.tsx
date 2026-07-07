@@ -105,7 +105,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
                   [{String(i + 1).padStart(2, "0")}]
                 </span>
 
-                <span className={i === step - 1 ? "" : "opacity-70"}>
+                <span className={i === step - 1 ? "font-bold text-gold-bright" : "opacity-70"}>
                   {line}
                 </span>
 

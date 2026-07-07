@@ -1,7 +1,6 @@
 import altaLogo from "../assets/alta.png";
 import {
   playMusic,
-  playVoice,
   playSfx,
   primeUnlockSound,
 } from "../audio/audiomanager";

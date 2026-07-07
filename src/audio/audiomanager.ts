@@ -2,6 +2,11 @@ let music: HTMLAudioElement | null = null;
 let voice: HTMLAudioElement | null = null;
 
 let musicFade: ReturnType<typeof setInterval> | null = null;
+let hasUserGesture = false;
+let listenersAttached = false;
+let pendingMusicPlay = false;
+let pendingUnlockVolume: number | null = null;
+
 const MUSIC_VOLUME = 0.08;
 const MUSIC_DUCK_VOLUME = 0.005;
 const EMAIL_VOICES: Record<string, string> = {
@@ -11,6 +16,39 @@ const EMAIL_VOICES: Record<string, string> = {
   "4": "/sounds/pitas.wav",
   "5": "/sounds/russian.wav",
 };
+
+function attachGestureUnlockListeners() {
+  if (listenersAttached || typeof window === "undefined") return;
+  listenersAttached = true;
+
+  const onGesture = () => {
+    hasUserGesture = true;
+
+    if (music && pendingMusicPlay) {
+      const retry = music.play();
+      if (retry) {
+        retry
+          .then(() => {
+            pendingMusicPlay = false;
+          })
+          .catch(() => {});
+      }
+    }
+
+    if (pendingUnlockVolume !== null) {
+      const volume = pendingUnlockVolume;
+      pendingUnlockVolume = null;
+      playUnlockSound(volume).catch(() => {});
+    }
+  };
+
+  window.addEventListener("pointerdown", onGesture, { passive: true });
+  window.addEventListener("touchstart", onGesture, { passive: true });
+  window.addEventListener("click", onGesture, { passive: true });
+  window.addEventListener("keydown", onGesture, { passive: true });
+}
+
+attachGestureUnlockListeners();
 
 export function playMusic(
   src: string,
@@ -27,16 +65,30 @@ export function playMusic(
   music.loop = loop;
   music.volume = volume;
 
-  music.addEventListener(
-    "loadedmetadata",
-    () => {
-      if (!music) return;
+  const startPlayback = () => {
+    if (!music) return;
 
-      music.currentTime = startTime;
-      music.play().catch(() => {});
-    },
-    { once: true }
-  );
+    music.currentTime = startTime;
+    const result = music.play();
+
+    if (result) {
+      result
+        .then(() => {
+          pendingMusicPlay = false;
+        })
+        .catch(() => {
+          // Safari iOS can block autoplay until a real user gesture.
+          pendingMusicPlay = true;
+          attachGestureUnlockListeners();
+        });
+    }
+  };
+
+  music.addEventListener("loadedmetadata", startPlayback, { once: true });
+
+  if (music.readyState >= 1) {
+    startPlayback();
+  }
 }
 
 export function stopMusic() {
@@ -45,6 +97,7 @@ export function stopMusic() {
   music.pause();
   music.currentTime = 0;
   music = null;
+  pendingMusicPlay = false;
 }
 
 export function seekMusic(seconds: number) {
@@ -194,6 +247,8 @@ let unlockSound: HTMLAudioElement | null = null;
 
 // Debe llamarse SÍNCRONAMENTE desde un gesto real del usuario (botón ACCEDER).
 export function primeUnlockSound() {
+  hasUserGesture = true;
+
   if (unlockSound) return;
 
   unlockSound = new Audio("/sounds/unlock.mp3");
@@ -221,6 +276,9 @@ export async function playUnlockSound(volume = 0.45) {
 
   if (!sound) return;
 
+  // Prioritize unlock cue intelligibility on mobile by ducking background music.
+  duckMusic();
+
   sound.currentTime = 0;
   sound.volume = volume;
   sound.muted = false;
@@ -233,10 +291,8 @@ export async function playUnlockSound(volume = 0.45) {
   if (result) {
     result.catch(() => {
       restoreMusic();
-      if (sound !== unlockSound) {
-        stopMusic();
-        playMusic("/sounds/unlock.mp3", volume, false, 0);
-      }
+      pendingUnlockVolume = volume;
+      attachGestureUnlockListeners();
     });
   }
 }
@@ -250,6 +306,10 @@ export function restoreMusicAfterVoice() {
 }
 
 export function playSfx(src: string, volume = 1) {
+  if (!hasUserGesture) {
+    attachGestureUnlockListeners();
+  }
+
   const sfx = new Audio(src);
   sfx.volume = volume;
   sfx.play().catch(() => {});

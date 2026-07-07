@@ -32,7 +32,7 @@ function Missions() {
   const [nowCest, setNowCest] = useState("");
   const navigateButtonRef = useRef<HTMLAnchorElement | null>(null);
   const [objectiveElapsed, setObjectiveElapsed] = useState(17);
-  const [reliability, setReliability] = useState<"99.8 %" | "99.9 %">("99.8 %");
+  const [reliability, setReliability] = useState("99.8 %");
   const [originIndex, setOriginIndex] = useState(0);
   const [signalPhase, setSignalPhase] = useState(0);
 
@@ -62,7 +62,7 @@ function Missions() {
   useEffect(() => {
     const tick = () => {
       const d = new Date();
-      const parts = new Intl.DateTimeFormat("sv-SE", {
+      const formatted = new Intl.DateTimeFormat("es-ES", {
         timeZone: "Europe/Madrid",
         year: "numeric",
         month: "2-digit",
@@ -71,12 +71,9 @@ function Missions() {
         minute: "2-digit",
         second: "2-digit",
         hour12: false,
-      }).formatToParts(d);
+      }).format(d);
 
-      const get = (type: Intl.DateTimeFormatPartTypes) =>
-        parts.find((p) => p.type === type)?.value ?? "00";
-
-      setNowCest(`${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")} CEST`);
+      setNowCest(`${formatted} CEST`);
     };
 
     tick();
@@ -93,8 +90,9 @@ function Missions() {
 
   useEffect(() => {
     const id = setInterval(() => {
-      setReliability((prev) => (prev === "99.8 %" ? "99.9 %" : "99.8 %"));
-    }, 4200);
+      const next = (95 + Math.random() * 5).toFixed(1);
+      setReliability(`${next} %`);
+    }, 2600);
     return () => clearInterval(id);
   }, []);
 
@@ -218,7 +216,7 @@ function Missions() {
         <div className="relative overflow-hidden">
           <div
             aria-hidden
-            className="pointer-events-none absolute left-0 right-0 h-px bg-gold/40 opacity-35 [animation:scan-objective_8s_linear_infinite]"
+            className="pointer-events-none absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent opacity-70 shadow-[0_0_10px_rgba(212,175,55,0.6)] [animation:scan-objective_6s_linear_infinite]"
           />
 
           <div className="relative z-10">

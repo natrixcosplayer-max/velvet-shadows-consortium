@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
-import { playSfx } from "../audio/audiomanager";
+import { playSfx, stopMusic } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/debrief")({
   head: () => ({
@@ -29,6 +29,13 @@ const HUD_ITEMS = [
   { label: "ESTADO", value: "EN LÍNEA" },
 ];
 
+const CLOSING_LINES = [
+  "CANAL SEGURO CERRADO ✔",
+  "EXPEDIENTE ARCHIVADO ✔",
+  "ACTIVO RECUPERADO ✔",
+  "MISION COMPLETADA ✔",
+];
+
 type Phase =
   | "starting"
   | "secure"
@@ -44,6 +51,15 @@ function Debrief() {
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [glitch, setGlitch] = useState(false);
+  const [videoFade, setVideoFade] = useState(false);
+  const [showTransmissionDone, setShowTransmissionDone] = useState(false);
+  const [typedClosingLines, setTypedClosingLines] = useState<string[]>(Array(CLOSING_LINES.length).fill(""));
+  const [activeClosingLine, setActiveClosingLine] = useState<number | null>(null);
+  const [showPermanentRecord, setShowPermanentRecord] = useState(false);
+  const [closingTime, setClosingTime] = useState("");
+  const [showCommissionMark, setShowCommissionMark] = useState(false);
+  const [showThanks, setShowThanks] = useState(false);
+  const [showCloseButton, setShowCloseButton] = useState(false);
 
   useEffect(() => {
     if (phase !== "starting") return;
@@ -113,6 +129,110 @@ function Debrief() {
   video.play().catch(console.error);
 
 }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "finished") return;
+
+    let cancelled = false;
+    const timers: Array<number | ReturnType<typeof setTimeout>> = [];
+
+    const wait = (ms: number) =>
+      new Promise<void>((resolve) => {
+        const id = window.setTimeout(() => resolve(), ms);
+        timers.push(id);
+      });
+
+    const typeLine = async (lineIndex: number, text: string) => {
+      setActiveClosingLine(lineIndex);
+      for (let i = 1; i <= text.length; i += 1) {
+        if (cancelled) return;
+        setTypedClosingLines((prev) => {
+          const next = [...prev];
+          next[lineIndex] = text.slice(0, i);
+          return next;
+        });
+        await wait(34);
+      }
+      setActiveClosingLine(null);
+    };
+
+    const runClosingSequence = async () => {
+      stopMusic();
+      setVideoFade(false);
+      setShowTransmissionDone(false);
+      setTypedClosingLines(Array(CLOSING_LINES.length).fill(""));
+      setShowPermanentRecord(false);
+      setShowCommissionMark(false);
+      setShowThanks(false);
+      setShowCloseButton(false);
+
+      await wait(500);
+      if (cancelled) return;
+
+      setVideoFade(true);
+      playSfx("/sounds/final1.wav", 0.2);
+
+      await wait(600);
+      if (cancelled) return;
+
+      setShowTransmissionDone(true);
+
+      await wait(420);
+      if (cancelled) return;
+
+      for (let lineIndex = 0; lineIndex < CLOSING_LINES.length; lineIndex += 1) {
+        await typeLine(lineIndex, CLOSING_LINES[lineIndex]);
+        if (cancelled) return;
+
+        if (lineIndex === 1 || lineIndex === 3) {
+          playSfx("/sounds/final2.wav", 0.2);
+        }
+
+        await wait(220);
+        if (cancelled) return;
+      }
+
+      await wait(1000);
+      if (cancelled) return;
+
+      setClosingTime(
+        new Intl.DateTimeFormat("es-ES", {
+          timeZone: "Europe/Madrid",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).format(new Date())
+      );
+      setShowPermanentRecord(true);
+      playSfx("/sounds/final3.wav", 0.2);
+
+      await wait(1000);
+      if (cancelled) return;
+
+      setShowCommissionMark(true);
+
+      await wait(2000);
+      if (cancelled) return;
+
+      setShowThanks(true);
+
+      await wait(1300);
+      if (cancelled) return;
+
+      setShowCloseButton(true);
+    };
+
+    runClosingSequence();
+
+    return () => {
+      cancelled = true;
+      timers.forEach((id) => window.clearTimeout(id));
+    };
+  }, [phase]);
 
   return (
     <AppShell title="Transmisión Final" latin="Alta Mesa · Informe">
@@ -228,7 +348,7 @@ function Debrief() {
                 </div>
               )}
 
-              {phase === "video" && (
+              {(phase === "video" || phase === "finished") && (
                 <div className="fixed inset-0 z-50 bg-black overflow-hidden">
                   <video
                     ref={videoRef}
@@ -238,41 +358,71 @@ function Debrief() {
                     className="h-full w-full object-cover"
                   />
 
+                  <div
+                    className={`pointer-events-none absolute inset-0 bg-black transition-opacity duration-[600ms] ${
+                      videoFade ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/65 to-transparent" />
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/65 to-transparent" />
                 </div>
               )}
 
               {phase === "finished" && (
-                <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-8 py-16 text-center">
-                  <div className="space-y-6">
+                <div className="relative z-[60] mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-8 py-16 text-center">
+                  <div className={`space-y-3 transition-opacity duration-700 ${showTransmissionDone ? "opacity-100" : "opacity-0"}`}>
                     <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">
-                      TRANSMISIÓN FINALIZADA
+                      TRANSMISION FINALIZADA
                     </p>
-                    <p className="font-display text-5xl uppercase text-gold">OPERACIÓN MINERVA</p>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    {[
-                      { label: "ACTIVO RECUPERADO" },
-                      { label: "MISIÓN COMPLETADA" },
-                      { label: "CANAL CERRADO" },
-                    ].map((item) => (
-                      <div
-                        key={item.label}
-                        className="rounded-3xl border border-gold-dim/50 bg-black/80 px-8 py-6"
+
+                  <div className="w-full max-w-[700px] space-y-3">
+                    {typedClosingLines.map((line, idx) => (
+                      <p
+                        key={`closing-line-${idx}`}
+                        className="font-mono text-[12px] tracking-[0.3em] uppercase text-gold-dim"
                       >
-                        <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold-dim">
-                          {item.label}
-                        </p>
-                      </div>
+                        {line}
+                        {activeClosingLine === idx && <span className="animate-blink">█</span>}
+                      </p>
                     ))}
                   </div>
-                  <Link
-                    to="/"
-                    className="inline-flex rounded-full border border-gold bg-gold px-10 py-3 font-mono text-[11px] uppercase tracking-[0.35em] text-black transition hover:bg-gold/90"
+
+                  <div
+                    className={`w-full max-w-[560px] border border-gold-dim/45 bg-black/70 px-6 py-5 text-left scanlines transition-all duration-700 ${
+                      showPermanentRecord ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                    }`}
                   >
-                    CERRAR EXPEDIENTE
-                  </Link>
+                    <p className="font-mono text-[10px] tracking-[0.35em] uppercase text-gold mb-4">REGISTRO PERMANENTE</p>
+                    <div className="grid grid-cols-[170px_1fr] gap-y-2 font-mono text-[11px] tracking-[0.18em] uppercase text-gold-dim">
+                      <span>ID</span>
+                      <span className="text-gold">AURUM VII · 0734</span>
+                      <span>HORA DE CIERRE</span>
+                      <span className="text-gold">{closingTime || "--/--/---- --:--:--"}</span>
+                      <span>ESTADO</span>
+                      <span className="text-gold">ARCHIVADO</span>
+                    </div>
+                  </div>
+
+                  <div className={`space-y-2 transition-all duration-1000 ${showCommissionMark ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+                    <p className="font-display text-3xl md:text-4xl text-gold uppercase">EX COMMISSIONE</p>
+                    <p className="font-display text-xl md:text-2xl text-gold-dim uppercase tracking-[0.2em]">ALTA MESA</p>
+                  </div>
+
+                  <div className={`space-y-2 transition-opacity duration-[1400ms] ${showThanks ? "opacity-100" : "opacity-0"}`}>
+                    <p className="font-mono text-[12px] tracking-[0.12em] text-gold-dim">La Comision agradece sus servicios.</p>
+                    <p className="font-mono text-[12px] tracking-[0.12em] text-gold-dim">Hasta la proxima mision.</p>
+                  </div>
+
+                  {showCloseButton && (
+                    <Link
+                      to="/"
+                      className="inline-flex border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.35em] text-gold transition hover:bg-gold/20"
+                    >
+                      CERRAR EXPEDIENTE
+                    </Link>
+                  )}
                 </div>
               )}
             </div>

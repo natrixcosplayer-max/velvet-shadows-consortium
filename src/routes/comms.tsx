@@ -27,9 +27,7 @@ const THREADS: Msg[] = [
   { id: "4", from: "Adjudicador Vex · Osaka", subject: "Entrega autorizada", portrait: osakaPortrait, body: "Las Pitas de Kevlar procedentes de Osaka ya están listas para su recogida. Último modelo homologado por la Comisión. Desconozco para quién son, pero te aconsejo mantenerlas ocultas hasta el momento oportuno. Algunos regalos solo deben descubrirse una vez. Buena suerte.", at: "Hace 23 días", cipher: "RSA-4096" },
   { id: "5", from: "Mesa Alta · Concilium", subject: "Convocatoria", portrait: altaPortrait, body: "Se requiere su presencia. Casa capitular de Roma. Medianoche, el día tres del mes. Etiqueta. Sin excepciones.", at: "Hace 4 semanas", cipher: "Sello Imperium" },
 ];
-
-
-let ximoAutoplayed = false;
+const XIMO_AUTOPLAY_SESSION_KEY = "comms-ximo-autoplayed";
 
 function Comms() {
   const [open, setOpen] = useState(THREADS[0]);
@@ -50,8 +48,11 @@ function Comms() {
   useEffect(() => {
     if (pathname !== "/comms") return;
 
-    if (!ximoAutoplayed) {
-      ximoAutoplayed = true;
+    const alreadyAutoplayed =
+      typeof window !== "undefined" && window.sessionStorage.getItem(XIMO_AUTOPLAY_SESSION_KEY) === "1";
+
+    if (!alreadyAutoplayed) {
+      window.sessionStorage.setItem(XIMO_AUTOPLAY_SESSION_KEY, "1");
       playEmailVoice("1");
     }
 
@@ -80,10 +81,11 @@ function Comms() {
               <li key={t.id}>
                 <button
                   onClick={() => {
-                    if (open.id === t.id) return;
-
                     playEmailVoice(t.id);
-                    setOpen(t);
+
+                    if (open.id !== t.id) {
+                      setOpen(t);
+                    }
                   }}
                   className={`w-full text-left p-4 border-b border-gold-dim/40 hover:bg-secondary/40 transition ${unreadIds.includes(t.id) ? "bg-gold/20" : ""} ${open.id === t.id ? "bg-secondary/60 border-l-2 border-l-gold" : ""}`}
                 >

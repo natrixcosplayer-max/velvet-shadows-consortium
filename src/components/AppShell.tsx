@@ -2,9 +2,12 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import altaLogo from "../assets/alta.png";
 import {
-  playMusic,
   playSfx,
 } from "../audio/audiomanager";
+
+const SKIP_COMMISSION_GATES_KEY = "skip-commission-gates-once";
+const UNLOCK_SOUND_PLAYED_KEY = "unlock-sound-played";
+const COMMUNICADO_SEEN_KEY = "comunicado-seen";
 
 const NAV = [
   { to: "/", label: "Comisión", latin: "Comissio" },
@@ -19,11 +22,15 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [now, setNow] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hudChannel, setHudChannel] = useState("CANAL SEGURO");
+  const [hudCipher, setHudCipher] = useState("AES-512");
+  const [hudGlitch, setHudGlitch] = useState(false);
+  const [operativoAttention, setOperativoAttention] = useState(false);
 
   useEffect(() => {
     const tick = () => {
       const d = new Date();
-      const parts = new Intl.DateTimeFormat("sv-SE", {
+      const formatted = new Intl.DateTimeFormat("es-ES", {
         timeZone: "Europe/Madrid",
         year: "numeric",
         month: "2-digit",
@@ -32,28 +39,81 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
         minute: "2-digit",
         second: "2-digit",
         hour12: false,
-      }).formatToParts(d);
+      }).format(d);
 
-      const get = (type: Intl.DateTimeFormatPartTypes) =>
-        parts.find((p) => p.type === type)?.value ?? "00";
-
-      setNow(`${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")} CEST`);
+      setNow(`${formatted} CEST`);
     };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
-   
-  useEffect(() => {
-  playMusic("/sounds/john.mp3", 0.08, true, 42);
-}, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    const channelId = setInterval(() => {
+      setHudChannel((prev) => (prev === "CANAL SEGURO" ? "CANAL ESTABLE" : "CANAL SEGURO"));
+    }, 9000);
+
+    const cipherId = setInterval(() => {
+      setHudCipher((prev) => (prev === "AES-512" ? "AES-1024" : "AES-512"));
+    }, 10500);
+
+    const scheduleGlitch = () => {
+      const delay = 45000 + Math.floor(Math.random() * 15000);
+      const id = setTimeout(() => {
+        if (cancelled) return;
+        setHudGlitch(true);
+        const clearId = setTimeout(() => {
+          if (!cancelled) setHudGlitch(false);
+        }, 85);
+        timeouts.push(clearId);
+        scheduleGlitch();
+      }, delay);
+      timeouts.push(id);
+    };
+
+    scheduleGlitch();
+
+    const onOperativoAttention = () => {
+      setOperativoAttention(true);
+      playSfx("/sounds/luxbeep.mp3", 0.17);
+      const stopId = setTimeout(() => setOperativoAttention(false), 1800);
+      timeouts.push(stopId);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("operativo-attention", onOperativoAttention);
+    }
+
+    return () => {
+      cancelled = true;
+      clearInterval(channelId);
+      clearInterval(cipherId);
+      timeouts.forEach((id) => clearTimeout(id));
+      if (typeof window !== "undefined") {
+        window.removeEventListener("operativo-attention", onOperativoAttention);
+      }
+    };
+  }, []);
+   
   return (
     <div className="min-h-screen flex flex-col font-sans">
       {/* Top bar */}
       <header className="border-b border-gold-dim bg-background/80 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center justify-between px-4 md:px-8 h-14">
-          <div className="flex items-center gap-3">
+          <Link
+            to="/"
+            onClick={() => {
+              window.sessionStorage.removeItem(SKIP_COMMISSION_GATES_KEY);
+              window.sessionStorage.removeItem(UNLOCK_SOUND_PLAYED_KEY);
+              window.sessionStorage.removeItem(COMMUNICADO_SEEN_KEY);
+              setMobileOpen(false);
+            }}
+            className="flex items-center gap-3"
+            aria-label="Reiniciar secuencia de acceso"
+          >
             <img
   src={altaLogo}
   alt="Alta Mesa"
@@ -63,11 +123,11 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
               <p className="font-display text-gold text-sm tracking-[0.25em]">EX COMISSIO</p>
               <p className="font-mono text-[10px] text-gold-dim tracking-[0.3em]">ALTA MESA</p>
             </div>
-          </div>
+          </Link>
           <div className="hidden md:flex items-center gap-6 font-mono text-[11px] text-gold-dim">
-            <span className="flex items-center gap-2">
+            <span className={`flex items-center gap-2 ${hudGlitch ? "animate-hud-micro-glitch" : ""}`}>
               <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse-gold" />
-              CANAL SEGURO · AES-512
+              {hudChannel} · {hudCipher}
             </span>
             <span>{now}</span>
             <span className="text-gold">AGENTE · {AGENT_ID}</span>
@@ -84,6 +144,8 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
           <div className="flex flex-col md:flex-row md:items-center px-4 md:px-8 overflow-x-auto">
             {NAV.map((item) => {
               const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
+              const isPriority = item.to === "/missions";
+              const showOperativoPrompt = isPriority && operativoAttention && !active;
               return (
                 <Link
                   key={item.to}
@@ -115,10 +177,21 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
 
  playSfx(sound, 0.45);
 
+  if (item.to === "/missions") {
+    navigator.vibrate?.(20);
+  }
+
   setMobileOpen(false);
+
+  if (item.to === "/") {
+    window.sessionStorage.setItem(SKIP_COMMISSION_GATES_KEY, "1");
+  }
 }}
-                  className={`relative font-mono text-base md:text-[11px] font-bold md:font-normal tracking-[0.18em] md:tracking-[0.25em] uppercase py-3 md:py-2.5 md:mr-8 transition-colors ${active ? "text-gold" : "text-gold-dim hover:text-gold"}`}
+                  className={`relative font-mono text-base md:text-[11px] font-bold md:font-normal tracking-[0.18em] md:tracking-[0.25em] uppercase py-3 md:py-2.5 md:mr-8 transition-colors ${active ? "text-gold" : "text-gold-dim hover:text-gold"} ${isPriority && !active ? "text-gold border border-gold/60 px-2 md:px-3" : ""} ${showOperativoPrompt ? "animate-operativo-attention" : ""}`}
                 >
+                  {isPriority && !active && (
+                    <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-gold" />
+                  )}
                   {item.label}
                   <span className="ml-2 text-[9px] opacity-60 font-display">· {item.latin}</span>
                   {active && <span className="hidden md:block absolute -bottom-px left-0 right-0 h-px bg-gold" />}
