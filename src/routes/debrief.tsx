@@ -85,9 +85,11 @@ type Phase =
 
 function Debrief() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoLayerRef = useRef<HTMLDivElement | null>(null);
   const videoTeardownRef = useRef<number | null>(null);
   const callPulseClearRef = useRef<number | null>(null);
   const ringIntervalRef = useRef<number | null>(null);
+  const pendingFullscreenRef = useRef(false);
   const [phase, setPhase] = useState<Phase>("starting");
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
@@ -176,6 +178,29 @@ function Debrief() {
 
     setHudDate(dateText);
     setHudTime(timeText);
+  };
+
+  const isIPhone = () => {
+    if (typeof navigator === "undefined") return false;
+    return /iPhone/i.test(navigator.userAgent || "");
+  };
+
+  const requestVideoFullscreen = () => {
+    if (typeof document === "undefined") return;
+
+    const layer = videoLayerRef.current;
+    const target = layer || document.documentElement;
+    const node = target as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void;
+    };
+
+    if (!document.fullscreenElement) {
+      if (target.requestFullscreen) {
+        target.requestFullscreen().catch(() => {});
+      } else if (node.webkitRequestFullscreen) {
+        node.webkitRequestFullscreen();
+      }
+    }
   };
 
   const handleVideoEnded = () => {
@@ -332,6 +357,7 @@ function Debrief() {
 
     const ringStartTimer = window.setTimeout(() => {
       setShowAcceptButton(true);
+      playSfx(SFX.magistrada, 0.2);
       ringIntervalRef.current = window.setInterval(() => {
         triggerIncomingPulse();
       }, 2000);
@@ -472,7 +498,25 @@ function Debrief() {
     }, 500);
 
     const startPlayback = window.setTimeout(() => {
+      if (pendingFullscreenRef.current) {
+        requestVideoFullscreen();
+      }
+
       video.play().catch(() => {});
+
+      const iOSVideo = video as HTMLVideoElement & {
+        webkitEnterFullscreen?: () => void;
+      };
+
+      if (pendingFullscreenRef.current && isIPhone() && iOSVideo.webkitEnterFullscreen) {
+        try {
+          iOSVideo.webkitEnterFullscreen();
+        } catch {
+          // Ignore if Safari denies native fullscreen request.
+        }
+      }
+
+      pendingFullscreenRef.current = false;
     }, 140);
 
     return () => {
@@ -821,6 +865,8 @@ function Debrief() {
                           stopControlledAudio("debrief-call");
                           clearCallPulse();
                           setAcceptFreeze(true);
+                          pendingFullscreenRef.current = true;
+                          requestVideoFullscreen();
 
                           window.setTimeout(() => {
                             setAcceptFreeze(false);
@@ -897,7 +943,7 @@ function Debrief() {
               )}
 
               {showVideoLayer && (
-                <div className="fixed inset-0 z-50 w-screen h-screen bg-black overflow-hidden">
+                <div ref={videoLayerRef} className="fixed inset-0 z-[140] w-screen h-screen bg-black overflow-hidden isolate" style={{ height: "100dvh" }}>
                   <video
                     ref={videoRef}
                     src="/videos/oldwoman.mp4"
@@ -906,8 +952,9 @@ function Debrief() {
                     preload="auto"
                     controls={false}
                     disablePictureInPicture
-                    className={`h-screen w-screen object-cover transition-[transform,filter] duration-100 ${videoMicroGlitch ? "translate-x-[1px] -translate-y-[1px]" : ""}`}
+                    className={`absolute inset-0 z-0 h-screen w-screen object-cover transition-[transform,filter] duration-100 ${videoMicroGlitch ? "translate-x-[1px] -translate-y-[1px]" : ""}`}
                     style={{
+                      height: "100dvh",
                       filter: [
                         `brightness(${(videoFlicker ? 0.99 : 1) + videoExposureKick + (videoSignalLoss ? -0.04 : 0)})`,
                         `contrast(${videoSignalLoss ? 1.05 : videoBootNoise ? 1.04 : 1})`,
@@ -921,18 +968,18 @@ function Debrief() {
 
                   {phase === "video" && (
                     <>
-                      <div className="pointer-events-none absolute inset-0 opacity-[0.038] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_3px,rgba(255,255,255,0.86)_3px,rgba(255,255,255,0.86)_5px)] mix-blend-overlay" />
+                      <div className="pointer-events-none absolute inset-0 z-10 opacity-[0.038] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_3px,rgba(255,255,255,0.86)_3px,rgba(255,255,255,0.86)_5px)] mix-blend-overlay" />
                       <div
-                        className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.45)_0.8px,transparent_1.2px)] [background-size:3px_3px] [animation:debrief-noise-drift_1.8s_steps(2,end)_infinite]"
+                        className="pointer-events-none absolute inset-0 z-10 [background-image:radial-gradient(circle,rgba(255,255,255,0.45)_0.8px,transparent_1.2px)] [background-size:3px_3px] [animation:debrief-noise-drift_1.8s_steps(2,end)_infinite]"
                         style={{ opacity: videoBootNoise ? 0.028 : 0.014 }}
                       />
-                      <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/20 [animation:debrief-video-scan_10.5s_linear_infinite]" />
-                      <div className={`pointer-events-none absolute inset-0 bg-black/28 transition-opacity duration-120 ${videoSignalLoss ? "opacity-100" : "opacity-0"}`} />
-                      <div className={`pointer-events-none absolute inset-0 transition-opacity duration-120 ${videoSignalLoss ? "opacity-[0.06]" : "opacity-0"} [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_2px,rgba(255,255,255,0.9)_2px,rgba(255,255,255,0.9)_4px)] mix-blend-overlay`} />
-                      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_58%,rgba(0,0,0,0.35)_100%)]" />
+                      <div className="pointer-events-none absolute left-0 right-0 z-10 h-px bg-white/20 [animation:debrief-video-scan_10.5s_linear_infinite]" />
+                      <div className={`pointer-events-none absolute inset-0 z-10 bg-black/28 transition-opacity duration-120 ${videoSignalLoss ? "opacity-100" : "opacity-0"}`} />
+                      <div className={`pointer-events-none absolute inset-0 z-10 transition-opacity duration-120 ${videoSignalLoss ? "opacity-[0.06]" : "opacity-0"} [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_2px,rgba(255,255,255,0.9)_2px,rgba(255,255,255,0.9)_4px)] mix-blend-overlay`} />
+                      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,transparent_58%,rgba(0,0,0,0.35)_100%)]" />
 
                       <div
-                        className="pointer-events-none absolute left-2 right-2 md:left-4 md:right-4 flex items-start justify-between font-mono text-[8px] md:text-[10px] leading-[1.1] tracking-[0.14em] md:tracking-[0.22em] uppercase text-gold-bright [text-shadow:0_0_8px_rgba(214,173,74,0.24)]"
+                        className="pointer-events-none absolute left-2 right-2 z-20 md:left-4 md:right-4 flex items-start justify-between font-mono text-[8px] md:text-[10px] leading-[1.1] tracking-[0.14em] md:tracking-[0.22em] uppercase text-gold-bright [text-shadow:0_0_8px_rgba(214,173,74,0.24)]"
                         style={{ top: "max(0.5rem, env(safe-area-inset-top))" }}
                       >
                         <div className="absolute left-[-4px] top-[-4px] h-16 w-28 md:h-20 md:w-36 bg-gradient-to-b from-black/24 via-black/10 to-transparent" />
@@ -970,11 +1017,11 @@ function Debrief() {
                   )}
 
                   <div
-                    className={`pointer-events-none absolute inset-0 bg-black transition-opacity ${videoEndingCut ? "duration-[220ms]" : "duration-[600ms]"} ${videoFade ? "opacity-100" : "opacity-0"}`}
+                    className={`pointer-events-none absolute inset-0 z-30 bg-black transition-opacity ${videoEndingCut ? "duration-[220ms]" : "duration-[600ms]"} ${videoFade ? "opacity-100" : "opacity-0"}`}
                   />
 
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/58 to-transparent" />
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/58 to-transparent" />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-24 bg-gradient-to-b from-black/58 to-transparent" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-24 bg-gradient-to-t from-black/58 to-transparent" />
                 </div>
               )}
 
