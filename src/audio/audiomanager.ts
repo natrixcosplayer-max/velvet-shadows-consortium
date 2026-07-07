@@ -403,6 +403,14 @@ export function playControlledAudio(
   }
 
   if (controlledAudioKey === key && controlledAudio) {
+    const sameSource = controlledAudio.src.endsWith(src);
+
+    if (!sameSource) {
+      controlledAudio.pause();
+      controlledAudio.currentTime = 0;
+      controlledAudio = null;
+      controlledAudioKey = null;
+    } else {
     controlledAudio.loop = loop;
     controlledAudio.volume = volume;
     controlledAudio.currentTime = 0;
@@ -411,6 +419,7 @@ export function playControlledAudio(
       resume.catch(() => {});
     }
     return;
+    }
   }
 
   if (controlledAudio) {
