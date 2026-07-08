@@ -201,6 +201,11 @@ function Missions() {
           </div>
         </div>
 
+        <div className="mt-5 border border-gold-dim/60 bg-black/25 p-3 md:p-4">
+          <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase text-center">VIGILANCIA ACTIVA</p>
+          <SurveillanceMonitor />
+        </div>
+
         <div className="mt-4 h-px bg-gold-dim/60" />
 
         <div className="mt-4 space-y-1">
@@ -389,6 +394,72 @@ function Missions() {
 
 const RULE = "══════════════════════════════";
 const DECRYPT_TEXT = "DESCIFRANDO...";
+
+function SurveillanceMonitor() {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [monitorBooted, setMonitorBooted] = useState(false);
+
+  useEffect(() => {
+    const bootId = window.setTimeout(() => {
+      setMonitorBooted(true);
+    }, 70);
+
+    const video = videoRef.current;
+    if (video) {
+      video.currentTime = 0;
+      const playPromise = video.play();
+      if (playPromise) {
+        void playPromise.catch(() => {
+          // Keep muted+inline autoplay attributes; browser policy may still defer playback.
+        });
+      }
+    }
+
+    return () => {
+      window.clearTimeout(bootId);
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+      }
+    };
+  }, []);
+
+  return (
+    <div className="mt-3 flex justify-center">
+      <div className="relative w-[78%] max-w-[360px] min-w-[220px]">
+        <div className="pointer-events-none absolute -inset-[2px] rounded-sm bg-gold/20 blur-md opacity-35" />
+
+        <div className="relative overflow-hidden rounded-sm border border-gold-dim bg-black shadow-[inset_0_0_0_1px_rgba(212,175,55,0.1),0_0_14px_rgba(212,175,55,0.18)]">
+          <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.08),transparent_58%)]" />
+          <div className="pointer-events-none absolute inset-0 z-20 opacity-[0.08] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_2px,rgba(255,255,255,0.75)_2px,rgba(255,255,255,0.75)_3px)]" />
+          <div className="pointer-events-none absolute left-0 right-0 z-20 h-px bg-white/20 [animation:debrief-video-scan_12s_linear_infinite]" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-gold/80 to-transparent" />
+
+          <video
+            ref={videoRef}
+            src="/videos/mercado.mp4"
+            autoPlay
+            muted
+            playsInline
+            loop
+            preload="auto"
+            controls={false}
+            disablePictureInPicture
+            disableRemotePlayback
+            className={`relative z-10 w-full h-auto max-h-[70vh] object-cover transition-all duration-700 ${monitorBooted ? "opacity-100 brightness-[0.9]" : "opacity-0 brightness-[0.2] scale-[1.01]"}`}
+            aria-label="Transmision de vigilancia del punto de entrega"
+          />
+
+          <div className={`pointer-events-none absolute inset-0 z-30 bg-black transition-opacity duration-700 ${monitorBooted ? "opacity-0" : "opacity-45"}`} />
+        </div>
+
+        <p className="mt-2 text-center font-mono text-[9px] tracking-[0.24em] uppercase text-gold-dim">
+          TRANSMISIÓN EN DIRECTO · MERCADO BAJO OBSERVACIÓN
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function SealedCode() {
   const [phase, setPhase] = useState<"idle" | "decrypting" | "done">("idle");

@@ -17,7 +17,7 @@ type Dossier = {
 };
 
 const DOSSIERS: Dossier[] = [
-  { codename: "Mandarin", latin: "Agente vociferador", status: "ACTIVO", clearance: "Aurum VII", chapter: "Valencia", specialty: "Liderazgo & Organización", markers: 1, notes: "Impulsivo, pero efectivo. Sólo es discreto cuando duerme", bio: "Operativo veterano especializado en camuflaje y combate táctico. Su capacidad para ser un motor incansable y resolver situaciones críticas le ha convertido en uno de los agentes más fiables de la Comisión. Destaca por su liderazgo, capacidad organizativa y una inagotable predisposición para asumir cualquier misión. La discreción no figura entre las fortalezas del sujeto. Se aprueba la asignación conjunta con la Agente MINERVA para compensar dichas vulnerabilidades y maximizar las probabilidades de éxito de la misión.", video: "/videos/mandarin.mp4",},
+  { codename: "Mandarin", latin: "Agente vociferador", status: "ACTIVO", clearance: "Aurum VII", chapter: "Valencia", specialty: "Liderazgo & Organización", markers: 1, notes: "Impulsivo, pero efectivo. Sólo es discreto cuando duerme", bio: "Operativo veterano especializado en camuflaje y combate táctico. Su capacidad para ser un motor incansable y resolver situaciones críticas le ha convertido en uno de los agentes más fiables de la Comisión. Destaca por su liderazgo, capacidad organizativa y una inagotable predisposición para asumir cualquier misión. La discreción no figura entre las fortalezas del sujeto. Se aprueba la asignación conjunta con la Agente MINERVA para compensar dichas vulnerabilidades y maximizar las probabilidades de éxito de la misión.", video: "/videos/mandarin.mp4?v=20260708-2s",},
   { codename: "Minerva", latin: "Diplomacia y discreción", status: "ACTIVO", clearance: "Imperium", chapter: "Valencia", specialty: "Encanto & Diplomacia", markers: 0, notes: "La mayoría de las operaciones concluyen sin un solo disparo. Las pocas excepciones suelen ser responsabilidad del Agente A.", bio: "Especialista en inteligencia, negociación y obtención de información sensible. Experta en aproximarse a objetivos de alto valor sin despertar sospechas y en desenvolverse con absoluta naturalidad en cualquier país o entorno. La Comisión la considera una de sus mejores agentes de campo para operaciones de máxima discreción. Domina una técnica de inmovilización con sus extremidades inferiores clasificada. Ha sido asignada a la supervisión táctica del Agente Mandarin, aportando equilibrio, criterio y cordura para garantizar el éxito de la operación.", video: "/videos/minerva.mp4",},
 ];
 
@@ -396,7 +396,7 @@ function DossierVideo({ codename, src }: { codename: string; src: string }) {
     <div className="mt-8">
       <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">VIDEO</p>
 
-      <div className="mt-3 relative aspect-video w-full overflow-hidden rounded-sm border border-gold-dim bg-black/70 shadow-[inset_0_0_0_1px_rgba(212,175,55,0.08)]">
+      <div className="mt-3 relative w-full overflow-hidden rounded-sm border border-gold-dim bg-black/70 shadow-[inset_0_0_0_1px_rgba(212,175,55,0.08)]">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.1),transparent_62%)]" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />
         <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/15 [animation:debrief-video-scan_14s_linear_infinite]" />
@@ -408,9 +408,9 @@ function DossierVideo({ codename, src }: { codename: string; src: string }) {
           preload="metadata"
           controls={started}
           playsInline
-          muted={false}
+          muted
           loop={false}
-          className="relative z-10 h-full w-full object-cover"
+          className="relative z-10 h-auto w-full object-contain"
           aria-label={`Archivo de vigilancia del agente ${codename}`}
         />
 
