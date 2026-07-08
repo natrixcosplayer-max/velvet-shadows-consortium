@@ -41,6 +41,7 @@ function Treasury() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanTimersRef = useRef<number[]>([]);
+  const balanceTimersRef = useRef<number[]>([]);
   const scanAutoCloseRef = useRef<number | null>(null);
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -66,6 +67,11 @@ function Treasury() {
       window.clearTimeout(scanAutoCloseRef.current);
       scanAutoCloseRef.current = null;
     }
+  };
+
+  const clearBalanceTimers = () => {
+    balanceTimersRef.current.forEach((id) => window.clearTimeout(id));
+    balanceTimersRef.current = [];
   };
 
   const stopScannerResources = () => {
@@ -95,6 +101,8 @@ function Treasury() {
   };
 
   const runAuthenticatedBalanceIncrement = () => {
+    clearBalanceTimers();
+
     const previous = balance;
     setCoinGlow(true);
     setBalanceDisplay(String(previous));
@@ -116,7 +124,7 @@ function Treasury() {
       setCoinGlow(false);
     }, 1640);
 
-    scanTimersRef.current.push(t1, t2, t3);
+    balanceTimersRef.current.push(t1, t2, t3);
   };
 
   const startScannerSequence = () => {
@@ -213,6 +221,7 @@ function Treasury() {
   useEffect(() => {
     return () => {
       stopScannerResources();
+      clearBalanceTimers();
     };
   }, []);
 
