@@ -15,8 +15,8 @@ type CreditBlock = {
 const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "ALTA MESA", lines: ["presenta"] },
   { title: "OPERACION", lines: ["CUMPLE"] },
-  { title: "EL MICHI", lines: ["como AGENTE MANDARIN"] },
-  { title: "LA MICHI", lines: ["como AGENTE MINERVA"] },
+  { title: "EL MICHI", lines: ["como AGENTE MANDARIN", "Realizando un operativo", "sin sospechar absolutamente nada."] },
+  { title: "LA MICHI", lines: ["como AGENTE MINERVA", "Programando durante dos semanas", "para su Michi."] },
   { title: "MENSAJE CIFRADO", lines: ["Espero que te guste el regalo"] },
   { title: "MENSAJE CIFRADO", lines: ["Y espero que juguemos juntos, jiji"] },
   { title: "DETALLE", lines: ["Me alegra habernos reencontrado", "para esta mision"] },
@@ -222,11 +222,19 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
 
       <div className="absolute inset-0 flex items-center justify-center px-6">
         <div className="text-center">
-          <img
-            src={altaLogo}
-            alt="Alta Mesa"
-            className={`mx-auto w-[220px] md:w-[280px] transition-opacity duration-[2000ms] ease-out drop-shadow-[0_0_24px_rgba(214,173,74,0.35)] [animation:debrief-logo-reveal_1900ms_cubic-bezier(0.2,0.75,0.2,1)_both,debrief-logo-drift_5.2s_ease-in-out_infinite] ${showLogo ? "opacity-95" : "opacity-0"}`}
-          />
+          <div className={`relative mx-auto w-[220px] md:w-[280px] transition-opacity duration-[2000ms] ease-out ${showLogo ? "opacity-95" : "opacity-0"}`}>
+            <img
+              src={altaLogo}
+              alt="Alta Mesa"
+              className={`w-full drop-shadow-[0_0_24px_rgba(214,173,74,0.35)] ${showLogo ? "animate-flicker" : ""}`}
+            />
+            {showLogo && (
+              <>
+                <div className="pointer-events-none absolute inset-0 mix-blend-screen opacity-40 [background-image:repeating-linear-gradient(180deg,rgba(255,255,255,0.16)_0px,rgba(255,255,255,0.16)_1px,transparent_1px,transparent_4px)]" />
+                <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:radial-gradient(circle,rgba(255,255,255,0.12)_0.7px,transparent_0.9px)] [background-size:3px_3px] animate-flicker" />
+              </>
+            )}
+          </div>
 
           {activeCreditIndex !== null && (
             <div className={`mt-16 transition-opacity duration-[900ms] ${creditVisible ? "opacity-100" : "opacity-0"}`}>
