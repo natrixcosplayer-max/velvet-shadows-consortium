@@ -1,5 +1,7 @@
 import mandarinPhoto from "../assets/agents/mandarin.jpg";
 import minervaPhoto from "../assets/agents/minerva.jpg";
+import mandarinPortraitVideo from "../assets/agents/mandarin-1.mp4";
+import minervaPortraitVideo from "../assets/agents/minerva-1.mp4";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
@@ -31,6 +33,8 @@ const AGENT_PHOTOS: Record<string, string> = {
   Mandarin: mandarinPhoto,
   Minerva: minervaPhoto,
 };
+const MINERVA_PORTRAIT_VIDEO = minervaPortraitVideo;
+const MANDARIN_PORTRAIT_VIDEO = mandarinPortraitVideo;
 const DOSSIER_VOICE: Partial<Record<string, string>> = {
   Mandarin: "/sounds/mandarin.mp3",
   Minerva: "/sounds/minerva.mp3",
@@ -309,21 +313,55 @@ function Dossiers() {
             {HUD_CHANNEL[hudChannelIndex]} · {HUD_CIPHER[hudCipherIndex]}
           </div>
           <div className="mt-4 md:mt-8 flex justify-center">
-            <div className={`relative overflow-hidden ${active.codename === "Mandarin" || active.codename === "Minerva" ? "scanlines" : ""}`}>
-              <div className="absolute inset-0 -z-10 scale-110 rounded-sm bg-gold/20 blur-xl" />
-              <div className="absolute -inset-x-16 -top-20 h-24 rotate-12 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 [animation:dossier-photo-shine_18s_ease-in-out_infinite]" />
-              {portraitScanActive && (
-                <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/45 [animation:dossier-portrait-scan_0.95s_linear_forwards]" />
-              )}
-              <img
-                src={AGENT_PHOTOS[active.codename]}
-                alt={active.codename}
-                className={`w-64 h-80 object-cover border border-gold shadow-lg [animation:dossier-photo-breath_9s_ease-in-out_infinite] transition-all duration-700 ${portraitScanActive ? "blur-[2px]" : "blur-0"}`}
-              />
-              {portraitVerified && (
-                <p className="absolute bottom-2 left-2 font-mono text-[9px] tracking-[0.24em] uppercase text-gold bg-black/45 px-2 py-1">IDENTIDAD VERIFICADA</p>
-              )}
-            </div>
+            {active.codename === "Minerva" || active.codename === "Mandarin" ? (
+              <div className="relative h-80 w-64">
+                <div className="pointer-events-none absolute -inset-[2px] rounded-sm bg-gold/20 blur-md opacity-35" />
+
+                <div className="relative h-full w-full overflow-hidden rounded-sm border-2 border-gold/65 bg-black shadow-[inset_0_0_0_2px_rgba(212,175,55,0.12),0_0_14px_rgba(212,175,55,0.18)]">
+                  <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.05),transparent_58%)]" />
+                  <div className="pointer-events-none absolute inset-0 z-20 opacity-[0.05] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_2px,rgba(255,255,255,0.75)_2px,rgba(255,255,255,0.75)_3px)]" />
+                  <div className="pointer-events-none absolute left-0 right-0 z-20 h-px bg-white/20 [animation:debrief-video-scan_12s_linear_infinite]" />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[2px] bg-gradient-to-r from-transparent via-gold/80 to-transparent" />
+
+                  <video
+                    key={active.codename}
+                    src={active.codename === "Minerva" ? MINERVA_PORTRAIT_VIDEO : MANDARIN_PORTRAIT_VIDEO}
+                    autoPlay
+                    muted
+                    playsInline
+                    loop
+                    preload="auto"
+                    controls={false}
+                    disablePictureInPicture
+                    disableRemotePlayback
+                    className={`relative z-10 h-full w-full object-cover transition-all duration-700 ${portraitScanActive ? "opacity-0 brightness-[0.2] scale-[1.01]" : "opacity-100 brightness-[0.95] contrast-[1.08]"}`}
+                    aria-label={`Retrato en video de ${active.codename}`}
+                  />
+
+                  <div className={`pointer-events-none absolute inset-0 z-30 bg-black transition-opacity duration-700 ${portraitScanActive ? "opacity-45" : "opacity-0"}`} />
+                </div>
+
+                {portraitVerified && (
+                  <p className="absolute bottom-2 left-2 z-40 font-mono text-[9px] tracking-[0.24em] uppercase text-gold bg-black/45 px-2 py-1">IDENTIDAD VERIFICADA</p>
+                )}
+              </div>
+            ) : (
+              <div className="relative overflow-hidden">
+                <div className="absolute inset-0 -z-10 scale-110 rounded-sm bg-gold/20 blur-xl" />
+                <div className="absolute -inset-x-16 -top-20 h-24 rotate-12 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 [animation:dossier-photo-shine_18s_ease-in-out_infinite]" />
+                {portraitScanActive && (
+                  <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/45 [animation:dossier-portrait-scan_0.95s_linear_forwards]" />
+                )}
+                <img
+                  src={AGENT_PHOTOS[active.codename]}
+                  alt={active.codename}
+                  className={`w-64 h-80 object-cover border border-gold shadow-lg [animation:dossier-photo-breath_9s_ease-in-out_infinite] transition-all duration-700 ${portraitScanActive ? "blur-[2px]" : "blur-0"}`}
+                />
+                {portraitVerified && (
+                  <p className="absolute bottom-2 left-2 font-mono text-[9px] tracking-[0.24em] uppercase text-gold bg-black/45 px-2 py-1">IDENTIDAD VERIFICADA</p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
