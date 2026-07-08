@@ -13,6 +13,7 @@ let musicRestoreSuppressed = false;
 
 const MUSIC_VOLUME = 0.08;
 const MUSIC_DUCK_VOLUME = 0.005;
+const UNLOCK_DUCK_VOLUME = 0.001;
 const EMAIL_VOICES: Record<string, string> = {
   "1": "/sounds/mailhotel.wav",
   "2": "/sounds/email.mp3",
@@ -353,8 +354,14 @@ export async function playUnlockSound(volume = 0.45) {
 
   if (!sound) return;
 
-  // iPhone can make short cues feel unducked if we only fade; force immediate duck.
-  duckMusicImmediate();
+  // Atrium priority: pull john.mp3 down hard while unlock cue is active.
+  if (music) {
+    if (musicFade) {
+      clearInterval(musicFade);
+      musicFade = null;
+    }
+    music.volume = UNLOCK_DUCK_VOLUME;
+  }
 
   sound.currentTime = 0;
   sound.volume = volume;

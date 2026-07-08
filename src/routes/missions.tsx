@@ -663,7 +663,7 @@ function VisualReferenceSequence() {
               <p className="text-center font-mono text-[10px] tracking-[0.32em] uppercase text-gold-bright">MATCH FOUND</p>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <figure className="relative overflow-hidden border border-gold-dim bg-black scanlines">
+                <figure className="relative max-w-full overflow-hidden border border-gold-dim bg-black scanlines">
                   <div className="pointer-events-none absolute inset-0 z-20 bg-[repeating-linear-gradient(180deg,rgba(255,255,255,0.16)_0px,rgba(255,255,255,0.16)_1px,transparent_1px,transparent_5px)] mix-blend-screen opacity-60" />
                   <div className="pointer-events-none absolute inset-0 z-20 animate-flicker bg-[linear-gradient(180deg,rgba(255,180,70,0.28)_0%,transparent_18%,transparent_82%,rgba(255,255,255,0.12)_100%)] opacity-85" />
                   <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1 bg-gold/80 shadow-[0_0_18px_rgba(214,173,74,0.95)] animate-pulse" />
@@ -671,14 +671,14 @@ function VisualReferenceSequence() {
                   <img
                     src="/images/locker_1.jpg"
                     alt="Archivo 01 recuperado"
-                    className="relative z-0 block w-full object-cover"
+                    className="relative z-0 mx-auto block h-auto w-full max-w-full object-contain"
                     style={{
                       filter: "grayscale(0.08) sepia(1) saturate(2.75) contrast(1.35) brightness(0.78) hue-rotate(10deg) blur(0.08px)",
                       opacity: 0.88,
                     }}
                   />
                 </figure>
-                <figure className="relative overflow-hidden border border-gold-dim bg-black scanlines">
+                <figure className="relative max-w-full overflow-hidden border border-gold-dim bg-black scanlines">
                   <div className="pointer-events-none absolute inset-0 z-20 bg-[repeating-linear-gradient(180deg,rgba(255,255,255,0.16)_0px,rgba(255,255,255,0.16)_1px,transparent_1px,transparent_5px)] mix-blend-screen opacity-60" />
                   <div className="pointer-events-none absolute inset-0 z-20 animate-flicker bg-[linear-gradient(180deg,rgba(255,180,70,0.28)_0%,transparent_18%,transparent_82%,rgba(255,255,255,0.12)_100%)] opacity-85" />
                   <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1 bg-gold/80 shadow-[0_0_18px_rgba(214,173,74,0.95)] animate-pulse" />
@@ -686,7 +686,7 @@ function VisualReferenceSequence() {
                   <img
                     src="/images/locker_2.jpg"
                     alt="Archivo 02 recuperado"
-                    className="relative z-0 block w-full object-cover"
+                    className="relative z-0 mx-auto block h-auto w-full max-w-full object-contain"
                     style={{
                       filter: "grayscale(0.08) sepia(1) saturate(2.75) contrast(1.35) brightness(0.78) hue-rotate(10deg) blur(0.08px)",
                       opacity: 0.88,

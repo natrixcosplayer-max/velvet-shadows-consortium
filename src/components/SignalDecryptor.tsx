@@ -197,15 +197,15 @@ export function SignalDecryptor({ image, targetFrequency, archiveName, onComplet
   const renderNoiseLayers = stage !== "done";
 
   return (
-    <section className="noir-panel gold-corners p-5 md:p-6">
+    <section className="noir-panel gold-corners max-w-full overflow-x-hidden p-5 md:p-6">
       <div className="flex items-baseline justify-between gap-3 border-b border-gold-dim pb-3">
         <h3 className="font-display text-xl text-gold">PISTA VISUAL</h3>
         <span className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">ARCHIVO DE VIGILANCIA</span>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)] lg:items-start">
-        <div className="space-y-4">
-          <div className="border border-gold-dim bg-black/85 p-4 md:p-5">
+      <div className="mt-5 grid max-w-full gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)] lg:items-start">
+        <div className="min-w-0 space-y-4">
+          <div className="max-w-full overflow-x-hidden border border-gold-dim bg-black/85 p-4 md:p-5">
             <div className="flex items-start justify-between gap-4 border-b border-gold-dim/50 pb-3">
               <div>
                 <p className="font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim">ARCHIVO:</p>
@@ -217,7 +217,7 @@ export function SignalDecryptor({ image, targetFrequency, archiveName, onComplet
               </div>
             </div>
 
-            <div className="relative mt-4 overflow-hidden border border-gold-dim/70 bg-black">
+            <div className="relative mt-4 max-w-full overflow-hidden border border-gold-dim/70 bg-black">
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03)_0,transparent_2px,transparent_14px,rgba(255,255,255,0.02)_15px)] opacity-50" />
               {renderNoiseLayers && (
                 <>
@@ -229,7 +229,7 @@ export function SignalDecryptor({ image, targetFrequency, archiveName, onComplet
               <img
                 src={image}
                 alt={archiveName}
-                className="w-full object-cover"
+                className="mx-auto block h-auto w-full max-w-full object-contain"
                 style={style}
               />
               {renderNoiseLayers && (
@@ -297,7 +297,7 @@ export function SignalDecryptor({ image, targetFrequency, archiveName, onComplet
                   setDisplayFrequency(next);
                   setLockPulse(false);
                 }}
-                className="h-3 w-full accent-[var(--gold)]"
+                className="tactile-range w-full"
                 disabled={stage !== "tuning"}
               />
 
@@ -339,7 +339,7 @@ export function SignalDecryptor({ image, targetFrequency, archiveName, onComplet
           )}
         </div>
 
-        <aside className="space-y-3 border border-gold-dim bg-black/80 p-4">
+        <aside className="min-w-0 max-w-full space-y-3 overflow-x-hidden border border-gold-dim bg-black/80 p-4">
           <p className="font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim">ESTADO OPERATIVO</p>
           <div className="h-px bg-gold-dim/50" />
           <p className="text-gold leading-7">

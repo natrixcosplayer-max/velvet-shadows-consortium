@@ -20,7 +20,7 @@ const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "EL MICHI", lines: ["Realizando un operativo", "sin sospechar absolutamente nada."] },
   { title: "MENSAJE", lines: ["Espero que te guste el regalo"] },
   { title: "MENSAJE", lines: ["Y espero que juguemos juntos, jiji"] },
-  { title: "DETALLE", lines: ["Cada imagen guarda", "un pedacito de nosotros."] },
+  { title: "DETALLE", lines: ["Me alegro habernos reencontrado", "para esta mision"] },
   { title: "PROMESA", lines: ["Seguimos sumando", "recuerdos juntos."] },
   { title: "CITA", lines: ["\"Porque naveguemos juntos todas las aguas,", "", "las buenas y las malas,", "", "y salgamos siempre mas fuertes.\""] },
   { title: "TE QUIERO", lines: ["Con amor,", "tu Michi."] },
@@ -35,6 +35,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const [activeCreditIndex, setActiveCreditIndex] = useState<number | null>(null);
   const [creditVisible, setCreditVisible] = useState(false);
   const [photoVisible, setPhotoVisible] = useState(false);
+  const [firstPhotoFadeFromBlack, setFirstPhotoFadeFromBlack] = useState(false);
   const [photoCurrent, setPhotoCurrent] = useState<string | null>(null);
   const [photoPrevious, setPhotoPrevious] = useState<string | null>(null);
   const [showFinalCommission, setShowFinalCommission] = useState(false);
@@ -96,7 +97,8 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       const resolvedPhotos = await Promise.all(PHOTO_BASENAMES.map((name) => resolvePhotoSrc(name)));
       if (cancelled) return;
 
-      const CREDIT_VISIBLE_MS = 1900;
+      const CREDIT_VISIBLE_MS = 2280;
+      const DEDICATION_VISIBLE_MS = 3040;
       const PHOTO_CROSSFADE_MS = 1200;
       const PHOTO_HOLD_MS = 1900;
       const PHOTO_FADEOUT_MS = 550;
@@ -115,7 +117,8 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       for (let i = 0; i < CREDIT_BLOCKS.length; i += 1) {
         setActiveCreditIndex(i);
         setCreditVisible(true);
-        await wait(CREDIT_VISIBLE_MS);
+        const isDedicationBlock = i === CREDIT_BLOCKS.length - 1;
+        await wait(isDedicationBlock ? DEDICATION_VISIBLE_MS : CREDIT_VISIBLE_MS);
         if (cancelled) return;
 
         if (i === CREDIT_BLOCKS.length - 1) {
@@ -128,6 +131,11 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         const photoIndex = Math.min(i, Math.max(0, resolvedPhotos.length - 1));
         const nextPhoto = resolvedPhotos[photoIndex] || null;
         if (nextPhoto) {
+          const isFirstPhoto = photoIndex === 0;
+          if (isFirstPhoto) {
+            setFirstPhotoFadeFromBlack(true);
+          }
+
           setPhotoPrevious(lastPhoto);
           setPhotoCurrent(nextPhoto);
           setPhotoVisible(true);
@@ -136,6 +144,9 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           await wait(PHOTO_CROSSFADE_MS);
           if (cancelled) return;
           setPhotoPrevious(null);
+          if (isFirstPhoto) {
+            setFirstPhotoFadeFromBlack(false);
+          }
 
           await wait(PHOTO_HOLD_MS);
           if (cancelled) return;
@@ -153,7 +164,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       }
 
       setShowFinalCommission(true);
-      await wait(3200);
+      await wait(3840);
       if (cancelled) return;
 
       setShowFinalCommission(false);
@@ -199,6 +210,8 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
             />
           )}
 
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_52%,rgba(0,0,0,0.26)_100%)]" />
+          <div className={`absolute inset-0 bg-black transition-opacity duration-[1700ms] ease-out ${firstPhotoFadeFromBlack ? "opacity-100" : "opacity-0"}`} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.54)_100%)]" />
           <div className="absolute inset-x-0 bottom-0 h-[34vh] bg-[linear-gradient(to_top,rgba(0,0,0,0.6),transparent)]" />
         </div>
@@ -209,7 +222,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           <img
             src={altaLogo}
             alt="Alta Mesa"
-            className={`mx-auto w-[96px] md:w-[116px] transition-opacity duration-[2000ms] ease-out ${showLogo ? "opacity-90" : "opacity-0"}`}
+            className={`mx-auto w-[154px] md:w-[186px] transition-opacity duration-[2000ms] ease-out ${showLogo ? "opacity-90" : "opacity-0"}`}
           />
 
           {activeCreditIndex !== null && (
@@ -235,14 +248,21 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       </div>
 
       {showReturn && (
-        <div className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2">
-          <Link
-            to="/"
-            onClick={() => stopControlledAudio("debrief-credits")}
-            className="inline-flex border border-gold-dim bg-transparent px-6 py-2 font-mono text-[10px] uppercase tracking-[0.34em] text-gold-bright transition hover:border-gold hover:bg-gold/10"
-          >
-            VOLVER A LA COMISION
-          </Link>
+        <div className="absolute inset-0 flex items-center justify-center px-6">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(214,173,74,0.22)_0%,rgba(214,173,74,0.08)_30%,transparent_66%)] [animation:debrief-return-haze_1200ms_ease-out_both]" />
+          <div className="pointer-events-none absolute h-[260px] w-[260px] rounded-full border border-gold/35 bg-gold/10 blur-[1.2px] [animation:debrief-return-haze_1050ms_ease-out_both]" />
+          <div className="relative flex flex-col items-center gap-4 [animation:debrief-return-hero_900ms_cubic-bezier(0.2,0.9,0.2,1)_both]">
+            <Link
+              to="/"
+              onClick={() => stopControlledAudio("debrief-credits")}
+              className="inline-flex items-center justify-center rounded-sm border border-gold bg-[linear-gradient(135deg,oklch(0.2_0.01_60_/_0.9),oklch(0.16_0.008_60_/_0.95))] px-10 py-4 font-mono text-sm uppercase tracking-[0.3em] text-gold-bright shadow-[0_0_28px_rgba(214,173,74,0.28),0_0_0_1px_rgba(214,173,74,0.22)_inset] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_36px_rgba(214,173,74,0.4),0_0_0_1px_rgba(214,173,74,0.3)_inset] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 animate-pulse-gold"
+            >
+              VOLVER A LA COMISION
+            </Link>
+            <p className="font-display text-xl text-gold-bright [text-shadow:0_0_14px_rgba(214,173,74,0.25)] md:text-2xl">
+              Enhorabuena, agentes.
+            </p>
+          </div>
         </div>
       )}
     </div>
