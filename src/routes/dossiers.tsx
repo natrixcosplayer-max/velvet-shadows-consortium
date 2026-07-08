@@ -13,12 +13,12 @@ export const Route = createFileRoute("/dossiers")({
 type Dossier = {
   codename: string; latin: string; status: "ACTIVO" | "FALLECIDO" | "EXCOMM" | "RETIRADO";
   clearance: string; chapter: string; specialty: string; markers: number; notes: string; bio: string;
-  
+  video: string;
 };
 
 const DOSSIERS: Dossier[] = [
-  { codename: "Mandarin", latin: "Agente vociferador", status: "ACTIVO", clearance: "Aurum VII", chapter: "Valencia", specialty: "Liderazgo & Organización", markers: 1, notes: "Impulsivo, pero efectivo. Sólo es discreto cuando duerme", bio: "Operativo veterano especializado en camuflaje y combate táctico. Su capacidad para ser un motor incansable y resolver situaciones críticas le ha convertido en uno de los agentes más fiables de la Comisión. Destaca por su liderazgo, capacidad organizativa y una inagotable predisposición para asumir cualquier misión. La discreción no figura entre las fortalezas del sujeto. Se aprueba la asignación conjunta con la Agente MINERVA para compensar dichas vulnerabilidades y maximizar las probabilidades de éxito de la misión.",},
-  { codename: "Minerva", latin: "Diplomacia y discreción", status: "ACTIVO", clearance: "Imperium", chapter: "Valencia", specialty: "Encanto & Diplomacia", markers: 0, notes: "La mayoría de las operaciones concluyen sin un solo disparo. Las pocas excepciones suelen ser responsabilidad del Agente A.", bio: "Especialista en inteligencia, negociación y obtención de información sensible. Experta en aproximarse a objetivos de alto valor sin despertar sospechas y en desenvolverse con absoluta naturalidad en cualquier país o entorno. La Comisión la considera una de sus mejores agentes de campo para operaciones de máxima discreción. Domina una técnica de inmovilización con sus extremidades inferiores clasificada. Ha sido asignada a la supervisión táctica del Agente Mandarin, aportando equilibrio, criterio y cordura para garantizar el éxito de la operación.",},
+  { codename: "Mandarin", latin: "Agente vociferador", status: "ACTIVO", clearance: "Aurum VII", chapter: "Valencia", specialty: "Liderazgo & Organización", markers: 1, notes: "Impulsivo, pero efectivo. Sólo es discreto cuando duerme", bio: "Operativo veterano especializado en camuflaje y combate táctico. Su capacidad para ser un motor incansable y resolver situaciones críticas le ha convertido en uno de los agentes más fiables de la Comisión. Destaca por su liderazgo, capacidad organizativa y una inagotable predisposición para asumir cualquier misión. La discreción no figura entre las fortalezas del sujeto. Se aprueba la asignación conjunta con la Agente MINERVA para compensar dichas vulnerabilidades y maximizar las probabilidades de éxito de la misión.", video: "/videos/mandarin.mp4",},
+  { codename: "Minerva", latin: "Diplomacia y discreción", status: "ACTIVO", clearance: "Imperium", chapter: "Valencia", specialty: "Encanto & Diplomacia", markers: 0, notes: "La mayoría de las operaciones concluyen sin un solo disparo. Las pocas excepciones suelen ser responsabilidad del Agente A.", bio: "Especialista en inteligencia, negociación y obtención de información sensible. Experta en aproximarse a objetivos de alto valor sin despertar sospechas y en desenvolverse con absoluta naturalidad en cualquier país o entorno. La Comisión la considera una de sus mejores agentes de campo para operaciones de máxima discreción. Domina una técnica de inmovilización con sus extremidades inferiores clasificada. Ha sido asignada a la supervisión táctica del Agente Mandarin, aportando equilibrio, criterio y cordura para garantizar el éxito de la operación.", video: "/videos/minerva.mp4",},
 ];
 
 const STATUS_COLOR: Record<Dossier["status"], string> = {
@@ -353,6 +353,8 @@ function Dossiers() {
             <p className="text-foreground/90 italic whitespace-pre-line break-words">"{active.notes}"</p>
           </div>
 
+          <DossierVideo key={active.codename} codename={active.codename} src={active.video} />
+
           <div className="mt-8 border-t border-gold-dim pt-4 font-mono text-[10px] text-gold-dim tracking-[0.25em] flex justify-between uppercase">
             <span>EXP · {active.codename.replace(/\s+/g, "-").toUpperCase()}-{Math.abs(active.codename.length * 37) % 9999}</span>
             <span>SELLO · ✦ ALTA MESA ✦</span>
@@ -372,6 +374,65 @@ function Field({ label, value, visible }: { label: string; value: string; visibl
     <div className={`border border-gold-dim p-3 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
       <p className="font-mono text-[9px] tracking-[0.3em] text-gold-dim uppercase">{label}</p>
       <p className="font-display text-gold mt-1">{value}</p>
+    </div>
+  );
+}
+
+function DossierVideo({ codename, src }: { codename: string; src: string }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [started, setStarted] = useState(false);
+
+  const handlePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    setStarted(true);
+    void video.play().catch(() => {
+      setStarted(false);
+    });
+  };
+
+  return (
+    <div className="mt-8">
+      <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">VIDEO</p>
+
+      <div className="mt-3 relative aspect-video w-full overflow-hidden rounded-sm border border-gold-dim bg-black/70 shadow-[inset_0_0_0_1px_rgba(212,175,55,0.08)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.1),transparent_62%)]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />
+        <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/15 [animation:debrief-video-scan_14s_linear_infinite]" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_2px,rgba(255,255,255,0.7)_2px,rgba(255,255,255,0.7)_3px)]" />
+
+        <video
+          ref={videoRef}
+          src={src}
+          preload="metadata"
+          controls={started}
+          playsInline
+          muted={false}
+          loop={false}
+          className="relative z-10 h-full w-full object-cover"
+          aria-label={`Archivo de vigilancia del agente ${codename}`}
+        />
+
+        {!started && (
+          <button
+            type="button"
+            onClick={handlePlay}
+            className="group absolute inset-0 z-20 grid place-items-center bg-black/22 transition-colors duration-300 hover:bg-black/10"
+            aria-label={`Reproducir video de ${codename}`}
+          >
+            <span className="grid h-20 w-20 place-items-center rounded-full border border-gold bg-black/62 text-gold shadow-[0_0_18px_rgba(212,175,55,0.36)] transition-all duration-300 group-hover:scale-[1.04] group-hover:shadow-[0_0_26px_rgba(212,175,55,0.48)]">
+              <svg viewBox="0 0 24 24" className="h-8 w-8 translate-x-[1px] fill-current" aria-hidden="true">
+                <path d="M8 6v12l10-6z" />
+              </svg>
+            </span>
+          </button>
+        )}
+
+        <div className="pointer-events-none absolute left-3 top-3 z-20 border border-gold/45 bg-black/58 px-2 py-1 font-mono text-[9px] tracking-[0.24em] text-gold uppercase">
+          CANAL DE VIGILANCIA · {codename}
+        </div>
+      </div>
     </div>
   );
 }
