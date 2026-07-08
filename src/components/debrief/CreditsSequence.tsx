@@ -12,6 +12,8 @@ type CreditBlock = {
   lines: string[];
 };
 
+type PhotoDriftDirection = "left" | "right";
+
 const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "ALTA MESA", lines: ["presenta"] },
   { title: "OPERACION", lines: ["CUMPLE"] },
@@ -37,6 +39,8 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const [firstPhotoFadeFromBlack, setFirstPhotoFadeFromBlack] = useState(false);
   const [photoCurrent, setPhotoCurrent] = useState<string | null>(null);
   const [photoPrevious, setPhotoPrevious] = useState<string | null>(null);
+  const [photoCurrentDirection, setPhotoCurrentDirection] = useState<PhotoDriftDirection>("right");
+  const [photoPreviousDirection, setPhotoPreviousDirection] = useState<PhotoDriftDirection>("left");
   const [showFinalCommission, setShowFinalCommission] = useState(false);
   const [showReturn, setShowReturn] = useState(false);
 
@@ -114,6 +118,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       if (cancelled) return;
 
       let lastPhoto: string | null = null;
+      let lastPhotoDirection: PhotoDriftDirection = "right";
 
       for (let i = 0; i < CREDIT_BLOCKS.length; i += 1) {
         setActiveCreditIndex(i);
@@ -135,10 +140,13 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         const nextPhoto = resolvedPhotos[photoIndex] || null;
         if (nextPhoto) {
           const isFirstPhoto = photoIndex === 0;
+          const nextDirection: PhotoDriftDirection = photoIndex % 2 === 0 ? "right" : "left";
           if (isFirstPhoto) {
             setFirstPhotoFadeFromBlack(true);
           }
 
+          setPhotoPreviousDirection(lastPhotoDirection);
+          setPhotoCurrentDirection(nextDirection);
           setPhotoPrevious(lastPhoto);
           setPhotoCurrent(nextPhoto);
           setPhotoVisible(true);
@@ -159,6 +167,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           if (cancelled) return;
 
           lastPhoto = nextPhoto;
+          lastPhotoDirection = nextDirection;
         } else {
           setCreditVisible(false);
           await wait(900);
@@ -201,7 +210,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
             <img
               src={photoPrevious}
               alt="Creditos anterior"
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] ${photoVisible ? "opacity-0" : "opacity-[0.85]"}`}
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] will-change-transform ${photoPreviousDirection === "right" ? "[animation:debrief-credit-pan-right_7000ms_ease-out_forwards]" : "[animation:debrief-credit-pan-left_7000ms_ease-out_forwards]"} ${photoVisible ? "opacity-0" : "opacity-[0.85]"}`}
             />
           )}
 
@@ -209,7 +218,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
             <img
               src={photoCurrent}
               alt="Creditos"
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] ${photoVisible ? "opacity-[0.85]" : "opacity-0"}`}
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] will-change-transform ${photoCurrentDirection === "right" ? "[animation:debrief-credit-pan-right_7000ms_ease-out_forwards]" : "[animation:debrief-credit-pan-left_7000ms_ease-out_forwards]"} ${photoVisible ? "opacity-[0.85]" : "opacity-0"}`}
             />
           )}
 
@@ -222,28 +231,25 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
 
       <div className="absolute inset-0 flex items-center justify-center px-6">
         <div className="text-center">
-          <div className={`relative mx-auto w-[220px] md:w-[280px] transition-opacity duration-[2000ms] ease-out ${showLogo ? "opacity-95" : "opacity-0"}`}>
+          <div className={`mx-auto w-[220px] md:w-[280px] transition-opacity duration-[2000ms] ease-out ${showLogo ? "opacity-95" : "opacity-0"}`}>
             <img
               src={altaLogo}
               alt="Alta Mesa"
-              className={`w-full drop-shadow-[0_0_24px_rgba(214,173,74,0.35)] ${showLogo ? "animate-flicker" : ""}`}
+              className={`w-full bg-transparent drop-shadow-[0_0_24px_rgba(214,173,74,0.35)] ${showLogo ? "animate-flicker" : ""}`}
             />
-            {showLogo && (
-              <>
-                <div className="pointer-events-none absolute inset-0 mix-blend-screen opacity-40 [background-image:repeating-linear-gradient(180deg,rgba(255,255,255,0.16)_0px,rgba(255,255,255,0.16)_1px,transparent_1px,transparent_4px)]" />
-                <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:radial-gradient(circle,rgba(255,255,255,0.12)_0.7px,transparent_0.9px)] [background-size:3px_3px] animate-flicker" />
-              </>
-            )}
           </div>
 
           {activeCreditIndex !== null && (
             <div className={`mt-16 transition-opacity duration-[900ms] ${creditVisible ? "opacity-100" : "opacity-0"}`}>
-              <h3 className="font-mono text-[11px] uppercase tracking-[0.42em] text-gold-dim [text-shadow:0_0_10px_rgba(214,173,74,0.15)] md:text-[13px]">
+              <h3 className={`font-mono uppercase tracking-[0.42em] text-gold-dim [text-shadow:0_0_10px_rgba(214,173,74,0.15)] ${["EL MICHI", "LA MICHI"].includes(CREDIT_BLOCKS[activeCreditIndex].title) ? "text-xl md:text-2xl" : "text-[11px] md:text-[13px]"}`}>
                 {CREDIT_BLOCKS[activeCreditIndex].title}
               </h3>
               <div className="mt-5 space-y-2 md:space-y-3">
-                {CREDIT_BLOCKS[activeCreditIndex].lines.map((line) => (
-                  <p key={`${CREDIT_BLOCKS[activeCreditIndex].title}-${line}`} className="font-display text-2xl text-gold-bright [text-shadow:0_0_12px_rgba(214,173,74,0.18)] md:text-3xl">
+                {CREDIT_BLOCKS[activeCreditIndex].lines.map((line, lineIndex) => (
+                  <p
+                    key={`${CREDIT_BLOCKS[activeCreditIndex].title}-${line}`}
+                    className={`${["EL MICHI", "LA MICHI"].includes(CREDIT_BLOCKS[activeCreditIndex].title) ? "text-sm md:text-base" : "font-display text-2xl md:text-3xl"} ${["EL MICHI", "LA MICHI"].includes(CREDIT_BLOCKS[activeCreditIndex].title) && lineIndex >= 1 ? "mt-5 md:mt-6" : ""} font-mono text-gold-bright [text-shadow:0_0_12px_rgba(214,173,74,0.18)]`}
+                  >
                     {line}
                   </p>
                 ))}
