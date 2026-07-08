@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 import { playControlledAudio, playSfx, stopControlledAudio } from "../audio/audiomanager";
 
-const MANDARIN_VIDEO_VERSION = "20260709-1";
+const MANDARIN_VIDEO_VERSION = "20260709-2";
 const MINERVA_VIDEO_VERSION = "20260709-1";
 
 export const Route = createFileRoute("/dossiers")({
