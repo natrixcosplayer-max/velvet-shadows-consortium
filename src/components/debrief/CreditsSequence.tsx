@@ -26,7 +26,7 @@ const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "TE QUIERO", lines: ["Con amor,", "tu Michi."] },
 ];
 
-const PHOTO_BASENAMES = ["eli", "nata", "eli1", "nata1", "eli2", "nata2", "eli3", "nata3", "nata4", "couple", "couple0"] as const;
+const PHOTO_BASENAMES = ["eli", "nata", "eli1", "nata1", "eli2", "nata2", "eli3", "nata3", "nata4", "couple0"] as const;
 const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"] as const;
 
 export function CreditsSequence({ active }: CreditsSequenceProps) {
@@ -117,6 +117,13 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         setCreditVisible(true);
         await wait(CREDIT_VISIBLE_MS);
         if (cancelled) return;
+
+        if (i === CREDIT_BLOCKS.length - 1) {
+          setCreditVisible(false);
+          await wait(900);
+          if (cancelled) return;
+          continue;
+        }
 
         const photoIndex = Math.min(i, Math.max(0, resolvedPhotos.length - 1));
         const nextPhoto = resolvedPhotos[photoIndex] || null;

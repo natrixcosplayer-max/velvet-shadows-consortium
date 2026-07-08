@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
+import { SignalDecryptor } from "../components/SignalDecryptor";
 import { playSfx } from "../audio/audiomanager";
 import mercado from "../assets/graphics/mercado.jpg";
 
@@ -283,19 +284,17 @@ function Missions() {
 
       <div className="space-y-4 text-gold">
 
-        <p>• Analice las coordenadas proporcionadas por la Comisión.</p>
+        <p>• Analice las coordenadas proporcionadas por la Comisión e inicie la navegación hacia el punto de recuperación del activo.</p>
 
-        <p>• Inicie el desplazamiento hacia el punto de recuperación del activo.</p>
+        <p>• Una vez en destino, descifre las credenciales proporcionadas más abajo.</p>
 
-        <p>• Desplácese junto a la Agente Minerva y mantenga vigilancia permanente durante el trayecto.</p>
-        
-        <p>• En caso de detectar seguimiento o actividad sospechosa, interrumpa temporalmente la operación. Adopte una cobertura civil y permanezca integrado en el entorno tomando un Cocktail.</p>
+        <p>• Si la desencriptación resulta insuficiente, recupere la información del archivo <strong>Pista Visual</strong> para obtener inteligencia adicional.</p>
 
-        <p>• Descifre las credenciales proporcionadas más abajo.</p>
+        <p>• En caso de detectar seguimiento o actividad sospechosa, interrumpa temporalmente la operación. Adopte una cobertura civil y permanezca integrado en el entorno tomando un cocktail.</p>
 
         <p>• Recupere el activo sin comprometer la misión.</p>
 
-        <p>• Confirme la recuperación del activo.</p>
+        <p>• Confirme la recuperación del activo ante la Comisión.</p>
 
       </div>
 
@@ -371,15 +370,16 @@ function Missions() {
 
     <SealedCode />
 
-    <Panel title="Observaciones de la Comisión" latin="Nota Interna" className="mt-8">
+    <VisualReferenceSequence />
 
-      <p className="text-gold leading-8">
+    <Panel title="Observaciones de la Comisión" className="mt-8">
 
-        La operación continúa desarrollándose conforme a lo previsto.
-        No se han detectado interferencias significativas durante las últimas horas.
-        Mantenga un perfil bajo y permanezca atento a futuras comunicaciones cifradas.
-
-      </p>
+      <div className="space-y-4 text-gold leading-8">
+        <p className="font-mono text-sm tracking-[0.22em] uppercase text-gold-dim">Nota Interna</p>
+        <blockquote className="border-l-2 border-gold/70 pl-4 text-gold">
+          La Comisión mantiene vigilancia permanente sobre los agentes <strong>Mandarin</strong> y <strong>Minerva</strong>. El desempeño de ambos durante la presente operación está siendo altamente satisfactorio. Continúen conforme al protocolo. La Alta Mesa observa.
+        </blockquote>
+      </div>
 
     </Panel>
 
@@ -589,6 +589,125 @@ function SealField({ label, value }: { label: string; value: string }) {
     <div className="border border-gold-dim p-3">
       <p className="font-mono text-[9px] tracking-[0.3em] text-gold-dim uppercase">{label}</p>
       <p className="font-display text-2xl text-gold mt-1">{value}</p>
+    </div>
+  );
+}
+
+type VisualPhase = "first" | "between" | "second" | "analysis";
+
+function VisualReferenceSequence() {
+  const [phase, setPhase] = useState<VisualPhase>("first");
+  const [analysisReady, setAnalysisReady] = useState(false);
+
+  useEffect(() => {
+    if (phase !== "analysis") {
+      setAnalysisReady(false);
+      return;
+    }
+
+    const t = window.setTimeout(() => setAnalysisReady(true), 2100);
+    return () => window.clearTimeout(t);
+  }, [phase]);
+
+  return (
+    <div className="mt-8 space-y-4">
+      {phase === "first" && (
+        <SignalDecryptor
+          image="/images/locker_1.jpg"
+          targetFrequency={61.4}
+          archiveName="VISUAL_REFERENCE.enc"
+          onCompleted={() => setPhase("between")}
+        />
+      )}
+
+      {phase === "between" && (
+        <Panel title="ARCHIVOS ASOCIADOS DETECTADOS" latin="Relatio Secreta" className="mt-4">
+          <div className="space-y-4 text-center font-mono">
+            <p className="text-gold-dim tracking-[0.15em] select-none overflow-hidden">────────────────────────</p>
+            <p className="text-gold-bright tracking-[0.3em] uppercase">1 de 2 RECUPERADOS</p>
+            <p className="text-gold leading-7">
+              Se ha localizado una segunda transmisión relacionada.
+            </p>
+            <button
+              type="button"
+              onClick={() => setPhase("second")}
+              className="mt-2 inline-flex w-full items-center justify-center border border-gold px-5 py-3 font-mono text-[10px] uppercase tracking-[0.34em] text-gold-bright transition hover:border-gold hover:bg-gold/10 sm:w-auto"
+            >
+              [ ANALIZAR SIGUIENTE TRANSMISIÓN ]
+            </button>
+            <p className="text-gold-dim tracking-[0.15em] select-none overflow-hidden">────────────────────────</p>
+          </div>
+        </Panel>
+      )}
+
+      {phase === "second" && (
+        <SignalDecryptor
+          image="/images/locker_2.jpg"
+          targetFrequency={58.9}
+          archiveName="VISUAL_REFERENCE_02.enc"
+          onCompleted={() => setPhase("analysis")}
+        />
+      )}
+
+      {phase === "analysis" && (
+        <Panel title="ANÁLISIS CRUZADO" latin="Comparatio" className="mt-4">
+          {!analysisReady ? (
+            <div className="space-y-4 text-center font-mono">
+              <p className="text-gold-bright tracking-[0.32em] uppercase animate-pulse">COMPARANDO EVIDENCIAS...</p>
+              <div className="h-2 overflow-hidden border border-gold-dim/70 bg-secondary">
+                <div className="h-full w-[78%] bg-[linear-gradient(90deg,oklch(0.58_0.1_84)_0%,oklch(0.82_0.14_87)_40%,oklch(0.95_0.11_90_/_0.8)_50%,oklch(0.82_0.14_87)_60%,oklch(0.58_0.1_84)_100%)] bg-[length:200%_100%] shadow-[0_0_12px_rgba(214,173,74,0.45)] animate-progress-flow" />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <p className="text-center font-mono text-[10px] tracking-[0.32em] uppercase text-gold-bright">MATCH FOUND</p>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <figure className="relative overflow-hidden border border-gold-dim bg-black scanlines">
+                  <div className="pointer-events-none absolute inset-0 z-20 bg-[repeating-linear-gradient(180deg,rgba(255,255,255,0.16)_0px,rgba(255,255,255,0.16)_1px,transparent_1px,transparent_5px)] mix-blend-screen opacity-60" />
+                  <div className="pointer-events-none absolute inset-0 z-20 animate-flicker bg-[linear-gradient(180deg,rgba(255,180,70,0.28)_0%,transparent_18%,transparent_82%,rgba(255,255,255,0.12)_100%)] opacity-85" />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1 bg-gold/80 shadow-[0_0_18px_rgba(214,173,74,0.95)] animate-pulse" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-1 bg-orange-400/60 shadow-[0_0_16px_rgba(251,146,60,0.75)] animate-pulse" />
+                  <img
+                    src="/images/locker_1.jpg"
+                    alt="Archivo 01 recuperado"
+                    className="relative z-0 block w-full object-cover"
+                    style={{
+                      filter: "grayscale(0.08) sepia(1) saturate(2.75) contrast(1.35) brightness(0.78) hue-rotate(10deg) blur(0.08px)",
+                      opacity: 0.88,
+                    }}
+                  />
+                </figure>
+                <figure className="relative overflow-hidden border border-gold-dim bg-black scanlines">
+                  <div className="pointer-events-none absolute inset-0 z-20 bg-[repeating-linear-gradient(180deg,rgba(255,255,255,0.16)_0px,rgba(255,255,255,0.16)_1px,transparent_1px,transparent_5px)] mix-blend-screen opacity-60" />
+                  <div className="pointer-events-none absolute inset-0 z-20 animate-flicker bg-[linear-gradient(180deg,rgba(255,180,70,0.28)_0%,transparent_18%,transparent_82%,rgba(255,255,255,0.12)_100%)] opacity-85" />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1 bg-gold/80 shadow-[0_0_18px_rgba(214,173,74,0.95)] animate-pulse" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-1 bg-orange-400/60 shadow-[0_0_16px_rgba(251,146,60,0.75)] animate-pulse" />
+                  <img
+                    src="/images/locker_2.jpg"
+                    alt="Archivo 02 recuperado"
+                    className="relative z-0 block w-full object-cover"
+                    style={{
+                      filter: "grayscale(0.08) sepia(1) saturate(2.75) contrast(1.35) brightness(0.78) hue-rotate(10deg) blur(0.08px)",
+                      opacity: 0.88,
+                    }}
+                  />
+                </figure>
+              </div>
+
+              <div className="space-y-3 text-center font-mono text-gold">
+                <p className="tracking-[0.2em] uppercase">────────────────────────</p>
+                <p className="tracking-[0.24em] uppercase">ARCHIVO 01 ✔</p>
+                <p className="tracking-[0.24em] uppercase">ARCHIVO 02 ✔</p>
+                <p className="tracking-[0.24em] uppercase">COINCIDENCIA DETECTADA</p>
+                <p className="tracking-[0.24em] uppercase">LOCALIZACIÓN VALIDADA</p>
+                <p className="text-gold-dim leading-7">"La Alta Mesa considera que dispone de información suficiente para localizar el depósito."</p>
+                <p className="tracking-[0.2em] uppercase">────────────────────────</p>
+              </div>
+            </div>
+          )}
+        </Panel>
+      )}
     </div>
   );
 }
