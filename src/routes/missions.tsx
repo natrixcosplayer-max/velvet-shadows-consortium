@@ -164,60 +164,6 @@ function Missions() {
         </p>
       </Panel>
 
-      <Panel title="Nivel de Riesgo" latin="Periculum">
-        <p className="font-display text-2xl text-red-400">
-          {OPERATION.risk}
-        </p>
-
-        <div className="mt-4 h-px bg-gold-dim/60" />
-
-        <p className="mt-4 font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">
-          Amenazas Activas
-        </p>
-
-        <div className="mt-3 space-y-3">
-          <div>
-            <p className="font-mono text-xs tracking-[0.2em] text-gold uppercase flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-              CONSORCIO OBSIDIANA
-            </p>
-            <p className="ml-4 text-[11px] text-muted-foreground">Actividad confirmada</p>
-          </div>
-
-          <div>
-            <p className="font-mono text-xs tracking-[0.2em] text-gold uppercase flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-gold-dim" />
-              OPERATIVOS HOSTILES
-            </p>
-            <p className="ml-4 text-[11px] text-muted-foreground">3 detectados</p>
-          </div>
-
-          <div>
-            <p className="font-mono text-xs tracking-[0.2em] text-gold uppercase flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
-              OBJETIVO PROTEGIDO
-            </p>
-            <p className="ml-4 text-[11px] text-muted-foreground">Seguimiento activo</p>
-          </div>
-        </div>
-
-        <div className="mt-5 border border-gold-dim/60 bg-black/25 p-3 md:p-4">
-          <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase text-center">VIGILANCIA ACTIVA</p>
-          <SurveillanceMonitor />
-        </div>
-
-        <div className="mt-4 h-px bg-gold-dim/60" />
-
-        <div className="mt-4 space-y-1">
-          <p className="font-mono text-[11px] tracking-[0.12em] text-gold-dim">
-            Probabilidad de contacto: <span className="text-gold">47%</span>
-          </p>
-          <p className="font-mono text-[10px] tracking-[0.14em] text-gold-dim uppercase animate-pulse">
-            Actualizado hace menos de 30 segundos
-          </p>
-        </div>
-      </Panel>
-
       <Panel title="Estado del Objetivo" latin="Objectivum">
         <div className="relative overflow-hidden">
           <div
@@ -371,6 +317,60 @@ function Missions() {
         </figcaption>
       </figure>
 
+    </Panel>
+
+    <Panel title="Nivel de Riesgo" latin="Periculum" className="mt-8">
+      <p className="font-display text-2xl text-red-400">
+        {OPERATION.risk}
+      </p>
+
+      <div className="mt-4 h-px bg-gold-dim/60" />
+
+      <p className="mt-4 font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">
+        Amenazas Activas
+      </p>
+
+      <div className="mt-3 space-y-3">
+        <div>
+          <p className="font-mono text-xs tracking-[0.2em] text-gold uppercase flex items-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+            CONSORCIO OBSIDIANA
+          </p>
+          <p className="ml-4 text-[11px] text-muted-foreground">Actividad confirmada</p>
+        </div>
+
+        <div>
+          <p className="font-mono text-xs tracking-[0.2em] text-gold uppercase flex items-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-gold-dim" />
+            OPERATIVOS HOSTILES
+          </p>
+          <p className="ml-4 text-[11px] text-muted-foreground">3 detectados</p>
+        </div>
+
+        <div>
+          <p className="font-mono text-xs tracking-[0.2em] text-gold uppercase flex items-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
+            OBJETIVO PROTEGIDO
+          </p>
+          <p className="ml-4 text-[11px] text-muted-foreground">Seguimiento activo</p>
+        </div>
+      </div>
+
+      <div className="mt-5 border border-gold-dim/60 bg-black/25 p-3 md:p-4">
+        <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase text-center">VIGILANCIA ACTIVA</p>
+        <SurveillanceMonitor />
+      </div>
+
+      <div className="mt-4 h-px bg-gold-dim/60" />
+
+      <div className="mt-4 space-y-1">
+        <p className="font-mono text-[11px] tracking-[0.12em] text-gold-dim">
+          Probabilidad de contacto: <span className="text-gold">47%</span>
+        </p>
+        <p className="font-mono text-[10px] tracking-[0.14em] text-gold-dim uppercase animate-pulse">
+          Actualizado hace menos de 30 segundos
+        </p>
+      </div>
     </Panel>
 
     <SealedCode />

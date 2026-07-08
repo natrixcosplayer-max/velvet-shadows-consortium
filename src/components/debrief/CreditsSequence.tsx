@@ -103,6 +103,9 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       const CREDIT_VISIBLE_MS = 2280;
       const CITA_VISIBLE_MS = 2850;
       const DEDICATION_VISIBLE_MS = 3040;
+      const LONG_TEXT_MULTIPLIER = 1.2;
+      const LONG_TEXT_MIN_CHARS = 64;
+      const LONG_TEXT_MIN_LINES = 3;
       const PHOTO_CROSSFADE_MS = 1200;
       const PHOTO_HOLD_MS = 1900;
       const PHOTO_FADEOUT_MS = 550;
@@ -123,9 +126,14 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       for (let i = 0; i < CREDIT_BLOCKS.length; i += 1) {
         setActiveCreditIndex(i);
         setCreditVisible(true);
+        const block = CREDIT_BLOCKS[i];
+        const linesWithContent = block.lines.filter((line) => line.trim().length > 0);
+        const textChars = linesWithContent.join(" ").replace(/\s+/g, "").length;
+        const isLongTextBlock = linesWithContent.length >= LONG_TEXT_MIN_LINES || textChars >= LONG_TEXT_MIN_CHARS;
         const isDedicationBlock = i === CREDIT_BLOCKS.length - 1;
         const isCitaBlock = i === citaBlockIndex;
-        const visibleMs = isDedicationBlock ? DEDICATION_VISIBLE_MS : isCitaBlock ? CITA_VISIBLE_MS : CREDIT_VISIBLE_MS;
+        const baseVisibleMs = isDedicationBlock ? DEDICATION_VISIBLE_MS : isCitaBlock ? CITA_VISIBLE_MS : CREDIT_VISIBLE_MS;
+        const visibleMs = Math.round(baseVisibleMs * (isLongTextBlock ? LONG_TEXT_MULTIPLIER : 1));
         await wait(visibleMs);
         if (cancelled) return;
 
@@ -241,12 +249,12 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
 
           {activeCreditIndex !== null && (
             <div className={`mt-16 transition-opacity duration-[900ms] ${creditVisible ? "opacity-100" : "opacity-0"}`}>
-              <h3 className="font-mono text-[11px] uppercase tracking-[0.42em] text-gold-dim [text-shadow:0_0_10px_rgba(214,173,74,0.15)] md:text-[13px]">
+              <h3 className="font-mono text-[11px] uppercase tracking-[0.42em] text-gold-dim/85 [text-shadow:0_0_8px_rgba(214,173,74,0.12)] md:text-[13px]">
                 {CREDIT_BLOCKS[activeCreditIndex].title}
               </h3>
               <div className="mt-5 space-y-2 md:space-y-3">
                 {CREDIT_BLOCKS[activeCreditIndex].lines.map((line) => (
-                  <p key={`${CREDIT_BLOCKS[activeCreditIndex].title}-${line}`} className="font-display text-2xl text-gold-bright [text-shadow:0_0_12px_rgba(214,173,74,0.18)] md:text-3xl">
+                  <p key={`${CREDIT_BLOCKS[activeCreditIndex].title}-${line}`} className="font-display text-2xl text-[#f1e2b8] [text-shadow:0_0_10px_rgba(214,173,74,0.16)] md:text-3xl">
                     {line}
                   </p>
                 ))}

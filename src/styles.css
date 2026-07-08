@@ -506,7 +506,7 @@
     transform: translateX(0) scale(1.01);
   }
   100% {
-    transform: translateX(1.45%) scale(1.01);
+    transform: translateX(1.8%) scale(1.01);
   }
 }
 @keyframes debrief-credit-pan-left {
@@ -514,7 +514,7 @@
     transform: translateX(0) scale(1.01);
   }
   100% {
-    transform: translateX(-1.45%) scale(1.01);
+    transform: translateX(-1.8%) scale(1.01);
   }
 }
 @keyframes debrief-credits-fade {
