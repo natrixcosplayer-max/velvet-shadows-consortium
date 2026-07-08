@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 import { playControlledAudio, playSfx, stopControlledAudio } from "../audio/audiomanager";
 
+const MANDARIN_VIDEO_VERSION = "20260709-1";
+
 export const Route = createFileRoute("/dossiers")({
   head: () => ({ meta: [{ title: "Expedientes" }, { name: "description", content: "Expedientes de personal sellados." }] }),
   component: Dossiers,
@@ -19,7 +21,7 @@ type Dossier = {
 };
 
 const DOSSIERS: Dossier[] = [
-  { codename: "Mandarin", latin: "Agente vociferador", status: "ACTIVO", clearance: "Aurum VII", chapter: "Valencia", specialty: "Liderazgo & Organización", markers: 1, notes: "Impulsivo, pero efectivo. Sólo es discreto cuando duerme", bio: "Operativo veterano especializado en camuflaje y combate táctico. Su capacidad para ser un motor incansable y resolver situaciones críticas le ha convertido en uno de los agentes más fiables de la Comisión. Destaca por su liderazgo, capacidad organizativa y una inagotable predisposición para asumir cualquier misión. La discreción no figura entre las fortalezas del sujeto. Se aprueba la asignación conjunta con la Agente MINERVA para compensar dichas vulnerabilidades y maximizar las probabilidades de éxito de la misión.", video: "/videos/mandarin.mp4?v=20260708-2s",},
+  { codename: "Mandarin", latin: "Agente vociferador", status: "ACTIVO", clearance: "Aurum VII", chapter: "Valencia", specialty: "Liderazgo & Organización", markers: 1, notes: "Impulsivo, pero efectivo. Sólo es discreto cuando duerme", bio: "Operativo veterano especializado en camuflaje y combate táctico. Su capacidad para ser un motor incansable y resolver situaciones críticas le ha convertido en uno de los agentes más fiables de la Comisión. Destaca por su liderazgo, capacidad organizativa y una inagotable predisposición para asumir cualquier misión. La discreción no figura entre las fortalezas del sujeto. Se aprueba la asignación conjunta con la Agente MINERVA para compensar dichas vulnerabilidades y maximizar las probabilidades de éxito de la misión.", video: `/videos/mandarin.mp4?v=${MANDARIN_VIDEO_VERSION}`,},
   { codename: "Minerva", latin: "Diplomacia y discreción", status: "ACTIVO", clearance: "Imperium", chapter: "Valencia", specialty: "Encanto & Diplomacia", markers: 0, notes: "La mayoría de las operaciones concluyen sin un solo disparo. Las pocas excepciones suelen ser responsabilidad del Agente A.", bio: "Especialista en inteligencia, negociación y obtención de información sensible. Experta en aproximarse a objetivos de alto valor sin despertar sospechas y en desenvolverse con absoluta naturalidad en cualquier país o entorno. La Comisión la considera una de sus mejores agentes de campo para operaciones de máxima discreción. Domina una técnica de inmovilización con sus extremidades inferiores clasificada. Ha sido asignada a la supervisión táctica del Agente Mandarin, aportando equilibrio, criterio y cordura para garantizar el éxito de la operación.", video: "/videos/minerva.mp4",},
 ];
 
@@ -34,7 +36,7 @@ const AGENT_PHOTOS: Record<string, string> = {
   Minerva: minervaPhoto,
 };
 const MINERVA_PORTRAIT_VIDEO = minervaPortraitVideo;
-const MANDARIN_PORTRAIT_VIDEO = mandarinPortraitVideo;
+const MANDARIN_PORTRAIT_VIDEO = `${mandarinPortraitVideo}?v=${MANDARIN_VIDEO_VERSION}`;
 const DOSSIER_VOICE: Partial<Record<string, string>> = {
   Mandarin: "/sounds/mandarin.mp3",
   Minerva: "/sounds/minerva.mp3",

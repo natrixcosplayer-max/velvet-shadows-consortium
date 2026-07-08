@@ -14,6 +14,14 @@ type CreditBlock = {
 
 type PhotoDriftDirection = "left" | "right";
 
+const EXTENDED_CREDIT_TITLES = new Set(["EL MICHI", "LA MICHI"]);
+const DELAYED_DETAIL_LINES = new Set([
+  "Realizando un operativo",
+  "sin sospechar absolutamente nada.",
+  "Programando durante dos semanas",
+  "para su Michi.",
+]);
+
 const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "ALTA MESA", lines: ["presenta"] },
   { title: "OPERACION", lines: ["CUMPLE"] },
@@ -106,6 +114,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       const LONG_TEXT_MULTIPLIER = 1.2;
       const LONG_TEXT_MIN_CHARS = 64;
       const LONG_TEXT_MIN_LINES = 3;
+      const CHARACTER_CREDIT_MULTIPLIER = 1.25;
       const PHOTO_CROSSFADE_MS = 1200;
       const PHOTO_HOLD_MS = 1900;
       const PHOTO_FADEOUT_MS = 550;
@@ -132,8 +141,11 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         const isLongTextBlock = linesWithContent.length >= LONG_TEXT_MIN_LINES || textChars >= LONG_TEXT_MIN_CHARS;
         const isDedicationBlock = i === CREDIT_BLOCKS.length - 1;
         const isCitaBlock = i === citaBlockIndex;
+        const isCharacterCreditBlock = EXTENDED_CREDIT_TITLES.has(block.title);
         const baseVisibleMs = isDedicationBlock ? DEDICATION_VISIBLE_MS : isCitaBlock ? CITA_VISIBLE_MS : CREDIT_VISIBLE_MS;
-        const visibleMs = Math.round(baseVisibleMs * (isLongTextBlock ? LONG_TEXT_MULTIPLIER : 1));
+        const longTextMultiplier = isLongTextBlock ? LONG_TEXT_MULTIPLIER : 1;
+        const characterMultiplier = isCharacterCreditBlock ? CHARACTER_CREDIT_MULTIPLIER : 1;
+        const visibleMs = Math.round(baseVisibleMs * longTextMultiplier * characterMultiplier);
         await wait(visibleMs);
         if (cancelled) return;
 
@@ -253,11 +265,20 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
                 {CREDIT_BLOCKS[activeCreditIndex].title}
               </h3>
               <div className="mt-5 space-y-2 md:space-y-3">
-                {CREDIT_BLOCKS[activeCreditIndex].lines.map((line) => (
-                  <p key={`${CREDIT_BLOCKS[activeCreditIndex].title}-${line}`} className="font-display text-2xl text-[#f1e2b8] [text-shadow:0_0_10px_rgba(214,173,74,0.16)] md:text-3xl">
-                    {line}
-                  </p>
-                ))}
+                {CREDIT_BLOCKS[activeCreditIndex].lines.map((line, lineIndex) => {
+                  const isDelayedDetailLine = DELAYED_DETAIL_LINES.has(line);
+                  const delayedOrder = isDelayedDetailLine ? lineIndex % 2 : 0;
+
+                  return (
+                    <p
+                      key={`${CREDIT_BLOCKS[activeCreditIndex].title}-${line}`}
+                      className={`font-display ${isDelayedDetailLine ? "text-lg text-white/92 md:text-2xl [text-shadow:0_0_8px_rgba(255,255,255,0.12)] [animation:debrief-credit-line-delayed_650ms_ease-out_both]" : "text-2xl text-gold-bright [text-shadow:0_0_10px_rgba(214,173,74,0.16)] md:text-3xl"}`}
+                      style={isDelayedDetailLine ? { animationDelay: `${360 + delayedOrder * 180}ms` } : undefined}
+                    >
+                      {line}
+                    </p>
+                  );
+                })}
               </div>
             </div>
           )}

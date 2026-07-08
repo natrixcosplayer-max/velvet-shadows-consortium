@@ -3,6 +3,7 @@ import { useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 import mapaImage from "../assets/graphics/mapa.jpg";
 import { playSfx } from "../audio/audiomanager";
+import { useIsMobile } from "../hooks/use-mobile";
 
 export const Route = createFileRoute("/atlas")({
   head: () => ({ meta: [{ title: "Atlas — Continental" }, { name: "description", content: "Hoteles Continental en todo el mundo." }] }),
@@ -48,6 +49,7 @@ const HOTEL_DESCRIPTIONS: Record<string, string> = {
 function Atlas() {
   const [active, setActive] = useState<Hotel>(HOTELS[0]);
   const [popupHotel, setPopupHotel] = useState<Hotel | null>(null);
+  const isMobile = useIsMobile();
 
   const handleSelectHotel = (hotel: Hotel) => {
     setActive(hotel);
@@ -73,12 +75,14 @@ function Atlas() {
             {HOTELS.map((h) => {
               const p = proj(h.lat, h.lng);
               const isActive = active.city === h.city;
+              const tapRadius = isMobile ? 5.4 : 3.8;
               const xOffset = h.city === "Nueva York" ? -3.2 : h.city === "Hong Kong" ? -2.4 : h.city === "Sídney" ? -3.6 : 0;
               const yOffset = h.city === "Reikiavik" ? 0 : h.city === "Sídney" ? 6.2 : 3.6;
               const x = p.x + xOffset;
               const y = (p.y / 2) + yOffset;
               return (
-                <g key={h.city} className="cursor-pointer" onClick={() => handleSelectHotel(h)}>
+                <g key={h.city} className="cursor-pointer" style={{ touchAction: "manipulation" }} onClick={() => handleSelectHotel(h)}>
+                  <circle cx={x} cy={y} r={tapRadius} fill="transparent" opacity={0} />
                   <circle cx={x} cy={y} r={isActive ? 1.68 : 1.008} className={STATUS_DOT[h.status]} opacity={isActive ? 1 : 0.85}>
                     {isActive && <animate attributeName="r" values="1.68;2.52;1.68" dur="2s" repeatCount="indefinite" />}
                   </circle>

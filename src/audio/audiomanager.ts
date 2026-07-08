@@ -14,6 +14,7 @@ let musicRestoreSuppressed = false;
 const MUSIC_VOLUME = 0.08;
 const MUSIC_DUCK_VOLUME = 0.005;
 const UNLOCK_DUCK_VOLUME = 0.001;
+let musicBaseVolume = MUSIC_VOLUME;
 const EMAIL_VOICES: Record<string, string> = {
   "1": "/sounds/mailhotel.wav",
   "2": "/sounds/email.mp3",
@@ -173,7 +174,15 @@ export function restoreMusic() {
     return;
   }
 
-  fadeMusicVolume(MUSIC_VOLUME, 1200);
+  fadeMusicVolume(musicBaseVolume, 1200);
+}
+
+export function setMusicBaseVolume(volume: number, ms = 300) {
+  musicBaseVolume = Math.max(0, Math.min(1, volume));
+
+  if (!music || musicRestoreSuppressed) return;
+
+  fadeMusicVolume(musicBaseVolume, ms);
 }
 
 export function setMusicRestoreSuppressed(suppressed: boolean) {
@@ -543,7 +552,7 @@ voice.volume = volume;
 
   } else {
 
-    fadeMusicVolume(MUSIC_VOLUME, 1200);
+    fadeMusicVolume(musicBaseVolume, 1200);
 
   }
 

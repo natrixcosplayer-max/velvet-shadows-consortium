@@ -30,6 +30,10 @@ function Treasury() {
   const [balance, setBalance] = useState(6);
   const [balanceDisplay, setBalanceDisplay] = useState<string | null>(null);
   const [coinGlow, setCoinGlow] = useState(false);
+  const [coinAddedFxVisible, setCoinAddedFxVisible] = useState(false);
+  const [coinAddedFxTick, setCoinAddedFxTick] = useState(0);
+  const [scanCoinTransferVisible, setScanCoinTransferVisible] = useState(false);
+  const [scanCoinTransferTick, setScanCoinTransferTick] = useState(0);
   const [log, setLog] = useState<{ kind: "+" | "−"; amt: number; reason: string; at: string }[]>([
         { kind: "+", amt: 1, reason: "Ayuda para la misión · Valencia", at: "Hace 3 días" },
     { kind: "−", amt: 1, reason: "Vehículo blindado · Gijón", at: "Hace 7 días, 022:13" },
@@ -98,6 +102,8 @@ function Treasury() {
     setScanFlash(false);
     setScannerError("");
     setCoinGlow(false);
+    setCoinAddedFxVisible(false);
+    setScanCoinTransferVisible(false);
   };
 
   const runAuthenticatedBalanceIncrement = () => {
@@ -109,13 +115,20 @@ function Treasury() {
 
     const t1 = window.setTimeout(() => {
       setBalanceDisplay(`${previous} + 1`);
+      setScanCoinTransferTick((v) => v + 1);
+      setScanCoinTransferVisible(true);
       playSfx("/sounds/coin.mp3", 0.8);
     }, 260);
 
     const t2 = window.setTimeout(() => {
       setBalance(previous + 1);
       setBalanceDisplay(String(previous + 1));
-      playSfx("/sounds/luxbeep.mp3", 0.3);
+      setCoinAddedFxTick((v) => v + 1);
+      setCoinAddedFxVisible(true);
+      playSfx("/sounds/coin.mp3", 1);
+      const chimeTimer = window.setTimeout(() => playSfx("/sounds/luxbeep.mp3", 0.38), 110);
+      balanceTimersRef.current.push(chimeTimer);
+      navigator.vibrate?.([26, 36, 26]);
       setLog((l) => [{ kind: "+", amt: 1, reason: "Asset verificado · Continental Coin", at: "Ahora mismo" }, ...l]);
     }, 720);
 
@@ -124,7 +137,15 @@ function Treasury() {
       setCoinGlow(false);
     }, 1640);
 
-    balanceTimersRef.current.push(t1, t2, t3);
+    const t4 = window.setTimeout(() => {
+      setCoinAddedFxVisible(false);
+    }, 1760);
+
+    const t5 = window.setTimeout(() => {
+      setScanCoinTransferVisible(false);
+    }, 1220);
+
+    balanceTimersRef.current.push(t1, t2, t3, t4, t5);
   };
 
   const startScannerSequence = () => {
@@ -243,10 +264,27 @@ function Treasury() {
           <div className="relative flex flex-col items-center text-center py-8">
             <Coin glow={coinGlow} />
             <p className="font-mono text-[10px] tracking-[0.4em] text-gold-dim uppercase mt-6">Saldo en Monedas</p>
-            <p className="font-display text-7xl text-gold mt-2 inline-flex items-center gap-2">
-              <span>{balanceDisplay ?? balance}</span>
-              <span className="text-3xl leading-none">⊙</span>
-            </p>
+            <div className="relative mt-2 inline-flex items-center justify-center">
+              <p className="font-display text-7xl text-gold inline-flex items-center gap-2">
+                <span>{balanceDisplay ?? balance}</span>
+                <span className="text-3xl leading-none">⊙</span>
+              </p>
+
+              {coinAddedFxVisible && (
+                <>
+                  <span
+                    key={`coin-fx-ring-${coinAddedFxTick}`}
+                    className="pointer-events-none absolute inset-[-22px] rounded-full border border-gold/80 animate-ping"
+                  />
+                  <span
+                    key={`coin-fx-plus-${coinAddedFxTick}`}
+                    className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-sm border border-gold/70 bg-black/75 px-3 py-1 font-mono text-[10px] tracking-[0.24em] text-gold-bright [animation:debrief-return-haze_650ms_ease-out_both]"
+                  >
+                    +1 MONEDA AÑADIDA
+                  </span>
+                </>
+              )}
+            </div>
             <p className="font-mono text-xs text-foreground/70 mt-3 max-w-md italic">
               "Una moneda. Un servicio. Sin excepciones. El valor no está en el metal sino en el juramento."
             </p>
@@ -377,6 +415,17 @@ function Treasury() {
           <div className="pointer-events-none absolute inset-0 opacity-[0.04] animate-flicker bg-[radial-gradient(circle,rgba(255,255,255,0.65)_0.8px,transparent_1.2px)] bg-[length:4px_4px]" />
 
           {scanFlash && <div className="pointer-events-none absolute inset-0 bg-gold/30 animate-flicker" />}
+
+          {scanCoinTransferVisible && (
+            <div className="pointer-events-none absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2">
+              <div
+                key={`scan-coin-transfer-${scanCoinTransferTick}`}
+                className="relative h-11 w-11 rounded-full border border-gold-bright/90 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.8),rgba(214,173,74,0.92)_48%,rgba(64,46,12,0.95)_100%)] shadow-[0_0_22px_rgba(214,173,74,0.7)] [animation:treasury-coin-transfer_920ms_cubic-bezier(0.2,0.85,0.25,1)_both]"
+              >
+                <span className="absolute inset-0 grid place-items-center font-display text-base text-black/80">⊙</span>
+              </div>
+            </div>
+          )}
 
           {scannerError && (
             <div className="absolute bottom-20 left-1/2 w-[92%] max-w-xl -translate-x-1/2 border border-destructive bg-black/70 px-4 py-3 text-center font-mono text-xs uppercase tracking-[0.2em] text-destructive">

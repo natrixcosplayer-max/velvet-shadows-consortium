@@ -506,7 +506,7 @@
     transform: translateX(0) scale(1.01);
   }
   100% {
-    transform: translateX(1.8%) scale(1.01);
+    transform: translateX(2.07%) scale(1.01);
   }
 }
 @keyframes debrief-credit-pan-left {
@@ -514,7 +514,34 @@
     transform: translateX(0) scale(1.01);
   }
   100% {
-    transform: translateX(-1.8%) scale(1.01);
+    transform: translateX(-2.07%) scale(1.01);
+  }
+}
+@keyframes debrief-credit-line-delayed {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes treasury-coin-transfer {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.7);
+    filter: blur(1.2px);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-32vw, 26vh) scale(0.58);
+    filter: blur(0.8px);
   }
 }
 @keyframes debrief-credits-fade {
