@@ -15,18 +15,17 @@ type CreditBlock = {
 const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "ALTA MESA", lines: ["presenta"] },
   { title: "OPERACION", lines: ["CUMPLE"] },
-  { title: "ELENCO", lines: ["Los Michis"] },
-  { title: "LA MICHI", lines: ["Programando durante dos semanas", "para su Michi."] },
-  { title: "EL MICHI", lines: ["Realizando un operativo", "sin sospechar absolutamente nada."] },
-  { title: "MENSAJE", lines: ["Espero que te guste el regalo"] },
-  { title: "MENSAJE", lines: ["Y espero que juguemos juntos, jiji"] },
-  { title: "DETALLE", lines: ["Me alegro habernos reencontrado", "para esta mision"] },
+  { title: "EL MICHI", lines: ["como AGENTE MANDARIN"] },
+  { title: "LA MICHI", lines: ["como AGENTE MINERVA"] },
+  { title: "MENSAJE CIFRADO", lines: ["Espero que te guste el regalo"] },
+  { title: "MENSAJE CIFRADO", lines: ["Y espero que juguemos juntos, jiji"] },
+  { title: "DETALLE", lines: ["Me alegra habernos reencontrado", "para esta mision"] },
   { title: "PROMESA", lines: ["Seguimos sumando", "recuerdos juntos."] },
   { title: "CITA", lines: ["\"Porque naveguemos juntos todas las aguas,", "", "las buenas y las malas,", "", "y salgamos siempre mas fuertes.\""] },
   { title: "TE QUIERO", lines: ["Con amor,", "tu Michi."] },
 ];
 
-const PHOTO_BASENAMES = ["eli", "nata", "eli1", "nata1", "eli2", "nata2", "eli3", "nata3", "nata4", "couple0"] as const;
+const PHOTO_SEQUENCE_BASENAMES = ["running", "eli", "nata", "eli1", "nata1", "eli2", "nata2", "eli3", "nata3"] as const;
 const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"] as const;
 
 export function CreditsSequence({ active }: CreditsSequenceProps) {
@@ -94,14 +93,16 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
     });
 
     const run = async () => {
-      const resolvedPhotos = await Promise.all(PHOTO_BASENAMES.map((name) => resolvePhotoSrc(name)));
+      const resolvedPhotos = await Promise.all(PHOTO_SEQUENCE_BASENAMES.map((name) => resolvePhotoSrc(name)));
       if (cancelled) return;
 
       const CREDIT_VISIBLE_MS = 2280;
+      const CITA_VISIBLE_MS = 2850;
       const DEDICATION_VISIBLE_MS = 3040;
       const PHOTO_CROSSFADE_MS = 1200;
       const PHOTO_HOLD_MS = 1900;
       const PHOTO_FADEOUT_MS = 550;
+      const citaBlockIndex = CREDIT_BLOCKS.findIndex((block) => block.title === "CITA");
 
       setShowLogo(true);
       await wait(2700);
@@ -118,7 +119,9 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         setActiveCreditIndex(i);
         setCreditVisible(true);
         const isDedicationBlock = i === CREDIT_BLOCKS.length - 1;
-        await wait(isDedicationBlock ? DEDICATION_VISIBLE_MS : CREDIT_VISIBLE_MS);
+        const isCitaBlock = i === citaBlockIndex;
+        const visibleMs = isDedicationBlock ? DEDICATION_VISIBLE_MS : isCitaBlock ? CITA_VISIBLE_MS : CREDIT_VISIBLE_MS;
+        await wait(visibleMs);
         if (cancelled) return;
 
         if (i === CREDIT_BLOCKS.length - 1) {
@@ -222,7 +225,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           <img
             src={altaLogo}
             alt="Alta Mesa"
-            className={`mx-auto w-[154px] md:w-[186px] transition-opacity duration-[2000ms] ease-out ${showLogo ? "opacity-90" : "opacity-0"}`}
+            className={`mx-auto w-[220px] md:w-[280px] transition-opacity duration-[2000ms] ease-out drop-shadow-[0_0_24px_rgba(214,173,74,0.35)] [animation:debrief-logo-reveal_1900ms_cubic-bezier(0.2,0.75,0.2,1)_both,debrief-logo-drift_5.2s_ease-in-out_infinite] ${showLogo ? "opacity-95" : "opacity-0"}`}
           />
 
           {activeCreditIndex !== null && (
