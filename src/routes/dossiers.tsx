@@ -55,7 +55,6 @@ function Dossiers() {
   const [isTypingBio, setIsTypingBio] = useState(false);
 
   const [portraitVerified, setPortraitVerified] = useState(false);
-  const [portraitScanActive, setPortraitScanActive] = useState(false);
   const [tagIndex, setTagIndex] = useState(0);
   const [hudCipherIndex, setHudCipherIndex] = useState(0);
   const [hudChannelIndex, setHudChannelIndex] = useState(0);
@@ -140,13 +139,7 @@ function Dossiers() {
     setClearancePhase("validating");
     setTypedBio("");
     setIsTypingBio(false);
-    setPortraitVerified(false);
-    setPortraitScanActive(true);
-
-    const portraitTimer = window.setTimeout(() => {
-      setPortraitScanActive(false);
-      setPortraitVerified(true);
-    }, 980);
+    setPortraitVerified(true);
 
     const nameTimer = window.setInterval(() => {
       nameIndex += 1;
@@ -200,7 +193,6 @@ function Dossiers() {
 
     return () => {
       window.clearInterval(nameTimer);
-      window.clearTimeout(portraitTimer);
     };
   }, [active, isDecrypting]);
 
@@ -334,11 +326,9 @@ function Dossiers() {
                     controls={false}
                     disablePictureInPicture
                     disableRemotePlayback
-                    className={`relative z-10 h-full w-full object-cover transition-all duration-700 ${portraitScanActive ? "opacity-0 brightness-[0.2] scale-[1.01]" : "opacity-100 brightness-[0.95] contrast-[1.08]"}`}
+                    className="relative z-10 h-full w-full object-cover opacity-100 brightness-[0.95] contrast-[1.08]"
                     aria-label={`Retrato en video de ${active.codename}`}
                   />
-
-                  <div className={`pointer-events-none absolute inset-0 z-30 bg-black transition-opacity duration-700 ${portraitScanActive ? "opacity-45" : "opacity-0"}`} />
                 </div>
 
                 {portraitVerified && (
@@ -349,13 +339,10 @@ function Dossiers() {
               <div className="relative overflow-hidden">
                 <div className="absolute inset-0 -z-10 scale-110 rounded-sm bg-gold/20 blur-xl" />
                 <div className="absolute -inset-x-16 -top-20 h-24 rotate-12 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 [animation:dossier-photo-shine_18s_ease-in-out_infinite]" />
-                {portraitScanActive && (
-                  <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/45 [animation:dossier-portrait-scan_0.95s_linear_forwards]" />
-                )}
                 <img
                   src={AGENT_PHOTOS[active.codename]}
                   alt={active.codename}
-                  className={`w-64 h-80 object-cover border border-gold shadow-lg [animation:dossier-photo-breath_9s_ease-in-out_infinite] transition-all duration-700 ${portraitScanActive ? "blur-[2px]" : "blur-0"}`}
+                  className="w-64 h-80 object-cover border border-gold shadow-lg [animation:dossier-photo-breath_9s_ease-in-out_infinite] transition-all duration-700 blur-0"
                 />
                 {portraitVerified && (
                   <p className="absolute bottom-2 left-2 font-mono text-[9px] tracking-[0.24em] uppercase text-gold bg-black/45 px-2 py-1">IDENTIDAD VERIFICADA</p>
@@ -417,55 +404,29 @@ function Field({ label, value, visible }: { label: string; value: string; visibl
 }
 
 function DossierVideo({ codename, src }: { codename: string; src: string }) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [started, setStarted] = useState(false);
-
-  const handlePlay = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    setStarted(true);
-    void video.play().catch(() => {
-      setStarted(false);
-    });
-  };
-
   return (
     <div className="mt-8">
       <p className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">VIDEO</p>
 
-      <div className="mt-3 relative w-full overflow-hidden rounded-sm border border-gold-dim bg-black/70 shadow-[inset_0_0_0_1px_rgba(212,175,55,0.08)]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.1),transparent_62%)]" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />
-        <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/15 [animation:debrief-video-scan_14s_linear_infinite]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_2px,rgba(255,255,255,0.7)_2px,rgba(255,255,255,0.7)_3px)]" />
+      <div className="mt-3 relative w-full overflow-hidden rounded-sm border-2 border-gold/65 bg-black shadow-[inset_0_0_0_2px_rgba(212,175,55,0.12),0_0_14px_rgba(212,175,55,0.18)]">
+        <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.05),transparent_58%)]" />
+        <div className="pointer-events-none absolute inset-0 z-20 opacity-[0.05] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_2px,rgba(255,255,255,0.75)_2px,rgba(255,255,255,0.75)_3px)]" />
+        <div className="pointer-events-none absolute left-0 right-0 z-20 h-px bg-white/20 [animation:debrief-video-scan_12s_linear_infinite]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[2px] bg-gradient-to-r from-transparent via-gold/80 to-transparent" />
 
         <video
-          ref={videoRef}
           src={src}
-          preload="metadata"
-          controls={started}
+          autoPlay
+          preload="auto"
+          controls={false}
           playsInline
           muted
-          loop={false}
-          className="relative z-10 h-auto w-full object-contain"
+          loop
+          disablePictureInPicture
+          disableRemotePlayback
+          className="relative z-10 h-auto w-full object-contain opacity-100 brightness-[0.95] contrast-[1.08]"
           aria-label={`Archivo de vigilancia del agente ${codename}`}
         />
-
-        {!started && (
-          <button
-            type="button"
-            onClick={handlePlay}
-            className="group absolute inset-0 z-20 grid place-items-center bg-black/22 transition-colors duration-300 hover:bg-black/10"
-            aria-label={`Reproducir video de ${codename}`}
-          >
-            <span className="grid h-20 w-20 place-items-center rounded-full border border-gold bg-black/62 text-gold shadow-[0_0_18px_rgba(212,175,55,0.36)] transition-all duration-300 group-hover:scale-[1.04] group-hover:shadow-[0_0_26px_rgba(212,175,55,0.48)]">
-              <svg viewBox="0 0 24 24" className="h-8 w-8 translate-x-[1px] fill-current" aria-hidden="true">
-                <path d="M8 6v12l10-6z" />
-              </svg>
-            </span>
-          </button>
-        )}
 
         <div className="pointer-events-none absolute left-3 top-3 z-20 border border-gold/45 bg-black/58 px-2 py-1 font-mono text-[9px] tracking-[0.24em] text-gold uppercase">
           CANAL DE VIGILANCIA · {codename}
