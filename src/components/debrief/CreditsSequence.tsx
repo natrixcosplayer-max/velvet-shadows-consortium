@@ -241,14 +241,20 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
 
           {activeCreditIndex !== null && (
             <div className={`mt-16 transition-opacity duration-[900ms] ${creditVisible ? "opacity-100" : "opacity-0"}`}>
-              <h3 className={`font-mono uppercase tracking-[0.42em] text-gold-dim [text-shadow:0_0_10px_rgba(214,173,74,0.15)] ${["EL MICHI", "LA MICHI"].includes(CREDIT_BLOCKS[activeCreditIndex].title) ? "text-xl md:text-2xl" : "text-[11px] md:text-[13px]"}`}>
+              <h3 className={`font-display uppercase tracking-[0.2em] text-gold-dim [text-shadow:0_0_10px_rgba(214,173,74,0.15)] ${["EL MICHI", "LA MICHI"].includes(CREDIT_BLOCKS[activeCreditIndex].title) ? "text-3xl md:text-4xl" : "text-xl md:text-2xl"}`}>
                 {CREDIT_BLOCKS[activeCreditIndex].title}
               </h3>
               <div className="mt-5 space-y-2 md:space-y-3">
                 {CREDIT_BLOCKS[activeCreditIndex].lines.map((line, lineIndex) => (
                   <p
                     key={`${CREDIT_BLOCKS[activeCreditIndex].title}-${line}`}
-                    className={`${["EL MICHI", "LA MICHI"].includes(CREDIT_BLOCKS[activeCreditIndex].title) ? "text-sm md:text-base" : "font-display text-2xl md:text-3xl"} ${["EL MICHI", "LA MICHI"].includes(CREDIT_BLOCKS[activeCreditIndex].title) && lineIndex >= 1 ? "mt-5 md:mt-6" : ""} font-mono text-gold-bright [text-shadow:0_0_12px_rgba(214,173,74,0.18)]`}
+                    className={`${["EL MICHI", "LA MICHI"].includes(CREDIT_BLOCKS[activeCreditIndex].title)
+                      ? lineIndex === 0
+                        ? "font-display text-base uppercase tracking-[0.2em] md:text-lg"
+                        : lineIndex === 1
+                          ? "mt-6 font-display text-[11px] font-normal uppercase tracking-[0.24em] text-gold-dim md:text-xs"
+                          : "font-display text-[11px] font-normal uppercase tracking-[0.24em] text-gold-dim md:text-xs"
+                      : "font-display text-2xl uppercase tracking-[0.08em] md:text-3xl"} [text-shadow:0_0_12px_rgba(214,173,74,0.18)]`}
                   >
                     {line}
                   </p>
