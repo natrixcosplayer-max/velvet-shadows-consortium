@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import altaLogo from "../../assets/alta.png";
 import besoVideo from "../../assets/birthday/beso.mp4";
 import gunnoirVideo from "../../assets/birthday/gunnoir.mp4";
+import perroVideo from "../../assets/birthday/perro.mp4";
 import { setControlledAudioVolume, stopControlledAudio } from "../../audio/audiomanager";
 
 type CreditsSequenceProps = {
@@ -27,6 +28,14 @@ const DELAYED_DETAIL_LINES = new Set([
   "Programando durante dos semanas",
   "para su Michi.",
 ]);
+const DELAYED_DETAIL_SEQUENCE_ORDER: Record<string, number> = {
+  "Realizando un operativo": 0,
+  "sin sospechar absolutamente nada.": 1,
+  "Programando durante dos semanas": 0,
+  "para su Michi.": 1,
+};
+const DELAYED_DETAIL_STEP_MS = 1400;
+const DELAYED_DETAIL_BASE_MS = 1400;
 
 const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "ALTA MESA", lines: ["presenta"] },
@@ -45,7 +54,7 @@ const INTERLUDE_MEDIA_SEQUENCE: InterludeMedia[] = [
   { type: "image", basename: "running" },
   { type: "video", src: gunnoirVideo },
   { type: "image", basename: "nata" },
-  { type: "image", basename: "eli1" },
+  { type: "video", src: perroVideo },
   { type: "image", basename: "nata1" },
   { type: "image", basename: "eli2" },
   { type: "image", basename: "nata2" },
@@ -76,6 +85,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const fullscreenVideoRef = useRef<HTMLVideoElement | null>(null);
   const preloadedVideoSrcRef = useRef<Record<string, string>>({});
   const preloadedVideoObjectUrlsRef = useRef<string[]>([]);
+  const preFadeTriggeredRef = useRef(false);
 
   const resolveActiveVideo = () => {
     const resolve = activeVideoResolveRef.current;
@@ -104,7 +114,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       if (cached) return cached;
 
       try {
-        const response = await fetch(src, { cache: "force-cache" });
+        const response = await fetch(src, { cache: src === besoVideo ? "no-store" : "force-cache" });
         if (!response.ok) return src;
 
         const blob = await response.blob();
@@ -190,7 +200,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
 
     const run = async () => {
       // Warm up videos early to minimize buffering pauses in the credits sequence.
-      void Promise.all([resolvePlayableVideoSrc(gunnoirVideo), resolvePlayableVideoSrc(besoVideo)]);
+      void Promise.all([resolvePlayableVideoSrc(gunnoirVideo), resolvePlayableVideoSrc(perroVideo), resolvePlayableVideoSrc(besoVideo)]);
 
       const imageBasenames = INTERLUDE_MEDIA_SEQUENCE.filter((media): media is { type: "image"; basename: string } => media.type === "image").map((media) => media.basename);
       const resolvedPhotoEntries = await Promise.all(imageBasenames.map(async (basename) => [basename, await resolvePhotoSrc(basename)] as const));
@@ -303,17 +313,17 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       }
 
       setShowFinalCommission(true);
-      await wait(3840);
-      if (cancelled) return;
-
-      setShowFinalCommission(false);
-      await wait(260);
+      await wait(320);
       if (cancelled) return;
 
       const besoPlayableSrc = await resolvePlayableVideoSrc(besoVideo);
       if (cancelled) return;
 
       await playFullscreenVideo(besoPlayableSrc, 30000);
+      if (cancelled) return;
+
+      setShowFinalCommission(false);
+      await wait(220);
       if (cancelled) return;
 
       setShowReturn(true);
@@ -354,6 +364,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
 
     const startPlayback = async () => {
       try {
+        preFadeTriggeredRef.current = false;
         video.muted = true;
         video.defaultMuted = true;
         await video.play();
@@ -372,6 +383,19 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   }, [fullscreenVideoSrc]);
 
   if (!active) return null;
+
+  const handleFullscreenVideoTimeUpdate = () => {
+    const video = fullscreenVideoRef.current;
+    if (!video || preFadeTriggeredRef.current) return;
+
+    const { duration, currentTime } = video;
+    if (!Number.isFinite(duration) || duration <= 0) return;
+
+    if (duration - currentTime <= 0.42) {
+      preFadeTriggeredRef.current = true;
+      setFullscreenVideoVisible(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[12000] overflow-hidden bg-black" style={{ opacity: overlayVisible ? 1 : 0, transition: "opacity 1500ms ease" }}>
@@ -412,6 +436,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
             muted
             playsInline
             preload="auto"
+            onTimeUpdate={handleFullscreenVideoTimeUpdate}
             onEnded={resolveActiveVideo}
             onError={resolveActiveVideo}
             className="h-full w-full object-cover"
@@ -437,13 +462,13 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
               <div className="mt-5 space-y-2 md:space-y-3">
                 {CREDIT_BLOCKS[activeCreditIndex].lines.map((line, lineIndex) => {
                   const isDelayedDetailLine = DELAYED_DETAIL_LINES.has(line);
-                  const delayedOrder = isDelayedDetailLine ? lineIndex % 2 : 0;
+                  const delayedOrder = isDelayedDetailLine ? (DELAYED_DETAIL_SEQUENCE_ORDER[line] ?? 0) : 0;
 
                   return (
                     <p
                       key={`${CREDIT_BLOCKS[activeCreditIndex].title}-${line}`}
                       className={`font-display ${isDelayedDetailLine ? "text-lg text-white/92 md:text-2xl [text-shadow:0_0_8px_rgba(255,255,255,0.12)] [animation:debrief-credit-line-delayed_650ms_ease-out_both]" : "text-2xl text-gold-bright [text-shadow:0_0_10px_rgba(214,173,74,0.16)] md:text-3xl"}`}
-                      style={isDelayedDetailLine ? { animationDelay: `${360 + delayedOrder * 180}ms` } : undefined}
+                      style={isDelayedDetailLine ? { animationDelay: `${DELAYED_DETAIL_BASE_MS + delayedOrder * DELAYED_DETAIL_STEP_MS}ms` } : undefined}
                     >
                       {line}
                     </p>
@@ -469,7 +494,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
               src={altaLogo}
               alt=""
               aria-hidden="true"
-              className="relative h-[270px] w-[270px] select-none object-contain opacity-[0.6] drop-shadow-[0_0_20px_rgba(214,173,74,0.28)] animate-flicker"
+              className="relative h-[270px] w-[270px] select-none object-contain opacity-[0.35] drop-shadow-[0_0_20px_rgba(214,173,74,0.28)] animate-flicker"
             />
             <div className="absolute h-[270px] w-[270px] rounded-full border border-gold/20 blur-[1px]" />
           </div>
