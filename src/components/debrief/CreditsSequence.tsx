@@ -1,10 +1,12 @@
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import altaLogo from "../../assets/alta.png";
 import besoVideo from "../../assets/birthday/beso.mp4";
+import conductoresVideo from "../../assets/birthday/conductores.mp4";
 import gunnoirVideo from "../../assets/birthday/gunnoir.mp4";
+import nataphoneVideo from "../../assets/birthday/nataphone.mp4";
 import perroVideo from "../../assets/birthday/perro.mp4";
-import { setControlledAudioVolume, stopControlledAudio } from "../../audio/audiomanager";
+import { playSfx, setControlledAudioVolume, stopControlledAudio } from "../../audio/audiomanager";
 
 type CreditsSequenceProps = {
   active: boolean;
@@ -36,6 +38,7 @@ const DELAYED_DETAIL_SEQUENCE_ORDER: Record<string, number> = {
 };
 const DELAYED_DETAIL_STEP_MS = 1400;
 const DELAYED_DETAIL_BASE_MS = 1400;
+const DELAYED_DETAIL_POST_REVEAL_HOLD_MS = 2000;
 
 const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "ALTA MESA", lines: ["presenta"] },
@@ -45,15 +48,15 @@ const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "MENSAJE CIFRADO", lines: ["Espero que te guste el regalo"] },
   { title: "MENSAJE CIFRADO", lines: ["Y espero que juguemos juntos, jiji"] },
   { title: "DETALLE", lines: ["Me alegra habernos reencontrado", "para esta mision"] },
-  { title: "PROMESA", lines: ["Seguimos sumando", "recuerdos juntos."] },
+  { title: "PROMESA", lines: ["Seguiremos sumando", "recuerdos juntos."] },
   { title: "CITA", lines: ["\"Porque naveguemos juntos todas las aguas,", "", "las buenas y las malas,", "", "y salgamos siempre mas fuertes.\""] },
   { title: "TE QUIERO", lines: ["Con amor,", "tu Michi."] },
 ];
 
 const INTERLUDE_MEDIA_SEQUENCE: InterludeMedia[] = [
-  { type: "image", basename: "running" },
+  { type: "video", src: conductoresVideo },
   { type: "video", src: gunnoirVideo },
-  { type: "image", basename: "nata" },
+  { type: "video", src: nataphoneVideo },
   { type: "video", src: perroVideo },
   { type: "image", basename: "nata1" },
   { type: "image", basename: "eli2" },
@@ -62,8 +65,18 @@ const INTERLUDE_MEDIA_SEQUENCE: InterludeMedia[] = [
   { type: "image", basename: "couple0" },
 ];
 const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"] as const;
+const RETURN_CLOSING_LINES = ["CERRANDO CANAL SEGURO...", "ARCHIVANDO EXPEDIENTE...", "VOLVIENDO A LA COMISION..."] as const;
+const RETURN_PARTICLES = [
+  { left: "14%", top: "28%", delay: "0s", duration: "12.4s" },
+  { left: "24%", top: "62%", delay: "1.8s", duration: "14.3s" },
+  { left: "36%", top: "44%", delay: "0.9s", duration: "13.7s" },
+  { left: "63%", top: "31%", delay: "2.7s", duration: "15.2s" },
+  { left: "74%", top: "59%", delay: "1.2s", duration: "12.8s" },
+  { left: "86%", top: "38%", delay: "3.1s", duration: "14.6s" },
+] as const;
 
 export function CreditsSequence({ active }: CreditsSequenceProps) {
+  const navigate = useNavigate();
   const [overlayVisible, setOverlayVisible] = useState(false);
   const [showLogo, setShowLogo] = useState(false);
   const [activeCreditIndex, setActiveCreditIndex] = useState<number | null>(null);
@@ -76,8 +89,14 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const [photoPreviousDirection, setPhotoPreviousDirection] = useState<PhotoDriftDirection>("left");
   const [fullscreenVideoSrc, setFullscreenVideoSrc] = useState<string | null>(null);
   const [fullscreenVideoVisible, setFullscreenVideoVisible] = useState(false);
-  const [showFinalCommission, setShowFinalCommission] = useState(false);
   const [showReturn, setShowReturn] = useState(false);
+  const [returnSealVisible, setReturnSealVisible] = useState(false);
+  const [returnOperationVisible, setReturnOperationVisible] = useState(false);
+  const [returnCongratsVisible, setReturnCongratsVisible] = useState(false);
+  const [returnChannelVisible, setReturnChannelVisible] = useState(false);
+  const [returnButtonVisible, setReturnButtonVisible] = useState(false);
+  const [returnClosing, setReturnClosing] = useState(false);
+  const [returnClosingStep, setReturnClosingStep] = useState(0);
 
   const timersRef = useRef<number[]>([]);
   const fadeIntervalRef = useRef<number | null>(null);
@@ -86,6 +105,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const preloadedVideoSrcRef = useRef<Record<string, string>>({});
   const preloadedVideoObjectUrlsRef = useRef<string[]>([]);
   const preFadeTriggeredRef = useRef(false);
+  const returnSequenceTimersRef = useRef<number[]>([]);
 
   const resolveActiveVideo = () => {
     const resolve = activeVideoResolveRef.current;
@@ -200,7 +220,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
 
     const run = async () => {
       // Warm up videos early to minimize buffering pauses in the credits sequence.
-      void Promise.all([resolvePlayableVideoSrc(gunnoirVideo), resolvePlayableVideoSrc(perroVideo), resolvePlayableVideoSrc(besoVideo)]);
+      void Promise.all([resolvePlayableVideoSrc(conductoresVideo), resolvePlayableVideoSrc(gunnoirVideo), resolvePlayableVideoSrc(nataphoneVideo), resolvePlayableVideoSrc(perroVideo), resolvePlayableVideoSrc(besoVideo)]);
 
       const imageBasenames = INTERLUDE_MEDIA_SEQUENCE.filter((media): media is { type: "image"; basename: string } => media.type === "image").map((media) => media.basename);
       const resolvedPhotoEntries = await Promise.all(imageBasenames.map(async (basename) => [basename, await resolvePhotoSrc(basename)] as const));
@@ -218,6 +238,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       const PHOTO_HOLD_MS = 1900;
       const PHOTO_FADEOUT_MS = 550;
       const citaBlockIndex = CREDIT_BLOCKS.findIndex((block) => block.title === "CITA");
+      const delayedDetailLastRevealMs = DELAYED_DETAIL_BASE_MS + DELAYED_DETAIL_STEP_MS;
 
       setShowLogo(true);
       await wait(2700);
@@ -244,7 +265,11 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         const baseVisibleMs = isDedicationBlock ? DEDICATION_VISIBLE_MS : isCitaBlock ? CITA_VISIBLE_MS : CREDIT_VISIBLE_MS;
         const longTextMultiplier = isLongTextBlock ? LONG_TEXT_MULTIPLIER : 1;
         const characterMultiplier = isCharacterCreditBlock ? CHARACTER_CREDIT_MULTIPLIER : 1;
-        const visibleMs = Math.round(baseVisibleMs * longTextMultiplier * characterMultiplier);
+        const animatedVisibleMs = Math.round(baseVisibleMs * longTextMultiplier * characterMultiplier);
+        const minHoldForDelayedDetails = isCharacterCreditBlock
+          ? delayedDetailLastRevealMs + DELAYED_DETAIL_POST_REVEAL_HOLD_MS
+          : 0;
+        const visibleMs = Math.max(animatedVisibleMs, minHoldForDelayedDetails);
         await wait(visibleMs);
         if (cancelled) return;
 
@@ -312,7 +337,6 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         }
       }
 
-      setShowFinalCommission(true);
       await wait(320);
       if (cancelled) return;
 
@@ -322,7 +346,6 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       await playFullscreenVideo(besoPlayableSrc, 30000);
       if (cancelled) return;
 
-      setShowFinalCommission(false);
       await wait(220);
       if (cancelled) return;
 
@@ -381,6 +404,60 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       cancelled = true;
     };
   }, [fullscreenVideoSrc]);
+
+  useEffect(() => {
+    returnSequenceTimersRef.current.forEach((id) => window.clearTimeout(id));
+    returnSequenceTimersRef.current = [];
+
+    setReturnSealVisible(false);
+    setReturnOperationVisible(false);
+    setReturnCongratsVisible(false);
+    setReturnChannelVisible(false);
+    setReturnButtonVisible(false);
+    setReturnClosing(false);
+    setReturnClosingStep(0);
+
+    if (!showReturn) return;
+
+    const addTimer = (ms: number, fn: () => void) => {
+      const id = window.setTimeout(fn, ms);
+      returnSequenceTimersRef.current.push(id);
+    };
+
+    // Keep a cinematic black hold before the final seal appears.
+    addTimer(800, () => {
+      setReturnSealVisible(true);
+      playSfx("/sounds/coin.mp3", 0.14);
+    });
+
+    addTimer(2300, () => setReturnOperationVisible(true));
+    addTimer(3150, () => setReturnCongratsVisible(true));
+    addTimer(3850, () => setReturnChannelVisible(true));
+
+    // Button appears ~5s after the seal reveal (800ms + 5000ms).
+    addTimer(5800, () => setReturnButtonVisible(true));
+
+    return () => {
+      returnSequenceTimersRef.current.forEach((id) => window.clearTimeout(id));
+      returnSequenceTimersRef.current = [];
+    };
+  }, [showReturn]);
+
+  const handleReturnToCommission = () => {
+    if (returnClosing) return;
+
+    setReturnClosing(true);
+    setReturnClosingStep(0);
+
+    const step1 = window.setTimeout(() => setReturnClosingStep(1), 270);
+    const step2 = window.setTimeout(() => setReturnClosingStep(2), 530);
+    const finish = window.setTimeout(() => {
+      stopControlledAudio("debrief-credits");
+      navigate({ to: "/" });
+    }, 800);
+
+    returnSequenceTimersRef.current.push(step1, step2, finish);
+  };
 
   if (!active) return null;
 
@@ -478,37 +555,94 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
             </div>
           )}
 
-          <div className={`mt-16 transition-opacity duration-[1000ms] ${showFinalCommission ? "opacity-100" : "opacity-0"}`}>
-            <p className="font-mono text-[11px] uppercase tracking-[0.42em] text-gold-dim md:text-[13px]">EX COMMISSIONE</p>
-            <p className="mt-4 font-display text-3xl text-gold-bright [text-shadow:0_0_14px_rgba(214,173,74,0.2)] md:text-4xl">ALTA MESA</p>
-          </div>
         </div>
       </div>
 
       {showReturn && (
         <div className="absolute inset-0 flex items-center justify-center px-6">
+          <div className={`pointer-events-none absolute inset-0 bg-black transition-opacity duration-700 ${returnClosing ? "opacity-45" : "opacity-0"}`} />
+          <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(rgba(214,173,74,0.32)_1px,transparent_1px),linear-gradient(90deg,rgba(214,173,74,0.32)_1px,transparent_1px)] [background-size:34px_34px]" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(214,173,74,0.22)_0%,rgba(214,173,74,0.08)_30%,transparent_66%)] [animation:debrief-return-haze_1200ms_ease-out_both]" />
-          <div className="pointer-events-none absolute flex h-[420px] w-[420px] items-center justify-center [animation:debrief-return-haze_1050ms_ease-out_both]">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_42%,rgba(0,0,0,0.62)_100%)]" />
+
+          {RETURN_PARTICLES.map((particle) => (
+            <span
+              key={`${particle.left}-${particle.top}-${particle.delay}`}
+              className={`pointer-events-none absolute h-[2px] w-[2px] rounded-full bg-gold/35 shadow-[0_0_8px_rgba(214,173,74,0.25)] transition-opacity duration-700 ${returnSealVisible ? "opacity-100" : "opacity-0"}`}
+              style={{
+                left: particle.left,
+                top: particle.top,
+                animation: `debrief-final-dust ${particle.duration} ease-in-out ${particle.delay} infinite`,
+              }}
+            />
+          ))}
+
+          <div className={`pointer-events-none absolute flex h-[420px] w-[420px] items-center justify-center [animation:debrief-return-haze_1050ms_ease-out_both] transition-opacity duration-[2000ms] ${returnSealVisible ? "opacity-100" : "opacity-0"}`}>
             <div className="absolute h-[320px] w-[320px] rounded-full bg-gold/10 blur-2xl" />
             <img
               src={altaLogo}
               alt=""
               aria-hidden="true"
-              className="relative h-[270px] w-[270px] select-none object-contain opacity-[0.35] drop-shadow-[0_0_20px_rgba(214,173,74,0.28)] animate-flicker"
+              className="relative h-[270px] w-[270px] select-none object-contain opacity-[0.2] brightness-50 drop-shadow-[0_0_20px_rgba(214,173,74,0.28)] [animation:debrief-final-seal-breathe_8.5s_ease-in-out_infinite]"
             />
             <div className="absolute h-[270px] w-[270px] rounded-full border border-gold/20 blur-[1px]" />
           </div>
-          <div className="relative flex flex-col items-center gap-4 [animation:debrief-return-hero_900ms_cubic-bezier(0.2,0.9,0.2,1)_both]">
-            <Link
-              to="/"
-              onClick={() => stopControlledAudio("debrief-credits")}
-              className="inline-flex items-center justify-center rounded-sm border border-gold bg-[linear-gradient(135deg,oklch(0.2_0.01_60_/_0.9),oklch(0.16_0.008_60_/_0.95))] px-10 py-4 font-mono text-sm uppercase tracking-[0.3em] text-gold-bright shadow-[0_0_28px_rgba(214,173,74,0.28),0_0_0_1px_rgba(214,173,74,0.22)_inset] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_36px_rgba(214,173,74,0.4),0_0_0_1px_rgba(214,173,74,0.3)_inset] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 animate-pulse-gold"
+
+          <div className="relative flex flex-col items-center text-center">
+            <div className={`transition-opacity duration-900 ${returnOperationVisible ? "opacity-100" : "opacity-0"}`}>
+              <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-gold-dim md:text-[12px]">OPERACION CUMPLE</p>
+              <p className="mt-2 font-display text-3xl text-gold-bright [text-shadow:0_0_14px_rgba(214,173,74,0.24)] md:text-4xl">COMPLETADA</p>
+            </div>
+
+            <div className={`mt-7 transition-opacity duration-900 ${returnCongratsVisible ? "opacity-100" : "opacity-0"}`}>
+              <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-gold-dim">ENHORABUENA,</p>
+              <p className="mt-2 font-display text-xl text-gold-bright [text-shadow:0_0_12px_rgba(214,173,74,0.23)] md:text-2xl">AGENTES MANDARIN Y MINERVA</p>
+
+              <div className="mt-6 flex items-start justify-center gap-[15px]">
+                <div
+                  className={`group animate-flicker [animation-duration:5.8s] transition-all duration-[800ms] ${returnCongratsVisible ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}
+                  style={{ transitionDelay: "0ms" }}
+                >
+                  <img
+                    src="/images/credits/eli.png"
+                    alt="Retrato oficial Mandarin"
+                    className="block h-[108px] w-auto border border-gold/60 bg-black/18 object-contain shadow-[0_0_12px_rgba(214,173,74,0.2)] [animation:debrief-portrait-breathe_9.5s_ease-in-out_infinite] md:h-[136px]"
+                  />
+                  <p className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim">MANDARIN</p>
+                  <p className="mt-1 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim/85">AURUM VII</p>
+                </div>
+
+                <div
+                  className={`group animate-flicker [animation-duration:6.2s] transition-all duration-[800ms] ${returnCongratsVisible ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}
+                  style={{ transitionDelay: "200ms" }}
+                >
+                  <img
+                    src="/images/credits/nata.png"
+                    alt="Retrato oficial Minerva"
+                    className="block h-[108px] w-auto -scale-x-100 border border-gold/60 bg-black/18 object-contain shadow-[0_0_12px_rgba(214,173,74,0.2)] [animation:debrief-portrait-breathe_10.2s_ease-in-out_infinite] md:h-[136px]"
+                  />
+                  <p className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim">MINERVA</p>
+                  <p className="mt-1 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim/85">IMPERIUM</p>
+                </div>
+              </div>
+            </div>
+
+            <div className={`mt-4 space-y-1 transition-opacity duration-900 ${returnChannelVisible ? "opacity-100" : "opacity-0"}`}>
+              <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-gold-dim">CANAL</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-gold-dim">CERRADO</p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleReturnToCommission}
+              className={`mt-8 inline-flex items-center justify-center rounded-sm border border-gold bg-[linear-gradient(135deg,oklch(0.2_0.01_60_/_0.9),oklch(0.16_0.008_60_/_0.95))] px-10 py-4 font-mono text-sm uppercase tracking-[0.3em] text-gold-bright shadow-[0_0_24px_rgba(214,173,74,0.2),0_0_0_1px_rgba(214,173,74,0.2)_inset] transition-opacity duration-700 hover:shadow-[0_0_34px_rgba(214,173,74,0.36),0_0_0_1px_rgba(214,173,74,0.3)_inset] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 ${returnButtonVisible && !returnClosing ? "opacity-100" : "pointer-events-none opacity-0"}`}
             >
               VOLVER A LA COMISION
-            </Link>
-            <p className="font-display text-xl text-gold-bright [text-shadow:0_0_14px_rgba(214,173,74,0.25)] md:text-2xl">
-              Enhorabuena, agentes.
-            </p>
+            </button>
+
+            <div className={`mt-6 min-h-[22px] transition-opacity duration-300 ${returnClosing ? "opacity-100" : "opacity-0"}`}>
+              <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-gold-dim">{RETURN_CLOSING_LINES[returnClosingStep]}</p>
+            </div>
           </div>
         </div>
       )}

@@ -343,6 +343,27 @@
   0% { background-position: 0 0; }
   100% { background-position: 12px 18px; }
 }
+@keyframes debrief-protocol-breathe {
+  0%, 100% { opacity: 0.36; filter: brightness(0.96); }
+  50% { opacity: 0.52; filter: brightness(1.03); }
+}
+@keyframes debrief-protocol-grid-breathe {
+  0%, 100% { opacity: 0.04; }
+  50% { opacity: 0.075; }
+}
+@keyframes debrief-link-sweep {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+@keyframes debrief-link-spark {
+  0% { transform: translateY(-50%) scale(0.75); opacity: 0.2; }
+  45% { transform: translateY(-50%) scale(1.45); opacity: 1; }
+  100% { transform: translateY(-50%) scale(1); opacity: 0.9; }
+}
+@keyframes debrief-link-complete-flash {
+  0% { opacity: 0.68; }
+  100% { opacity: 0; }
+}
 @keyframes debrief-signal-breathe {
   0%, 100% { opacity: 0.78; }
   50% { opacity: 1; }
@@ -525,6 +546,40 @@
   100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+@keyframes debrief-final-seal-breathe {
+  0%, 100% {
+    transform: scale(1) rotate(-0.45deg);
+    filter: brightness(0.5);
+  }
+  50% {
+    transform: scale(1.02) rotate(0.35deg);
+    filter: brightness(0.56);
+  }
+}
+@keyframes debrief-final-dust {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.9;
+  }
+  78% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translate3d(9px, -16px, 0);
+    opacity: 0;
+  }
+}
+@keyframes debrief-portrait-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.015);
   }
 }
 @keyframes treasury-coin-transfer {

@@ -76,8 +76,8 @@ function Atlas() {
               const p = proj(h.lat, h.lng);
               const isActive = active.city === h.city;
               const tapRadius = isMobile ? 5.4 : 3.8;
-              const xOffset = h.city === "Nueva York" ? -3.2 : h.city === "Hong Kong" ? -2.4 : h.city === "Sídney" ? -3.6 : 0;
-              const yOffset = h.city === "Reikiavik" ? 0 : h.city === "Sídney" ? 6.2 : 3.6;
+              const xOffset = h.city === "Nueva York" ? -3.2 : h.city === "Hong Kong" ? -2.4 : h.city === "Sídney" ? -3.6 : h.city === "Roma" ? -3.4 : h.city === "El Cairo" ? -1.8 : 0;
+              const yOffset = h.city === "Reikiavik" ? 0 : h.city === "Sídney" ? 6.2 : h.city === "Marrakech" ? 5.3 : h.city === "El Cairo" ? 5.1 : 3.6;
               const x = p.x + xOffset;
               const y = (p.y / 2) + yOffset;
               return (

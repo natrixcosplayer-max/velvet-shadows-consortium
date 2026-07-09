@@ -1,6 +1,6 @@
 import { MESSAGES } from "./types";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type ConnectionSequenceProps = {
   phase: "starting" | "priority" | "link";
@@ -13,6 +13,21 @@ type ConnectionSequenceProps = {
   onPriorityAccept: () => void;
 };
 
+const PROTOCOL_STATES: Array<{ primary: string; secondary: string }> = [
+  { primary: "INICIALIZANDO", secondary: "PROTOCOLO ALTA MESA" },
+  { primary: "VALIDANDO", secondary: "IDENTIDAD" },
+  { primary: "VERIFICANDO", secondary: "AURUM VII" },
+  { primary: "AUTENTICANDO", secondary: "CANAL SEGURO" },
+  { primary: "NEGOCIANDO", secondary: "CIFRADO" },
+  { primary: "ESTABLECIENDO", secondary: "ENLACE SAT-COM VII" },
+  { primary: "SINCRONIZANDO", secondary: "NODOS CONTINENTALES" },
+  { primary: "ENRUTANDO", secondary: "COMUNICACION" },
+  { primary: "PREPARANDO", secondary: "AUDIENCIA PRIVADA" },
+  { primary: "CANAL", secondary: "LISTO" },
+];
+
+const BAR_MILESTONE_COUNT = 5;
+
 export function ConnectionSequence({
   phase,
   progress,
@@ -24,12 +39,55 @@ export function ConnectionSequence({
   onPriorityAccept,
 }: ConnectionSequenceProps) {
   const [priorityAccepted, setPriorityAccepted] = useState(false);
+  const [flashMilestone, setFlashMilestone] = useState<number | null>(null);
+  const milestoneRef = useRef(0);
 
   useEffect(() => {
     if (phase !== "priority") {
       setPriorityAccepted(false);
     }
   }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "starting") {
+      milestoneRef.current = 0;
+      setFlashMilestone(null);
+      return;
+    }
+
+    const reached = Math.min(BAR_MILESTONE_COUNT, Math.floor(progress / 20));
+    if (reached <= milestoneRef.current) return;
+
+    milestoneRef.current = reached;
+    setFlashMilestone(reached);
+
+    const timer = window.setTimeout(() => {
+      setFlashMilestone((prev) => (prev === reached ? null : prev));
+    }, 340);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [phase, progress]);
+
+  const statusPair = useMemo(() => {
+    if (progress >= 100) {
+      return { primary: "CANAL PREPARADO", secondary: "AUDIENCIA DISPONIBLE" };
+    }
+
+    const index = Math.min(PROTOCOL_STATES.length - 1, Math.floor(progress / (100 / PROTOCOL_STATES.length)));
+    return PROTOCOL_STATES[index];
+  }, [progress]);
+
+  const telemetry = useMemo(() => {
+    const latency = 10 + Math.round((Math.sin(progress * 0.2) + 1) * 1.1);
+    const integrity = (99.7 + ((Math.cos(progress * 0.16) + 1) * 0.1)).toFixed(1);
+    return {
+      latency,
+      integrity,
+      trama: messageIndex + 1,
+    };
+  }, [messageIndex, progress]);
 
   const handlePriorityAccept = () => {
     if (priorityAccepted) return;
@@ -39,21 +97,65 @@ export function ConnectionSequence({
 
   return (
     <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 py-12 text-center md:px-8">
-      <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:repeating-linear-gradient(0deg,transparent_0,transparent_3px,rgba(255,255,255,0.88)_3px,rgba(255,255,255,0.88)_5px)] mix-blend-overlay" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(212,175,55,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(212,175,55,0.08)_1px,transparent_1px)] [background-size:40px_40px] [animation:debrief-protocol-grid-breathe_11s_ease-in-out_infinite]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02)_0%,rgba(0,0,0,0.45)_75%)] [animation:debrief-protocol-breathe_9s_ease-in-out_infinite]" />
       <div className="pointer-events-none absolute left-0 right-0 h-px bg-white/20 [animation:debrief-video-scan_13s_linear_infinite]" />
 
       {phase === "starting" && (
-        <div className="w-full space-y-6">
-          <p className="font-mono text-[10px] tracking-[0.4em] uppercase text-gold-dim">DESBLOQUEO DE CONSOLA SEGURA</p>
-          <div className="h-4 w-full overflow-hidden rounded-full border border-gold/70 bg-white/10 shadow-[0_0_18px_rgba(212,175,55,0.22)]">
+        <div className="w-full space-y-7">
+          <div className="space-y-2">
+            <p className="font-mono text-[10px] tracking-[0.42em] uppercase text-gold-dim">PROTOCOLO INTERNO · ALTA MESA</p>
+            <p className="font-mono text-[16px] md:text-[20px] tracking-[0.24em] uppercase text-gold-bright [text-shadow:0_0_10px_rgba(214,173,74,0.22)]">{statusPair.primary}</p>
+            <p className="font-mono text-[11px] md:text-[12px] tracking-[0.28em] uppercase text-gold-dim">{statusPair.secondary}</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-left md:grid-cols-4">
+            <div className="border border-gold-dim/35 bg-black/35 px-3 py-2">
+              <p className="font-mono text-[9px] tracking-[0.24em] uppercase text-gold-dim">LATENCIA</p>
+              <p className="mt-1 font-mono text-[12px] uppercase tracking-[0.22em] text-gold-bright">{telemetry.latency} ms</p>
+            </div>
+            <div className="border border-gold-dim/35 bg-black/35 px-3 py-2">
+              <p className="font-mono text-[9px] tracking-[0.24em] uppercase text-gold-dim">CANAL</p>
+              <p className="mt-1 font-mono text-[12px] uppercase tracking-[0.22em] text-gold-bright">VII</p>
+            </div>
+            <div className="border border-gold-dim/35 bg-black/35 px-3 py-2">
+              <p className="font-mono text-[9px] tracking-[0.24em] uppercase text-gold-dim">INTEGRIDAD</p>
+              <p className="mt-1 font-mono text-[12px] uppercase tracking-[0.22em] text-gold-bright">{telemetry.integrity} %</p>
+            </div>
+            <div className="border border-gold-dim/35 bg-black/35 px-3 py-2">
+              <p className="font-mono text-[9px] tracking-[0.24em] uppercase text-gold-dim">NODO</p>
+              <p className="mt-1 font-mono text-[12px] uppercase tracking-[0.22em] text-gold-bright">ROMA</p>
+            </div>
+          </div>
+
+          <div className="relative h-4 w-full overflow-hidden rounded-full border border-gold/75 bg-black/55 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
             <div
               className="h-full rounded-full bg-[linear-gradient(90deg,oklch(0.55_0.08_80)_0%,oklch(0.78_0.13_85)_35%,oklch(0.9_0.1_88_/_0.65)_50%,oklch(0.78_0.13_85)_65%,oklch(0.55_0.08_80)_100%)] bg-[length:200%_100%] animate-progress-flow transition-all duration-300 shadow-[0_0_14px_rgba(212,175,55,0.48)]"
               style={{ width: `${progress}%` }}
             />
+            <div className="pointer-events-none absolute inset-0 [animation:debrief-link-sweep_2.2s_linear_infinite] bg-[linear-gradient(100deg,transparent_0%,rgba(255,255,255,0.02)_38%,rgba(255,255,255,0.22)_50%,rgba(255,255,255,0.02)_62%,transparent_100%)]" />
+            {progress >= 100 && <div className="pointer-events-none absolute inset-0 bg-gold/20 [animation:debrief-link-complete-flash_380ms_ease-out_1]" />}
+
+            <div className="pointer-events-none absolute inset-0">
+              {Array.from({ length: BAR_MILESTONE_COUNT }).map((_, idx) => {
+                const milestone = idx + 1;
+                const reached = progress >= milestone * 20;
+                const isFlash = flashMilestone === milestone;
+                return (
+                  <span
+                    key={`spark-${milestone}`}
+                    className={`absolute top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full border border-gold/60 ${reached ? "bg-gold/85 shadow-[0_0_8px_rgba(214,173,74,0.62)]" : "bg-gold/20"} ${isFlash ? "[animation:debrief-link-spark_360ms_ease-out_1]" : ""}`}
+                    style={{ left: `calc(${milestone * 20}% - 3px)` }}
+                  />
+                );
+              })}
+            </div>
           </div>
-          <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-gold-dim">
+
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-gold-dim">
             <span>{progress}%</span>
-            <span>{MESSAGES[messageIndex]}</span>
+            <span>{MESSAGES[Math.min(messageIndex, MESSAGES.length - 1)]}</span>
+            <span>TRAMA {telemetry.trama}</span>
           </div>
         </div>
       )}

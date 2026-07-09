@@ -18,6 +18,24 @@ import { IncomingCall } from "../components/debrief/IncomingCall";
 import { VideoCall } from "../components/debrief/VideoCall";
 import { AUTH_LINES, CLOSING_LINES, DebriefPhase } from "../components/debrief/types";
 
+type DebugMode = "loader" | "video" | "call" | "finished" | "credits";
+
+function parseDebugMode(search: string): DebugMode | null {
+  const raw = new URLSearchParams(search).get("debug")?.toLowerCase();
+  if (raw === "loader" || raw === "video" || raw === "call" || raw === "finished" || raw === "credits") {
+    return raw;
+  }
+  return null;
+}
+
+function mapDebugModeToPhase(mode: DebugMode | null): DebriefPhase {
+  if (!mode || mode === "loader") return "starting";
+  if (mode === "video") return "waiting";
+  if (mode === "call") return "video";
+  if (mode === "finished") return "finished";
+  return "credits";
+}
+
 export const Route = createFileRoute("/debrief")({
   head: () => ({
     meta: [
@@ -96,6 +114,7 @@ type ClosingState = {
 };
 
 function Debrief() {
+  const initialDebugMode = typeof window !== "undefined" ? parseDebugMode(window.location.search) : null;
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const videoLayerRef = useRef<HTMLDivElement | null>(null);
   const callPulseClearRef = useRef<number | null>(null);
@@ -104,8 +123,10 @@ function Debrief() {
   const videoStartCleanupRef = useRef<(() => void) | null>(null);
   const priorityAcceptedRef = useRef(false);
   const audioQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const debugInitializedRef = useRef(false);
 
-  const [phase, setPhase] = useState<DebriefPhase>("starting");
+  const [debugMode] = useState<DebugMode | null>(initialDebugMode);
+  const [phase, setPhase] = useState<DebriefPhase>(() => mapDebugModeToPhase(initialDebugMode));
   const [startup, setStartup] = useState<StartupState>({
     progress: 0,
     messageIndex: 0,
@@ -118,7 +139,7 @@ function Debrief() {
     signalBoost: false,
     preSignalLoss: false,
     acceptFreeze: false,
-    showAcceptButton: false,
+    showAcceptButton: initialDebugMode === "video",
     countdown: 20,
     waitingFlicker: false,
     hudDate: "",
@@ -321,6 +342,30 @@ function Debrief() {
   }, [clearCallPulse]);
 
   useEffect(() => {
+    if (!debugMode || debugInitializedRef.current) return;
+    debugInitializedRef.current = true;
+
+    tickHudClock();
+
+    if (debugMode === "video") {
+      setCall((prev) => ({ ...prev, showAcceptButton: true, countdown: 20, preSignalLoss: false }));
+      return;
+    }
+
+    if (debugMode === "credits") {
+      stopControlledAudio("debrief-call");
+      stopControlledAudio("debrief-ambience");
+      stopControlledAudio("debrief-progress");
+      playControlledAudio("debrief-credits", "/sounds/debrief/credits.mp3", 0.001, true);
+      return;
+    }
+
+    if (debugMode === "call") {
+      setVideo((prev) => ({ ...prev, showLayer: true, fade: false, bootNoise: true }));
+    }
+  }, [debugMode, tickHudClock]);
+
+  useEffect(() => {
     const timers: number[] = [];
     const intervals: number[] = [];
     let cancelled = false;
@@ -335,6 +380,10 @@ function Debrief() {
       if (phase === "starting") {
         let progressValue = 0;
         let messageValue = 0;
+        let authenticatePlayed = false;
+        let secureLinkPlayed = false;
+        let archivePlayed = false;
+        let commissionPlayed = false;
         queueAudio(() => playSfx("/sounds/beep.mp3", 0.22));
         playControlledAudio("debrief-progress", SFX.incomingCall, 0.08, true);
 
@@ -342,6 +391,26 @@ function Debrief() {
           messageValue = Math.min(messageValue + 1, 4);
           progressValue = Math.min(100, progressValue + 8);
           setStartup((prev) => ({ ...prev, messageIndex: messageValue, progress: progressValue }));
+
+          if (!authenticatePlayed && progressValue >= 24) {
+            authenticatePlayed = true;
+            queueAudio(() => playSfx(SFX.authenticate, 0.12));
+          }
+
+          if (!secureLinkPlayed && progressValue >= 48) {
+            secureLinkPlayed = true;
+            queueAudio(() => playSfx(SFX.secureLink, 0.12));
+          }
+
+          if (!archivePlayed && progressValue >= 72) {
+            archivePlayed = true;
+            queueAudio(() => playSfx(SFX.archive, 0.11));
+          }
+
+          if (!commissionPlayed && progressValue >= 96) {
+            commissionPlayed = true;
+            queueAudio(() => playSfx(SFX.commission, 0.12));
+          }
 
           if (progressValue >= 100) {
             window.clearInterval(id);
@@ -385,7 +454,7 @@ function Debrief() {
 
       if (phase === "waiting") {
         tickHudClock();
-        setCall((prev) => ({ ...prev, countdown: 20, showAcceptButton: false, preSignalLoss: false }));
+        setCall((prev) => ({ ...prev, countdown: 20, showAcceptButton: debugMode === "video", preSignalLoss: false }));
 
         const ringStart = window.setTimeout(() => {
           setCall((prev) => ({ ...prev, showAcceptButton: true }));
@@ -394,7 +463,7 @@ function Debrief() {
             triggerIncomingPulse();
           }, 2000);
           intervals.push(ringLoop);
-        }, 1200);
+        }, debugMode === "video" ? 0 : 1200);
         timers.push(ringStart);
 
         const countLoop = window.setInterval(() => {
@@ -576,7 +645,7 @@ function Debrief() {
         setCall((prev) => ({ ...prev, waitingFlicker: false }));
       }
     };
-  }, [phase, clearCallPulse, queueAudio, tickHudClock, triggerIncomingPulse]);
+  }, [phase, clearCallPulse, debugMode, queueAudio, tickHudClock, triggerIncomingPulse]);
 
   useEffect(() => {
     if (phase !== "video" || !video.showLayer) return;
@@ -727,6 +796,12 @@ function Debrief() {
       </AppShell>
 
       <CreditsSequence active={phase === "credits"} />
+
+      {debugMode && (
+        <div className="pointer-events-none fixed bottom-3 left-3 z-[13000] border border-gold-dim/45 bg-black/55 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-gold-dim">
+          DEBUG · {debugMode.toUpperCase()}
+        </div>
+      )}
 
       {video.showLayer &&
         typeof document !== "undefined" &&
