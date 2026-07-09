@@ -717,6 +717,7 @@ function VisualReferenceSequence() {
           targetFrequency={58.9}
           archiveName="VISUAL_REFERENCE_02.enc"
           onCompleted={() => setPhase("analysis")}
+          mobileRaised
         />
       )}
 

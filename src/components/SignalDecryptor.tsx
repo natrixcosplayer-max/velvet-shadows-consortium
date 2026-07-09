@@ -6,6 +6,7 @@ type SignalDecryptorProps = {
   targetFrequency: number;
   archiveName: string;
   onCompleted: () => void;
+  mobileRaised?: boolean;
 };
 
 type Stage = "idle" | "tuning" | "locked" | "decrypting" | "done";
@@ -50,7 +51,7 @@ function createSignalFilter(effectStrength: number, stage: Stage) {
   ].join(" ");
 }
 
-export function SignalDecryptor({ image, targetFrequency, archiveName, onCompleted }: SignalDecryptorProps) {
+export function SignalDecryptor({ image, targetFrequency, archiveName, onCompleted, mobileRaised = false }: SignalDecryptorProps) {
   const [stage, setStage] = useState<Stage>("idle");
   const [frequency, setFrequency] = useState(48);
   const [displayFrequency, setDisplayFrequency] = useState(48);
@@ -314,7 +315,7 @@ export function SignalDecryptor({ image, targetFrequency, archiveName, onComplet
           )}
 
           {stage === "decrypting" && (
-            <div className="space-y-4 rounded-sm border border-gold-dim/70 bg-black/70 p-4">
+            <div className={`space-y-4 rounded-sm border border-gold-dim/70 bg-black/70 p-4 ${mobileRaised ? "-mt-2 sm:mt-0" : ""}`}>
               <div className="flex items-center justify-between gap-4">
                 <p className="font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim">FRECUENCIA DE RECONSTRUCCIÓN</p>
                 <p className="font-display text-xl text-gold">{formatFrequency(targetFrequency)}</p>
@@ -332,7 +333,7 @@ export function SignalDecryptor({ image, targetFrequency, archiveName, onComplet
           )}
 
           {stage === "done" && (
-            <div className="space-y-3 rounded-sm border border-gold-dim/70 bg-black/70 p-4">
+            <div className={`space-y-3 rounded-sm border border-gold-dim/70 bg-black/70 p-4 ${mobileRaised ? "-mt-2 sm:mt-0" : ""}`}>
               <p className="font-display text-2xl text-gold-bright">ARCHIVO DESCLASIFICADO</p>
               <p className="font-mono text-[10px] tracking-[0.3em] uppercase text-gold-dim">ARCHIVO RECUPERADO - TONO FORENSE BLOQUEADO</p>
             </div>
