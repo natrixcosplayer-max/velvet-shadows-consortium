@@ -716,17 +716,9 @@ function Debrief() {
                   closingTime={closing.closingTime}
                   showCommissionMark={closing.showCommissionMark}
                   showThanks={closing.showThanks}
+                  showCloseButton={closing.showCloseButton}
+                  onCloseDossier={handleStartCredits}
                 />
-              )}
-
-              {phase === "finished" && closing.showCloseButton && (
-                <button
-                  type="button"
-                  onClick={handleStartCredits}
-                  className="relative z-[90] mx-auto -mt-1 inline-flex border border-gold bg-gold/10 px-8 py-3 font-mono text-[11px] uppercase tracking-[0.35em] text-gold transition hover:bg-gold/20"
-                >
-                  CERRAR EXPEDIENTE
-                </button>
               )}
             </div>
             </Panel>

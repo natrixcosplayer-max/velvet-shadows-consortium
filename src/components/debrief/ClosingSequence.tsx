@@ -8,6 +8,8 @@ type ClosingSequenceProps = {
   closingTime: string;
   showCommissionMark: boolean;
   showThanks: boolean;
+  showCloseButton: boolean;
+  onCloseDossier: () => void;
 };
 
 export function ClosingSequence({
@@ -18,6 +20,8 @@ export function ClosingSequence({
   closingTime,
   showCommissionMark,
   showThanks,
+  showCloseButton,
+  onCloseDossier,
 }: ClosingSequenceProps) {
   return (
     <div className="relative z-[60] mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-8 px-4 py-16 text-center md:px-8">
@@ -58,6 +62,16 @@ export function ClosingSequence({
       <div className={`space-y-2 transition-opacity duration-[1400ms] ${showThanks ? "opacity-100" : "opacity-0"}`}>
         <p className="font-mono text-[12px] tracking-[0.12em] text-gold-dim">La Comision agradece sus servicios.</p>
         <p className="font-mono text-[12px] tracking-[0.12em] text-gold-dim">Hasta la proxima mision.</p>
+
+        {showCloseButton && (
+          <button
+            type="button"
+            onClick={onCloseDossier}
+            className="mx-auto mt-5 inline-flex border border-gold bg-gold/15 px-10 py-3.5 font-mono text-[12px] uppercase tracking-[0.38em] text-gold shadow-[0_0_16px_rgba(201,165,92,0.28)] transition hover:-translate-y-0.5 hover:bg-gold/25 hover:shadow-[0_0_22px_rgba(201,165,92,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/55 animate-pulse"
+          >
+            CERRAR EXPEDIENTE
+          </button>
+        )}
       </div>
     </div>
   );

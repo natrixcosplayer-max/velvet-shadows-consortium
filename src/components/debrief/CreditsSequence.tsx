@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import altaLogo from "../../assets/alta.png";
+import besoVideo from "../../assets/birthday/beso.mp4";
+import gunnoirVideo from "../../assets/birthday/gunnoir.mp4";
 import { setControlledAudioVolume, stopControlledAudio } from "../../audio/audiomanager";
 
 type CreditsSequenceProps = {
@@ -13,6 +15,10 @@ type CreditBlock = {
 };
 
 type PhotoDriftDirection = "left" | "right";
+
+type InterludeMedia =
+  | { type: "image"; basename: string }
+  | { type: "video"; src: string };
 
 const EXTENDED_CREDIT_TITLES = new Set(["EL MICHI", "LA MICHI"]);
 const DELAYED_DETAIL_LINES = new Set([
@@ -35,7 +41,17 @@ const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "TE QUIERO", lines: ["Con amor,", "tu Michi."] },
 ];
 
-const PHOTO_SEQUENCE_BASENAMES = ["running", "eli", "nata", "eli1", "nata1", "eli2", "nata2", "eli3", "couple0"] as const;
+const INTERLUDE_MEDIA_SEQUENCE: InterludeMedia[] = [
+  { type: "image", basename: "running" },
+  { type: "video", src: gunnoirVideo },
+  { type: "image", basename: "nata" },
+  { type: "image", basename: "eli1" },
+  { type: "image", basename: "nata1" },
+  { type: "image", basename: "eli2" },
+  { type: "image", basename: "nata2" },
+  { type: "image", basename: "eli3" },
+  { type: "image", basename: "couple0" },
+];
 const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"] as const;
 
 export function CreditsSequence({ active }: CreditsSequenceProps) {
@@ -49,11 +65,21 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const [photoPrevious, setPhotoPrevious] = useState<string | null>(null);
   const [photoCurrentDirection, setPhotoCurrentDirection] = useState<PhotoDriftDirection>("right");
   const [photoPreviousDirection, setPhotoPreviousDirection] = useState<PhotoDriftDirection>("left");
+  const [fullscreenVideoSrc, setFullscreenVideoSrc] = useState<string | null>(null);
+  const [fullscreenVideoVisible, setFullscreenVideoVisible] = useState(false);
   const [showFinalCommission, setShowFinalCommission] = useState(false);
   const [showReturn, setShowReturn] = useState(false);
 
   const timersRef = useRef<number[]>([]);
   const fadeIntervalRef = useRef<number | null>(null);
+  const activeVideoResolveRef = useRef<(() => void) | null>(null);
+
+  const resolveActiveVideo = () => {
+    const resolve = activeVideoResolveRef.current;
+    if (!resolve) return;
+    activeVideoResolveRef.current = null;
+    resolve();
+  };
 
   useEffect(() => {
     if (!active) return;
@@ -68,6 +94,43 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       new Promise<void>((resolve) => {
         const id = window.setTimeout(() => resolve(), ms);
         timersRef.current.push(id);
+      });
+
+    const playFullscreenVideo = (src: string, fallbackMs = 18000) =>
+      new Promise<void>((resolve) => {
+        if (cancelled) {
+          resolve();
+          return;
+        }
+
+        const fallbackId = window.setTimeout(() => {
+          resolveActiveVideo();
+        }, fallbackMs);
+        timersRef.current.push(fallbackId);
+
+        activeVideoResolveRef.current = () => {
+          if (cancelled) {
+            resolve();
+            return;
+          }
+
+          setFullscreenVideoVisible(false);
+          const hideId = window.setTimeout(() => {
+            if (!cancelled) {
+              setFullscreenVideoSrc(null);
+            }
+            resolve();
+          }, 280);
+          timersRef.current.push(hideId);
+        };
+
+        setFullscreenVideoSrc(src);
+        const showId = window.setTimeout(() => {
+          if (!cancelled) {
+            setFullscreenVideoVisible(true);
+          }
+        }, 20);
+        timersRef.current.push(showId);
       });
 
     const resolvePhotoSrc = async (basename: string) => {
@@ -105,7 +168,9 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
     });
 
     const run = async () => {
-      const resolvedPhotos = await Promise.all(PHOTO_SEQUENCE_BASENAMES.map((name) => resolvePhotoSrc(name)));
+      const imageBasenames = INTERLUDE_MEDIA_SEQUENCE.filter((media): media is { type: "image"; basename: string } => media.type === "image").map((media) => media.basename);
+      const resolvedPhotoEntries = await Promise.all(imageBasenames.map(async (basename) => [basename, await resolvePhotoSrc(basename)] as const));
+      const resolvedPhotoMap = new Map<string, string>(resolvedPhotoEntries);
       if (cancelled) return;
 
       const CREDIT_VISIBLE_MS = 2280;
@@ -156,11 +221,26 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           continue;
         }
 
-        const photoIndex = Math.min(i, Math.max(0, resolvedPhotos.length - 1));
-        const nextPhoto = resolvedPhotos[photoIndex] || null;
+        const mediaIndex = Math.min(i, Math.max(0, INTERLUDE_MEDIA_SEQUENCE.length - 1));
+        const media = INTERLUDE_MEDIA_SEQUENCE[mediaIndex];
+
+        if (media?.type === "video") {
+          setCreditVisible(false);
+          await wait(420);
+          if (cancelled) return;
+
+          await playFullscreenVideo(media.src, 22000);
+          if (cancelled) return;
+
+          await wait(300);
+          if (cancelled) return;
+          continue;
+        }
+
+        const nextPhoto = media?.type === "image" ? (resolvedPhotoMap.get(media.basename) ?? null) : null;
         if (nextPhoto) {
-          const isFirstPhoto = photoIndex === 0;
-          const nextDirection: PhotoDriftDirection = photoIndex % 2 === 0 ? "right" : "left";
+          const isFirstPhoto = mediaIndex === 0;
+          const nextDirection: PhotoDriftDirection = mediaIndex % 2 === 0 ? "right" : "left";
           if (isFirstPhoto) {
             setFirstPhotoFadeFromBlack(true);
           }
@@ -200,6 +280,12 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       if (cancelled) return;
 
       setShowFinalCommission(false);
+      await wait(260);
+      if (cancelled) return;
+
+      await playFullscreenVideo(besoVideo, 22000);
+      if (cancelled) return;
+
       setShowReturn(true);
     };
 
@@ -215,6 +301,10 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         window.clearInterval(fadeIntervalRef.current);
         fadeIntervalRef.current = null;
       }
+
+      activeVideoResolveRef.current = null;
+      setFullscreenVideoVisible(false);
+      setFullscreenVideoSrc(null);
     };
   }, [active]);
 
@@ -246,6 +336,21 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           <div className={`absolute inset-0 bg-black transition-opacity duration-[1700ms] ease-out ${firstPhotoFadeFromBlack ? "opacity-100" : "opacity-0"}`} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.54)_100%)]" />
           <div className="absolute inset-x-0 bottom-0 h-[34vh] bg-[linear-gradient(to_top,rgba(0,0,0,0.6),transparent)]" />
+        </div>
+      )}
+
+      {fullscreenVideoSrc && (
+        <div className={`absolute inset-0 z-[35] bg-black transition-opacity duration-500 ${fullscreenVideoVisible ? "opacity-100" : "opacity-0"}`}>
+          <video
+            key={fullscreenVideoSrc}
+            src={fullscreenVideoSrc}
+            autoPlay
+            playsInline
+            preload="auto"
+            onEnded={resolveActiveVideo}
+            onError={resolveActiveVideo}
+            className="h-full w-full object-cover"
+          />
         </div>
       )}
 
@@ -293,7 +398,16 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       {showReturn && (
         <div className="absolute inset-0 flex items-center justify-center px-6">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(214,173,74,0.22)_0%,rgba(214,173,74,0.08)_30%,transparent_66%)] [animation:debrief-return-haze_1200ms_ease-out_both]" />
-          <div className="pointer-events-none absolute h-[260px] w-[260px] rounded-full border border-gold/35 bg-gold/10 blur-[1.2px] [animation:debrief-return-haze_1050ms_ease-out_both]" />
+          <div className="pointer-events-none absolute flex h-[280px] w-[280px] items-center justify-center [animation:debrief-return-haze_1050ms_ease-out_both]">
+            <div className="absolute h-[230px] w-[230px] rounded-full bg-gold/10 blur-2xl" />
+            <img
+              src={altaLogo}
+              alt=""
+              aria-hidden="true"
+              className="relative h-[180px] w-[180px] select-none object-contain opacity-[0.2] drop-shadow-[0_0_20px_rgba(214,173,74,0.28)] animate-flicker"
+            />
+            <div className="absolute h-[180px] w-[180px] rounded-full border border-gold/20 blur-[1px]" />
+          </div>
           <div className="relative flex flex-col items-center gap-4 [animation:debrief-return-hero_900ms_cubic-bezier(0.2,0.9,0.2,1)_both]">
             <Link
               to="/"
