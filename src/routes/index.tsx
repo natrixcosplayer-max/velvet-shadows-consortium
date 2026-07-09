@@ -16,7 +16,6 @@ export const Route = createFileRoute("/")({
 });
 
 const SKIP_COMMISSION_GATES_KEY = "skip-commission-gates-once";
-const UNLOCK_SOUND_PLAYED_KEY = "unlock-sound-played";
 
 function Index() {
   const [entered, setEntered] = useState(false);
@@ -86,11 +85,11 @@ function Atrium() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const unlockPlayed = window.sessionStorage.getItem(UNLOCK_SOUND_PLAYED_KEY) === "1";
-    if (unlockPlayed) return;
+    const id = window.setTimeout(() => {
+      void playUnlockSound(0.62);
+    }, 120);
 
-    playUnlockSound(0.62);
-    window.sessionStorage.setItem(UNLOCK_SOUND_PLAYED_KEY, "1");
+    return () => window.clearTimeout(id);
   }, []);
 
   useEffect(() => {

@@ -348,7 +348,6 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         const objectUrl = URL.createObjectURL(blob);
         preloadedVideoSrcRef.current[src] = objectUrl;
         preloadedVideoObjectUrlsRef.current.push(objectUrl);
-      playCompleteSfx = false,
       } catch {
         return src;
       }
