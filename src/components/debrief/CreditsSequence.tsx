@@ -73,6 +73,9 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const timersRef = useRef<number[]>([]);
   const fadeIntervalRef = useRef<number | null>(null);
   const activeVideoResolveRef = useRef<(() => void) | null>(null);
+  const fullscreenVideoRef = useRef<HTMLVideoElement | null>(null);
+  const preloadedVideoSrcRef = useRef<Record<string, string>>({});
+  const preloadedVideoObjectUrlsRef = useRef<string[]>([]);
 
   const resolveActiveVideo = () => {
     const resolve = activeVideoResolveRef.current;
@@ -95,6 +98,24 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         const id = window.setTimeout(() => resolve(), ms);
         timersRef.current.push(id);
       });
+
+    const resolvePlayableVideoSrc = async (src: string) => {
+      const cached = preloadedVideoSrcRef.current[src];
+      if (cached) return cached;
+
+      try {
+        const response = await fetch(src, { cache: "force-cache" });
+        if (!response.ok) return src;
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        preloadedVideoSrcRef.current[src] = objectUrl;
+        preloadedVideoObjectUrlsRef.current.push(objectUrl);
+        return objectUrl;
+      } catch {
+        return src;
+      }
+    };
 
     const playFullscreenVideo = (src: string, fallbackMs = 18000) =>
       new Promise<void>((resolve) => {
@@ -168,6 +189,9 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
     });
 
     const run = async () => {
+      // Warm up videos early to minimize buffering pauses in the credits sequence.
+      void Promise.all([resolvePlayableVideoSrc(gunnoirVideo), resolvePlayableVideoSrc(besoVideo)]);
+
       const imageBasenames = INTERLUDE_MEDIA_SEQUENCE.filter((media): media is { type: "image"; basename: string } => media.type === "image").map((media) => media.basename);
       const resolvedPhotoEntries = await Promise.all(imageBasenames.map(async (basename) => [basename, await resolvePhotoSrc(basename)] as const));
       const resolvedPhotoMap = new Map<string, string>(resolvedPhotoEntries);
@@ -229,7 +253,10 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           await wait(420);
           if (cancelled) return;
 
-          await playFullscreenVideo(media.src, 22000);
+          const playableSrc = await resolvePlayableVideoSrc(media.src);
+          if (cancelled) return;
+
+          await playFullscreenVideo(playableSrc, 30000);
           if (cancelled) return;
 
           await wait(300);
@@ -283,7 +310,10 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       await wait(260);
       if (cancelled) return;
 
-      await playFullscreenVideo(besoVideo, 22000);
+      const besoPlayableSrc = await resolvePlayableVideoSrc(besoVideo);
+      if (cancelled) return;
+
+      await playFullscreenVideo(besoPlayableSrc, 30000);
       if (cancelled) return;
 
       setShowReturn(true);
@@ -302,11 +332,44 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         fadeIntervalRef.current = null;
       }
 
+      preloadedVideoObjectUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      preloadedVideoObjectUrlsRef.current = [];
+      preloadedVideoSrcRef.current = {};
+
       activeVideoResolveRef.current = null;
       setFullscreenVideoVisible(false);
       setFullscreenVideoSrc(null);
     };
   }, [active]);
+
+  useEffect(() => {
+    if (!fullscreenVideoSrc) return;
+
+    const video = fullscreenVideoRef.current;
+    if (!video) return;
+
+    let cancelled = false;
+
+    const startPlayback = async () => {
+      try {
+        video.muted = true;
+        video.defaultMuted = true;
+        await video.play();
+      } catch {
+        if (!cancelled) {
+          resolveActiveVideo();
+        }
+      }
+    };
+
+    void startPlayback();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fullscreenVideoSrc]);
 
   if (!active) return null;
 
@@ -342,9 +405,11 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       {fullscreenVideoSrc && (
         <div className={`absolute inset-0 z-[35] bg-black transition-opacity duration-500 ${fullscreenVideoVisible ? "opacity-100" : "opacity-0"}`}>
           <video
+            ref={fullscreenVideoRef}
             key={fullscreenVideoSrc}
             src={fullscreenVideoSrc}
             autoPlay
+            muted
             playsInline
             preload="auto"
             onEnded={resolveActiveVideo}
@@ -398,15 +463,15 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       {showReturn && (
         <div className="absolute inset-0 flex items-center justify-center px-6">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(214,173,74,0.22)_0%,rgba(214,173,74,0.08)_30%,transparent_66%)] [animation:debrief-return-haze_1200ms_ease-out_both]" />
-          <div className="pointer-events-none absolute flex h-[280px] w-[280px] items-center justify-center [animation:debrief-return-haze_1050ms_ease-out_both]">
-            <div className="absolute h-[230px] w-[230px] rounded-full bg-gold/10 blur-2xl" />
+          <div className="pointer-events-none absolute flex h-[420px] w-[420px] items-center justify-center [animation:debrief-return-haze_1050ms_ease-out_both]">
+            <div className="absolute h-[320px] w-[320px] rounded-full bg-gold/10 blur-2xl" />
             <img
               src={altaLogo}
               alt=""
               aria-hidden="true"
-              className="relative h-[180px] w-[180px] select-none object-contain opacity-[0.2] drop-shadow-[0_0_20px_rgba(214,173,74,0.28)] animate-flicker"
+              className="relative h-[270px] w-[270px] select-none object-contain opacity-[0.6] drop-shadow-[0_0_20px_rgba(214,173,74,0.28)] animate-flicker"
             />
-            <div className="absolute h-[180px] w-[180px] rounded-full border border-gold/20 blur-[1px]" />
+            <div className="absolute h-[270px] w-[270px] rounded-full border border-gold/20 blur-[1px]" />
           </div>
           <div className="relative flex flex-col items-center gap-4 [animation:debrief-return-hero_900ms_cubic-bezier(0.2,0.9,0.2,1)_both]">
             <Link

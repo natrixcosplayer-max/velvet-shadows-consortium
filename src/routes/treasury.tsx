@@ -181,7 +181,7 @@ function Treasury() {
       setScanMessage(SCAN_RESULTS[0]);
       setScanConfidence(1);
       setScanFlash(true);
-      playSfx("/sounds/unlock.mp3", 0.45);
+      playSfx("/sounds/luxbeep2.mp3", 0.2);
       navigator.vibrate?.([20, 40, 20]);
       runAuthenticatedBalanceIncrement();
 

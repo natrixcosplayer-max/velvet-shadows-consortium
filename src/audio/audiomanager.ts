@@ -403,6 +403,12 @@ export function playSfx(src: string, volume = 1) {
     attachGestureUnlockListeners();
   }
 
+  // Global rule: unlock cue always uses the unlock pipeline so john.mp3 ducks first.
+  if (/(^|\/)unlock\.mp3(?:\?.*)?$/i.test(src)) {
+    void playUnlockSound(volume);
+    return;
+  }
+
   const sfx = new Audio(src);
   sfx.volume = volume;
   sfx.play().catch(() => {});
