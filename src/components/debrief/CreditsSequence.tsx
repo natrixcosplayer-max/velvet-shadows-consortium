@@ -23,6 +23,26 @@ type InterludeMedia =
   | { type: "image"; basename: string }
   | { type: "video"; src: string };
 
+type DecryptTextProps = {
+  text: string;
+  active: boolean;
+  className: string;
+  as?: "p" | "h3";
+  durationMs?: number;
+  revealDelayMs?: number;
+  playCompleteSfx?: boolean;
+};
+
+type PhotoOverlayProfile = {
+  showTracking: boolean;
+  showScanLine: boolean;
+  showText: boolean;
+  showGlitch: boolean;
+  particleCount: number;
+  scanDurationMs: number;
+  scanDelayMs: number;
+};
+
 const EXTENDED_CREDIT_TITLES = new Set(["EL MICHI", "LA MICHI"]);
 const DELAYED_DETAIL_LINES = new Set([
   "Realizando un operativo",
@@ -39,6 +59,163 @@ const DELAYED_DETAIL_SEQUENCE_ORDER: Record<string, number> = {
 const DELAYED_DETAIL_STEP_MS = 1400;
 const DELAYED_DETAIL_BASE_MS = 1400;
 const DELAYED_DETAIL_POST_REVEAL_HOLD_MS = 2000;
+const DECRYPT_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*";
+const DECRYPT_BLOCKS = "█▓▒";
+const PHOTO_ANALYSIS_TEXT_POOL = [
+  "IDENTIDAD VERIFICADA",
+  "SEGUIMIENTO ACTIVO",
+  "ARCHIVO RECUPERADO",
+  "OBJETIVO IDENTIFICADO",
+  "EXPEDIENTE VALIDADO",
+  "REGISTRO ROMA",
+  "OPERATIVO CLASIFICADO",
+  "ANALISIS COMPLETADO",
+] as const;
+const PHOTO_ANALYSIS_PARTICLES = [
+  { left: "13%", top: "26%", delay: "0.1s", duration: "7.1s" },
+  { left: "22%", top: "63%", delay: "0.9s", duration: "8.4s" },
+  { left: "35%", top: "41%", delay: "1.5s", duration: "7.8s" },
+  { left: "44%", top: "58%", delay: "0.4s", duration: "8.8s" },
+  { left: "56%", top: "31%", delay: "1.1s", duration: "7.5s" },
+  { left: "63%", top: "68%", delay: "0.7s", duration: "8.2s" },
+  { left: "74%", top: "36%", delay: "1.8s", duration: "8.6s" },
+  { left: "82%", top: "55%", delay: "0.2s", duration: "7.2s" },
+  { left: "88%", top: "29%", delay: "1.3s", duration: "8.9s" },
+  { left: "91%", top: "62%", delay: "0.8s", duration: "7.9s" },
+] as const;
+
+const hashString = (value: string) =>
+  value.split("").reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) % 100000, 7);
+
+const getPhotoBasename = (src: string) => {
+  const match = src.match(/\/images\/credits\/([^./]+)\./);
+  return match?.[1] ?? src;
+};
+
+const getPhotoOverlayProfile = (basename: string): PhotoOverlayProfile => {
+  const hash = hashString(basename);
+  const showTracking = hash % 4 !== 1;
+  const showScanLine = hash % 5 !== 2;
+  const showText = hash % 3 !== 0;
+  const showGlitch = hash % 4 === 0;
+  const anyPrimary = showTracking || showScanLine || showText;
+
+  return {
+    showTracking: anyPrimary ? showTracking : true,
+    showScanLine: anyPrimary ? showScanLine : false,
+    showText: anyPrimary ? showText : false,
+    showGlitch,
+    particleCount: 8 + (hash % 3),
+    scanDurationMs: 4100 + (hash % 3) * 420,
+    scanDelayMs: 2300 + (hash % 4) * 320,
+  };
+};
+
+function DecryptText({
+  text,
+  active,
+  className,
+  as = "p",
+  durationMs = 760,
+  revealDelayMs = 0,
+  playCompleteSfx = true,
+}: DecryptTextProps) {
+  const [displayText, setDisplayText] = useState(text);
+  const [isComplete, setIsComplete] = useState(false);
+  const finishedRef = useRef(false);
+
+  useEffect(() => {
+    if (!active) {
+      setDisplayText(text);
+      setIsComplete(false);
+      finishedRef.current = false;
+      return;
+    }
+
+    if (!text.trim()) {
+      setDisplayText(text);
+      setIsComplete(true);
+      finishedRef.current = true;
+      return;
+    }
+
+    let rafId = 0;
+    let startAt = 0;
+    let cancelled = false;
+
+    const scrambleChar = (progress: number) => {
+      if (progress < 0.35 && Math.random() < 0.55) {
+        return DECRYPT_BLOCKS[Math.floor(Math.random() * DECRYPT_BLOCKS.length)] ?? "█";
+      }
+      return DECRYPT_CHARSET[Math.floor(Math.random() * DECRYPT_CHARSET.length)] ?? "#";
+    };
+
+    const animate = (timestamp: number) => {
+      if (cancelled) return;
+
+      if (startAt === 0) {
+        startAt = timestamp;
+      }
+
+      const elapsed = timestamp - startAt;
+      const progress = Math.max(0, Math.min(1, elapsed / durationMs));
+      const revealCount = Math.floor(text.length * progress);
+
+      const next = text
+        .split("")
+        .map((char, index) => {
+          if (char === " ") return " ";
+          if (index <= revealCount) return char;
+          return scrambleChar(progress);
+        })
+        .join("");
+
+      setDisplayText(next);
+
+      if (progress >= 1) {
+        setDisplayText(text);
+        setIsComplete(true);
+        if (!finishedRef.current && playCompleteSfx) {
+          finishedRef.current = true;
+          playSfx("/sounds/shortbeep.mp3", 0.032);
+        } else if (!finishedRef.current) {
+          finishedRef.current = true;
+        }
+        return;
+      }
+
+      rafId = window.requestAnimationFrame(animate);
+    };
+
+    setIsComplete(false);
+    finishedRef.current = false;
+
+    const delayId = window.setTimeout(() => {
+      if (cancelled) return;
+      rafId = window.requestAnimationFrame(animate);
+    }, revealDelayMs);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(delayId);
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
+    };
+  }, [active, durationMs, playCompleteSfx, revealDelayMs, text]);
+
+  const Component = as;
+
+  return (
+    <Component
+      className={`${className} transition-[text-shadow] duration-300 ${
+        isComplete ? "[text-shadow:0_0_12px_rgba(214,173,74,0.26)]" : ""
+      }`}
+    >
+      {displayText}
+    </Component>
+  );
+}
 
 const CREDIT_BLOCKS: CreditBlock[] = [
   { title: "ALTA MESA", lines: ["presenta"] },
@@ -67,12 +244,24 @@ const INTERLUDE_MEDIA_SEQUENCE: InterludeMedia[] = [
 const PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"] as const;
 const RETURN_CLOSING_LINES = ["CERRANDO CANAL SEGURO...", "ARCHIVANDO EXPEDIENTE...", "VOLVIENDO A LA COMISION..."] as const;
 const RETURN_PARTICLES = [
-  { left: "14%", top: "28%", delay: "0s", duration: "12.4s" },
-  { left: "24%", top: "62%", delay: "1.8s", duration: "14.3s" },
-  { left: "36%", top: "44%", delay: "0.9s", duration: "13.7s" },
-  { left: "63%", top: "31%", delay: "2.7s", duration: "15.2s" },
-  { left: "74%", top: "59%", delay: "1.2s", duration: "12.8s" },
-  { left: "86%", top: "38%", delay: "3.1s", duration: "14.6s" },
+  { left: "10%", top: "24%", delay: "0s", duration: "6.6s" },
+  { left: "14%", top: "53%", delay: "0.9s", duration: "7.4s" },
+  { left: "19%", top: "36%", delay: "1.7s", duration: "8.2s" },
+  { left: "24%", top: "66%", delay: "0.5s", duration: "6.9s" },
+  { left: "31%", top: "41%", delay: "2.2s", duration: "7.8s" },
+  { left: "37%", top: "58%", delay: "1.1s", duration: "8.6s" },
+  { left: "43%", top: "29%", delay: "2.6s", duration: "7.1s" },
+  { left: "48%", top: "49%", delay: "0.8s", duration: "9.1s" },
+  { left: "54%", top: "34%", delay: "1.9s", duration: "7.6s" },
+  { left: "59%", top: "62%", delay: "0.4s", duration: "8.4s" },
+  { left: "64%", top: "43%", delay: "2.4s", duration: "6.8s" },
+  { left: "69%", top: "27%", delay: "1.2s", duration: "8.8s" },
+  { left: "73%", top: "55%", delay: "2.8s", duration: "7.3s" },
+  { left: "78%", top: "38%", delay: "1.4s", duration: "8.1s" },
+  { left: "82%", top: "61%", delay: "0.7s", duration: "6.5s" },
+  { left: "87%", top: "32%", delay: "2.1s", duration: "9.3s" },
+  { left: "91%", top: "46%", delay: "1.6s", duration: "7.2s" },
+  { left: "94%", top: "24%", delay: "2.9s", duration: "8.7s" },
 ] as const;
 
 export function CreditsSequence({ active }: CreditsSequenceProps) {
@@ -97,6 +286,23 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const [returnButtonVisible, setReturnButtonVisible] = useState(false);
   const [returnClosing, setReturnClosing] = useState(false);
   const [returnClosingStep, setReturnClosingStep] = useState(0);
+  const [photoOverlayEpoch, setPhotoOverlayEpoch] = useState(0);
+  const [photoBlackFade, setPhotoBlackFade] = useState(false);
+  const [photoFocusBlur, setPhotoFocusBlur] = useState(false);
+  const [photoTrackingVisible, setPhotoTrackingVisible] = useState(false);
+  const [photoScanLineActive, setPhotoScanLineActive] = useState(false);
+  const [photoGlitchActive, setPhotoGlitchActive] = useState(false);
+  const [photoAnalysisTextVisible, setPhotoAnalysisTextVisible] = useState(false);
+  const [photoAnalysisText, setPhotoAnalysisText] = useState<string>(PHOTO_ANALYSIS_TEXT_POOL[0]);
+  const [photoOverlayProfile, setPhotoOverlayProfile] = useState<PhotoOverlayProfile>({
+    showTracking: true,
+    showScanLine: true,
+    showText: true,
+    showGlitch: false,
+    particleCount: 9,
+    scanDurationMs: 4400,
+    scanDelayMs: 2600,
+  });
 
   const timersRef = useRef<number[]>([]);
   const fadeIntervalRef = useRef<number | null>(null);
@@ -106,6 +312,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const preloadedVideoObjectUrlsRef = useRef<string[]>([]);
   const preFadeTriggeredRef = useRef(false);
   const returnSequenceTimersRef = useRef<number[]>([]);
+  const photoOverlayTimersRef = useRef<number[]>([]);
 
   const resolveActiveVideo = () => {
     const resolve = activeVideoResolveRef.current;
@@ -265,11 +472,12 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         const baseVisibleMs = isDedicationBlock ? DEDICATION_VISIBLE_MS : isCitaBlock ? CITA_VISIBLE_MS : CREDIT_VISIBLE_MS;
         const longTextMultiplier = isLongTextBlock ? LONG_TEXT_MULTIPLIER : 1;
         const characterMultiplier = isCharacterCreditBlock ? CHARACTER_CREDIT_MULTIPLIER : 1;
+        const initialAltaMesaMultiplier = i === 0 ? 1.2 : 1;
         const animatedVisibleMs = Math.round(baseVisibleMs * longTextMultiplier * characterMultiplier);
         const minHoldForDelayedDetails = isCharacterCreditBlock
           ? delayedDetailLastRevealMs + DELAYED_DETAIL_POST_REVEAL_HOLD_MS
           : 0;
-        const visibleMs = Math.max(animatedVisibleMs, minHoldForDelayedDetails);
+        const visibleMs = Math.max(Math.round(animatedVisibleMs * initialAltaMesaMultiplier), minHoldForDelayedDetails);
         await wait(visibleMs);
         if (cancelled) return;
 
@@ -374,6 +582,9 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       activeVideoResolveRef.current = null;
       setFullscreenVideoVisible(false);
       setFullscreenVideoSrc(null);
+
+      photoOverlayTimersRef.current.forEach((id) => window.clearTimeout(id));
+      photoOverlayTimersRef.current = [];
     };
   }, [active]);
 
@@ -404,6 +615,71 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       cancelled = true;
     };
   }, [fullscreenVideoSrc]);
+
+  useEffect(() => {
+    photoOverlayTimersRef.current.forEach((id) => window.clearTimeout(id));
+    photoOverlayTimersRef.current = [];
+
+    setPhotoBlackFade(false);
+    setPhotoFocusBlur(false);
+    setPhotoTrackingVisible(false);
+    setPhotoScanLineActive(false);
+    setPhotoGlitchActive(false);
+    setPhotoAnalysisTextVisible(false);
+
+    if (!photoVisible || !photoCurrent) return;
+
+    const basename = getPhotoBasename(photoCurrent);
+    const profile = getPhotoOverlayProfile(basename);
+    const hash = hashString(basename);
+    const phrase = PHOTO_ANALYSIS_TEXT_POOL[hash % PHOTO_ANALYSIS_TEXT_POOL.length];
+    setPhotoOverlayProfile(profile);
+    setPhotoAnalysisText(phrase);
+    setPhotoOverlayEpoch((value) => value + 1);
+
+    const addOverlayTimer = (ms: number, fn: () => void) => {
+      const id = window.setTimeout(fn, ms);
+      photoOverlayTimersRef.current.push(id);
+    };
+
+    // Step 1-3: black flash, slight blur and autofocus.
+    setPhotoBlackFade(true);
+    setPhotoFocusBlur(true);
+    addOverlayTimer(220, () => setPhotoFocusBlur(false));
+    addOverlayTimer(320, () => setPhotoBlackFade(false));
+
+    // Step 4-5: brief corner tracking and subtle analysis beep.
+    if (profile.showTracking) {
+      addOverlayTimer(240, () => setPhotoTrackingVisible(true));
+      addOverlayTimer(940, () => setPhotoTrackingVisible(false));
+    }
+    addOverlayTimer(260, () => playSfx("/sounds/shortbeep.mp3", 0.03));
+
+    // Step 6: delayed scan line start.
+    if (profile.showScanLine) {
+      addOverlayTimer(profile.scanDelayMs, () => setPhotoScanLineActive(true));
+    }
+
+    // Step 7-8: decrypted analysis text appears briefly and then fades away.
+    if (profile.showText) {
+      addOverlayTimer(420, () => setPhotoAnalysisTextVisible(true));
+      addOverlayTimer(2440, () => setPhotoAnalysisTextVisible(false));
+    }
+
+    // Step 8: one-time micro glitch variation.
+    if (profile.showGlitch) {
+      addOverlayTimer(760, () => {
+        setPhotoGlitchActive(true);
+        const endId = window.setTimeout(() => setPhotoGlitchActive(false), 100);
+        photoOverlayTimersRef.current.push(endId);
+      });
+    }
+
+    return () => {
+      photoOverlayTimersRef.current.forEach((id) => window.clearTimeout(id));
+      photoOverlayTimersRef.current = [];
+    };
+  }, [photoCurrent, photoVisible]);
 
   useEffect(() => {
     returnSequenceTimersRef.current.forEach((id) => window.clearTimeout(id));
@@ -474,6 +750,8 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
     }
   };
 
+  const isPhotoOverlayActive = photoVisible && !!photoCurrent;
+
   return (
     <div className="fixed inset-0 z-[12000] overflow-hidden bg-black" style={{ opacity: overlayVisible ? 1 : 0, transition: "opacity 1500ms ease" }}>
       <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:linear-gradient(rgba(214,173,74,0.35)_1px,transparent_1px),linear-gradient(90deg,rgba(214,173,74,0.35)_1px,transparent_1px)] [background-size:36px_36px]" />
@@ -481,22 +759,96 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       {(photoCurrent || photoPrevious) && (
         <div className="pointer-events-none absolute inset-0">
           {photoPrevious && (
-            <img
-              src={photoPrevious}
-              alt="Creditos anterior"
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] will-change-transform ${photoPreviousDirection === "right" ? "[animation:debrief-credit-pan-right_7000ms_ease-out_forwards]" : "[animation:debrief-credit-pan-left_7000ms_ease-out_forwards]"} ${photoVisible ? "opacity-0" : "opacity-[0.85]"}`}
-            />
+            <div className={`absolute inset-0 transition-opacity duration-[2000ms] ${photoVisible ? "opacity-0" : "opacity-[0.85]"}`}>
+              <img
+                src={photoPrevious}
+                alt="Creditos anterior"
+                className={`absolute inset-0 h-full w-full object-cover will-change-transform ${photoPreviousDirection === "right" ? "[animation:debrief-credit-pan-right_7000ms_ease-out_forwards]" : "[animation:debrief-credit-pan-left_7000ms_ease-out_forwards]"}`}
+              />
+            </div>
           )}
 
           {photoCurrent && (
-            <img
-              src={photoCurrent}
-              alt="Creditos"
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[2000ms] will-change-transform ${photoCurrentDirection === "right" ? "[animation:debrief-credit-pan-right_7000ms_ease-out_forwards]" : "[animation:debrief-credit-pan-left_7000ms_ease-out_forwards]"} ${photoVisible ? "opacity-[0.85]" : "opacity-0"}`}
-            />
+            <div
+              className={`absolute inset-0 transition-[opacity,filter] duration-[2000ms] ${photoVisible ? "opacity-[0.85]" : "opacity-0"} ${
+                photoFocusBlur ? "blur-[1.6px]" : "blur-0"
+              } ${photoGlitchActive ? "animate-hud-micro-glitch" : ""}`}
+            >
+              <div className="absolute inset-0 [animation:debrief-photo-breathe_10.5s_ease-in-out_infinite]">
+                <img
+                  src={photoCurrent}
+                  alt="Creditos"
+                  className={`absolute inset-0 h-full w-full object-cover will-change-transform ${photoCurrentDirection === "right" ? "[animation:debrief-credit-pan-right_7000ms_ease-out_forwards]" : "[animation:debrief-credit-pan-left_7000ms_ease-out_forwards]"}`}
+                />
+              </div>
+            </div>
+          )}
+
+          {isPhotoOverlayActive && (
+            <>
+              <div
+                className="absolute inset-0 opacity-[0.09] [background-image:repeating-linear-gradient(to_bottom,rgba(226,189,112,0.9)_0px,rgba(226,189,112,0.9)_1px,transparent_1px,transparent_4px)] [animation:debrief-photo-scanlines_5400ms_ease-in-out_infinite]"
+                key={`scanlines-${photoOverlayEpoch}`}
+              />
+              <div className="absolute inset-0 opacity-[0.045] [background-image:linear-gradient(rgba(166,126,53,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(166,126,53,0.55)_1px,transparent_1px)] [background-size:38px_38px]" />
+
+              <div className="absolute inset-x-[9%] top-[12%] flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.24em] text-[#bfd9ec]/82 [animation:debrief-surveillance-flicker_1700ms_steps(2,end)_infinite]">
+                <span>SURVEILLANCE FEED</span>
+                <span>LIVE ANALYSIS</span>
+              </div>
+
+              <div className="absolute inset-x-[9%] bottom-[12%] flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.22em] text-[#bfd9ec]/80 [animation:debrief-surveillance-flicker_1900ms_steps(2,end)_infinite]">
+                <span>SECTOR 07</span>
+                <span>ANALYZING...</span>
+              </div>
+
+              <div className="absolute left-[11%] top-[24%] h-px w-[54%] bg-[#d8ebf7]/32 [animation:debrief-surveillance-feed-line_3300ms_ease-in-out_infinite]" />
+              <div className="absolute left-[8%] top-[66%] h-px w-[48%] bg-[#d8ebf7]/28 [animation:debrief-surveillance-feed-line_3900ms_ease-in-out_infinite_reverse]" />
+
+              {photoTrackingVisible && photoOverlayProfile.showTracking && (
+                <div className="absolute inset-0 [animation:debrief-photo-tracking-in_700ms_ease-out_forwards]" key={`tracking-${photoOverlayEpoch}`}>
+                  <span className="absolute left-[13%] top-[14%] h-[24px] w-[24px] border-l border-t border-[#e7c278]/76" />
+                  <span className="absolute right-[13%] top-[14%] h-[24px] w-[24px] border-r border-t border-[#e7c278]/76" />
+                  <span className="absolute bottom-[15%] left-[13%] h-[24px] w-[24px] border-b border-l border-[#e7c278]/76" />
+                  <span className="absolute bottom-[15%] right-[13%] h-[24px] w-[24px] border-b border-r border-[#e7c278]/76" />
+                </div>
+              )}
+
+              {photoScanLineActive && photoOverlayProfile.showScanLine && (
+                <div className="absolute inset-x-0 top-0 h-[28%] opacity-0 [backdrop-filter:brightness(1.06)_contrast(1.05)_saturate(1.03)] [animation:debrief-photo-scan-pass_var(--scan-ms)_linear_infinite]" style={{ ["--scan-ms" as string]: `${photoOverlayProfile.scanDurationMs + 2600}ms` }}>
+                  <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.92),transparent)]" />
+                </div>
+              )}
+
+              {PHOTO_ANALYSIS_PARTICLES.slice(0, photoOverlayProfile.particleCount).map((particle, index) => (
+                <span
+                  key={`photo-particle-${index}-${photoOverlayEpoch}`}
+                  className="absolute h-[2px] w-[2px] rounded-full bg-gold/38 shadow-[0_0_5px_rgba(214,173,74,0.26)]"
+                  style={{
+                    left: particle.left,
+                    top: particle.top,
+                    animation: `debrief-photo-particle ${particle.duration} ease-in-out ${particle.delay} infinite`,
+                  }}
+                />
+              ))}
+
+              {photoAnalysisTextVisible && photoOverlayProfile.showText && (
+                <div className="absolute left-1/2 top-[18%] -translate-x-1/2" key={`analysis-text-${photoOverlayEpoch}`}>
+                  <DecryptText
+                    text={photoAnalysisText}
+                    active={photoAnalysisTextVisible}
+                    durationMs={760}
+                    revealDelayMs={100}
+                    playCompleteSfx={false}
+                    className="font-mono text-[11px] uppercase tracking-[0.3em] text-[#d7b06b]/90 [text-shadow:0_0_10px_rgba(214,173,74,0.24)] md:text-[12px]"
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_52%,rgba(0,0,0,0.26)_100%)]" />
+          <div className={`absolute inset-0 bg-black transition-opacity duration-300 ${photoBlackFade ? "opacity-100" : "opacity-0"}`} />
           <div className={`absolute inset-0 bg-black transition-opacity duration-[1700ms] ease-out ${firstPhotoFadeFromBlack ? "opacity-100" : "opacity-0"}`} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.54)_100%)]" />
           <div className="absolute inset-x-0 bottom-0 h-[34vh] bg-[linear-gradient(to_top,rgba(0,0,0,0.6),transparent)]" />
@@ -533,17 +885,43 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
 
           {activeCreditIndex !== null && (
             <div className={`mt-16 transition-opacity duration-[900ms] ${creditVisible ? "opacity-100" : "opacity-0"}`}>
-              <h3 className="font-mono text-[11px] uppercase tracking-[0.42em] text-gold-dim/85 [text-shadow:0_0_8px_rgba(214,173,74,0.12)] md:text-[13px]">
-                {CREDIT_BLOCKS[activeCreditIndex].title}
-              </h3>
+              {activeCreditIndex <= 1 ? (
+                <DecryptText
+                  as="h3"
+                  text={CREDIT_BLOCKS[activeCreditIndex].title}
+                  active={creditVisible}
+                  durationMs={720}
+                  revealDelayMs={40}
+                  className="font-mono text-[11px] uppercase tracking-[0.42em] text-gold-dim/85 md:text-[13px]"
+                />
+              ) : (
+                <h3 className="font-mono text-[11px] uppercase tracking-[0.42em] text-gold-dim/85 [text-shadow:0_0_8px_rgba(214,173,74,0.12)] md:text-[13px]">
+                  {CREDIT_BLOCKS[activeCreditIndex].title}
+                </h3>
+              )}
               <div className="mt-5 space-y-2 md:space-y-3">
                 {CREDIT_BLOCKS[activeCreditIndex].lines.map((line, lineIndex) => {
                   const isDelayedDetailLine = DELAYED_DETAIL_LINES.has(line);
                   const delayedOrder = isDelayedDetailLine ? (DELAYED_DETAIL_SEQUENCE_ORDER[line] ?? 0) : 0;
+                  const isInitialDecryptBlock = activeCreditIndex <= 1;
+                  const isAgentDecryptLine = line === "como AGENTE MANDARIN" || line === "como AGENTE MINERVA";
+
+                  if ((isInitialDecryptBlock && line.trim().length > 0) || isAgentDecryptLine) {
+                    return (
+                      <DecryptText
+                        key={`${CREDIT_BLOCKS[activeCreditIndex].title}-${line}-${lineIndex}`}
+                        text={line}
+                        active={creditVisible}
+                        durationMs={isInitialDecryptBlock ? 700 : 760}
+                        revealDelayMs={isInitialDecryptBlock ? 110 + lineIndex * 70 : 120}
+                        className="font-display text-2xl text-gold-bright md:text-3xl"
+                      />
+                    );
+                  }
 
                   return (
                     <p
-                      key={`${CREDIT_BLOCKS[activeCreditIndex].title}-${line}`}
+                      key={`${CREDIT_BLOCKS[activeCreditIndex].title}-${line}-${lineIndex}`}
                       className={`font-display ${isDelayedDetailLine ? "text-lg text-white/92 md:text-2xl [text-shadow:0_0_8px_rgba(255,255,255,0.12)] [animation:debrief-credit-line-delayed_650ms_ease-out_both]" : "text-2xl text-gold-bright [text-shadow:0_0_10px_rgba(214,173,74,0.16)] md:text-3xl"}`}
                       style={isDelayedDetailLine ? { animationDelay: `${DELAYED_DETAIL_BASE_MS + delayedOrder * DELAYED_DETAIL_STEP_MS}ms` } : undefined}
                     >
@@ -568,7 +946,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           {RETURN_PARTICLES.map((particle) => (
             <span
               key={`${particle.left}-${particle.top}-${particle.delay}`}
-              className={`pointer-events-none absolute h-[2px] w-[2px] rounded-full bg-gold/35 shadow-[0_0_8px_rgba(214,173,74,0.25)] transition-opacity duration-700 ${returnSealVisible ? "opacity-100" : "opacity-0"}`}
+              className={`pointer-events-none absolute h-[3px] w-[3px] rounded-full bg-gold/52 shadow-[0_0_8px_rgba(214,173,74,0.34)] transition-opacity duration-700 ${returnSealVisible ? "opacity-100" : "opacity-0"}`}
               style={{
                 left: particle.left,
                 top: particle.top,
@@ -606,7 +984,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
                   <img
                     src="/images/credits/eli.png"
                     alt="Retrato oficial Mandarin"
-                    className="block h-[108px] w-auto border border-gold/60 bg-black/18 object-contain shadow-[0_0_12px_rgba(214,173,74,0.2)] [animation:debrief-portrait-breathe_9.5s_ease-in-out_infinite] md:h-[136px]"
+                    className="block h-[162px] w-auto border border-gold/60 bg-black/18 object-contain shadow-[0_0_12px_rgba(214,173,74,0.2)] [animation:debrief-portrait-breathe_9.5s_ease-in-out_infinite] md:h-[204px]"
                   />
                   <p className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim">MANDARIN</p>
                   <p className="mt-1 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim/85">AURUM VII</p>
@@ -619,7 +997,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
                   <img
                     src="/images/credits/nata.png"
                     alt="Retrato oficial Minerva"
-                    className="block h-[108px] w-auto -scale-x-100 border border-gold/60 bg-black/18 object-contain shadow-[0_0_12px_rgba(214,173,74,0.2)] [animation:debrief-portrait-breathe_10.2s_ease-in-out_infinite] md:h-[136px]"
+                    className="block h-[162px] w-auto -scale-x-100 border border-gold/60 bg-black/18 object-contain shadow-[0_0_12px_rgba(214,173,74,0.2)] [animation:debrief-portrait-breathe_10.2s_ease-in-out_infinite] md:h-[204px]"
                   />
                   <p className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim">MINERVA</p>
                   <p className="mt-1 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim/85">IMPERIUM</p>

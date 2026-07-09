@@ -548,6 +548,193 @@
     transform: translateY(0);
   }
 }
+@keyframes debrief-photo-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.008);
+  }
+}
+@keyframes debrief-photo-scanlines {
+  0% {
+    transform: translateY(-1px);
+  }
+  50% {
+    transform: translateY(1px);
+  }
+  100% {
+    transform: translateY(-1px);
+  }
+}
+@keyframes debrief-photo-tracking-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  22% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+@keyframes debrief-photo-scan-pass {
+  0% {
+    transform: translateY(-130%);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0;
+  }
+  24% {
+    opacity: 0.72;
+  }
+  54% {
+    transform: translateY(360%);
+    opacity: 0.72;
+  }
+  62% {
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(360%);
+    opacity: 0;
+  }
+}
+@keyframes debrief-photo-particle {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.62;
+  }
+  74% {
+    opacity: 0.24;
+  }
+  100% {
+    transform: translate3d(7px, -11px, 0);
+    opacity: 0;
+  }
+}
+@keyframes debrief-surveillance-sweep {
+  0% {
+    transform: translateY(-62%);
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.26;
+  }
+  100% {
+    transform: translateY(62%);
+    opacity: 0.12;
+  }
+}
+@keyframes debrief-surveillance-flicker {
+  0%, 100% {
+    opacity: 0.82;
+  }
+  49% {
+    opacity: 0.76;
+  }
+  50% {
+    opacity: 0.56;
+  }
+  51% {
+    opacity: 0.8;
+  }
+}
+@keyframes debrief-surveillance-feed-line {
+  0% {
+    transform: translateX(-4%);
+    opacity: 0.24;
+  }
+  50% {
+    transform: translateX(4%);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(-4%);
+    opacity: 0.24;
+  }
+}
+@keyframes debrief-surveillance-bar {
+  0% {
+    opacity: 0.28;
+    transform: scaleX(0.92);
+  }
+  50% {
+    opacity: 0.62;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0.28;
+    transform: scaleX(0.92);
+  }
+}
+@keyframes debrief-surveillance-track {
+  0% {
+    transform: translate(-2.8vw, -1.2vh);
+    opacity: 0.72;
+  }
+  35% {
+    transform: translate(1.7vw, -0.6vh);
+    opacity: 0.9;
+  }
+  70% {
+    transform: translate(2.3vw, 1.3vh);
+    opacity: 0.76;
+  }
+  100% {
+    transform: translate(-2.8vw, -1.2vh);
+    opacity: 0.72;
+  }
+}
+@keyframes debrief-surveillance-ring-rotate {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.56;
+  }
+  50% {
+    opacity: 0.82;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 0.56;
+  }
+}
+@keyframes debrief-surveillance-link {
+  0% {
+    transform: rotate(-7deg) translateX(-6%);
+    opacity: 0.2;
+  }
+  50% {
+    transform: rotate(-7deg) translateX(6%);
+    opacity: 0.44;
+  }
+  100% {
+    transform: rotate(-7deg) translateX(-6%);
+    opacity: 0.2;
+  }
+}
+@keyframes debrief-surveillance-scan-beam {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.85;
+  }
+  78% {
+    opacity: 0.72;
+  }
+  100% {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
 @keyframes debrief-final-seal-breathe {
   0%, 100% {
     transform: scale(1) rotate(-0.45deg);
@@ -563,11 +750,14 @@
     transform: translate3d(0, 0, 0);
     opacity: 0;
   }
-  18% {
-    opacity: 0.9;
+  12% {
+    opacity: 0.82;
   }
-  78% {
-    opacity: 0.45;
+  44% {
+    opacity: 0.34;
+  }
+  66% {
+    opacity: 0.06;
   }
   100% {
     transform: translate3d(9px, -16px, 0);
