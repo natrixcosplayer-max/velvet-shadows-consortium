@@ -235,17 +235,19 @@ function Missions() {
 
       <div className="space-y-4 text-gold">
 
-        <p>• Analice las coordenadas proporcionadas por la Comisión e inicie la navegación hacia el punto de recuperación del activo.</p>
+        <p>• Diríjase al punto de extracción siguiendo las coordenadas proporcionadas.</p>
 
-        <p>• Una vez en destino, descifre las credenciales proporcionadas más abajo.</p>
+        <p>• Descifre las credenciales.</p>
 
-        <p>• Si la desencriptación resulta insuficiente, recupere la información del archivo <strong>Pista Visual</strong> para obtener inteligencia adicional.</p>
+        <p>• Consulte <strong>Pista Visual</strong> si precisa inteligencia adicional.</p>
 
-        <p>• En caso de detectar seguimiento o actividad sospechosa, interrumpa temporalmente la operación. Adopte una cobertura civil y permanezca integrado en el entorno tomando un cocktail.</p>
+        <p>• Si detecta seguimiento, adopte cobertura civil tomando un cóctel con Minerva.</p>
 
-        <p>• Recupere el activo sin comprometer la misión.</p>
+        <p>• Recupere el activo.</p>
 
-        <p>• Confirme la recuperación del activo ante la Comisión.</p>
+        <p>• Informe a la Comisión.</p>
+
+        <p>• Abandone la zona en el vehículo asignado.</p>
 
       </div>
 
