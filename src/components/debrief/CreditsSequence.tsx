@@ -118,7 +118,7 @@ function DecryptText({
   as = "p",
   durationMs = 760,
   revealDelayMs = 0,
-  playCompleteSfx = true,
+  playCompleteSfx = false,
 }: DecryptTextProps) {
   const [displayText, setDisplayText] = useState(text);
   const [isComplete, setIsComplete] = useState(false);
@@ -348,7 +348,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         const objectUrl = URL.createObjectURL(blob);
         preloadedVideoSrcRef.current[src] = objectUrl;
         preloadedVideoObjectUrlsRef.current.push(objectUrl);
-        return objectUrl;
+      playCompleteSfx = false,
       } catch {
         return src;
       }
@@ -784,74 +784,50 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
             </div>
           )}
 
-          {isPhotoOverlayActive && (
-            <>
-              <div
-                className="absolute inset-0 opacity-[0.09] [background-image:repeating-linear-gradient(to_bottom,rgba(226,189,112,0.9)_0px,rgba(226,189,112,0.9)_1px,transparent_1px,transparent_4px)] [animation:debrief-photo-scanlines_5400ms_ease-in-out_infinite]"
-                key={`scanlines-${photoOverlayEpoch}`}
-              />
-              <div className="absolute inset-0 opacity-[0.045] [background-image:linear-gradient(rgba(166,126,53,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(166,126,53,0.55)_1px,transparent_1px)] [background-size:38px_38px]" />
-
-              <div className="absolute inset-x-[9%] top-[12%] flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.24em] text-[#bfd9ec]/82 [animation:debrief-surveillance-flicker_1700ms_steps(2,end)_infinite]">
-                <span>SURVEILLANCE FEED</span>
-                <span>LIVE ANALYSIS</span>
-              </div>
-
-              <div className="absolute inset-x-[9%] bottom-[12%] flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.22em] text-[#bfd9ec]/80 [animation:debrief-surveillance-flicker_1900ms_steps(2,end)_infinite]">
-                <span>SECTOR 07</span>
-                <span>ANALYZING...</span>
-              </div>
-
-              <div className="absolute left-[11%] top-[24%] h-px w-[54%] bg-[#d8ebf7]/32 [animation:debrief-surveillance-feed-line_3300ms_ease-in-out_infinite]" />
-              <div className="absolute left-[8%] top-[66%] h-px w-[48%] bg-[#d8ebf7]/28 [animation:debrief-surveillance-feed-line_3900ms_ease-in-out_infinite_reverse]" />
-
-              {photoTrackingVisible && photoOverlayProfile.showTracking && (
-                <div className="absolute inset-0 [animation:debrief-photo-tracking-in_700ms_ease-out_forwards]" key={`tracking-${photoOverlayEpoch}`}>
-                  <span className="absolute left-[13%] top-[14%] h-[24px] w-[24px] border-l border-t border-[#e7c278]/76" />
-                  <span className="absolute right-[13%] top-[14%] h-[24px] w-[24px] border-r border-t border-[#e7c278]/76" />
-                  <span className="absolute bottom-[15%] left-[13%] h-[24px] w-[24px] border-b border-l border-[#e7c278]/76" />
-                  <span className="absolute bottom-[15%] right-[13%] h-[24px] w-[24px] border-b border-r border-[#e7c278]/76" />
-                </div>
-              )}
-
-              {photoScanLineActive && photoOverlayProfile.showScanLine && (
-                <div className="absolute inset-x-0 top-0 h-[28%] opacity-0 [backdrop-filter:brightness(1.06)_contrast(1.05)_saturate(1.03)] [animation:debrief-photo-scan-pass_var(--scan-ms)_linear_infinite]" style={{ ["--scan-ms" as string]: `${photoOverlayProfile.scanDurationMs + 2600}ms` }}>
-                  <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.92),transparent)]" />
-                </div>
-              )}
-
-              {PHOTO_ANALYSIS_PARTICLES.slice(0, photoOverlayProfile.particleCount).map((particle, index) => (
-                <span
-                  key={`photo-particle-${index}-${photoOverlayEpoch}`}
-                  className="absolute h-[2px] w-[2px] rounded-full bg-gold/38 shadow-[0_0_5px_rgba(214,173,74,0.26)]"
-                  style={{
-                    left: particle.left,
-                    top: particle.top,
-                    animation: `debrief-photo-particle ${particle.duration} ease-in-out ${particle.delay} infinite`,
-                  }}
-                />
-              ))}
-
-              {photoAnalysisTextVisible && photoOverlayProfile.showText && (
-                <div className="absolute left-1/2 top-[18%] -translate-x-1/2" key={`analysis-text-${photoOverlayEpoch}`}>
-                  <DecryptText
-                    text={photoAnalysisText}
-                    active={photoAnalysisTextVisible}
-                    durationMs={760}
-                    revealDelayMs={100}
-                    playCompleteSfx={false}
-                    className="font-mono text-[11px] uppercase tracking-[0.3em] text-[#d7b06b]/90 [text-shadow:0_0_10px_rgba(214,173,74,0.24)] md:text-[12px]"
-                  />
-                </div>
-              )}
-            </>
-          )}
-
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_52%,rgba(0,0,0,0.26)_100%)]" />
           <div className={`absolute inset-0 bg-black transition-opacity duration-300 ${photoBlackFade ? "opacity-100" : "opacity-0"}`} />
           <div className={`absolute inset-0 bg-black transition-opacity duration-[1700ms] ease-out ${firstPhotoFadeFromBlack ? "opacity-100" : "opacity-0"}`} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.54)_100%)]" />
           <div className="absolute inset-x-0 bottom-0 h-[34vh] bg-[linear-gradient(to_top,rgba(0,0,0,0.6),transparent)]" />
+          <div className={`absolute inset-0 transition-opacity duration-[2000ms] ${photoVisible ? "opacity-100" : "opacity-0"}`}>
+            {isPhotoOverlayActive && (
+              <>
+                <div
+                  className="absolute inset-0 opacity-[0.09] [background-image:repeating-linear-gradient(to_bottom,rgba(226,189,112,0.9)_0px,rgba(226,189,112,0.9)_1px,transparent_1px,transparent_4px)] [animation:debrief-photo-scanlines_5400ms_ease-in-out_infinite]"
+                  key={`scanlines-${photoOverlayEpoch}`}
+                />
+                <div className="absolute inset-0 opacity-[0.045] [background-image:linear-gradient(rgba(166,126,53,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(166,126,53,0.55)_1px,transparent_1px)] [background-size:38px_38px]" />
+
+                <div className="absolute inset-x-[9%] top-[12%] flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.24em] text-[#bfd9ec]/82 [animation:debrief-surveillance-flicker_1700ms_steps(2,end)_infinite]">
+                  <span>SURVEILLANCE FEED</span>
+                  <span>LIVE ANALYSIS</span>
+                </div>
+
+                <div className="absolute inset-x-[9%] bottom-[12%] flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.22em] text-[#bfd9ec]/80 [animation:debrief-surveillance-flicker_1900ms_steps(2,end)_infinite]">
+                  <span>SECTOR 07</span>
+                  <span>ANALYZING...</span>
+                </div>
+
+                <div className="absolute left-[11%] top-[24%] h-px w-[54%] bg-[#d8ebf7]/32 [animation:debrief-surveillance-feed-line_3300ms_ease-in-out_infinite]" />
+                <div className="absolute left-[8%] top-[66%] h-px w-[48%] bg-[#d8ebf7]/28 [animation:debrief-surveillance-feed-line_3900ms_ease-in-out_infinite_reverse]" />
+
+                {photoTrackingVisible && photoOverlayProfile.showTracking && (
+                  <div className="absolute inset-0 [animation:debrief-photo-tracking-in_700ms_ease-out_forwards]" key={`tracking-${photoOverlayEpoch}`}>
+                    <span className="absolute left-[13%] top-[14%] h-[24px] w-[24px] border-l border-t border-[#e7c278]/76" />
+                    <span className="absolute right-[13%] top-[14%] h-[24px] w-[24px] border-r border-t border-[#e7c278]/76" />
+                    <span className="absolute bottom-[15%] left-[13%] h-[24px] w-[24px] border-b border-l border-[#e7c278]/76" />
+                    <span className="absolute bottom-[15%] right-[13%] h-[24px] w-[24px] border-b border-r border-[#e7c278]/76" />
+                  </div>
+                )}
+
+                {photoScanLineActive && photoOverlayProfile.showScanLine && (
+                  <div className="absolute inset-x-0 top-0 h-[28%] opacity-0 [backdrop-filter:brightness(1.06)_contrast(1.05)_saturate(1.03)] [animation:debrief-photo-scan-pass_var(--scan-ms)_linear_infinite]" style={{ ["--scan-ms" as string]: `${photoOverlayProfile.scanDurationMs + 2600}ms` }}>
+                    <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.92),transparent)]" />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
 
