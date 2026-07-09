@@ -663,7 +663,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
     // Step 7-8: decrypted analysis text appears briefly and then fades away.
     if (profile.showText) {
       addOverlayTimer(420, () => setPhotoAnalysisTextVisible(true));
-      addOverlayTimer(2440, () => setPhotoAnalysisTextVisible(false));
+      addOverlayTimer(1800, () => setPhotoAnalysisTextVisible(false));
     }
 
     // Step 8: one-time micro glitch variation.
@@ -750,7 +750,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
     }
   };
 
-  const isPhotoOverlayActive = photoVisible && !!photoCurrent;
+  const isPhotoOverlayActive = !!photoCurrent;
 
   return (
     <div className="fixed inset-0 z-[12000] overflow-hidden bg-black" style={{ opacity: overlayVisible ? 1 : 0, transition: "opacity 1500ms ease" }}>
@@ -811,8 +811,11 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
                 <div className="absolute left-[11%] top-[24%] h-px w-[54%] bg-[#d8ebf7]/32 [animation:debrief-surveillance-feed-line_3300ms_ease-in-out_infinite]" />
                 <div className="absolute left-[8%] top-[66%] h-px w-[48%] bg-[#d8ebf7]/28 [animation:debrief-surveillance-feed-line_3900ms_ease-in-out_infinite_reverse]" />
 
-                {photoTrackingVisible && photoOverlayProfile.showTracking && (
-                  <div className="absolute inset-0 [animation:debrief-photo-tracking-in_700ms_ease-out_forwards]" key={`tracking-${photoOverlayEpoch}`}>
+                {photoOverlayProfile.showTracking && (
+                  <div
+                    className={`absolute inset-0 transition-opacity duration-700 ${photoTrackingVisible ? "opacity-100" : "opacity-0"}`}
+                    key={`tracking-${photoOverlayEpoch}`}
+                  >
                     <span className="absolute left-[13%] top-[14%] h-[24px] w-[24px] border-l border-t border-[#e7c278]/76" />
                     <span className="absolute right-[13%] top-[14%] h-[24px] w-[24px] border-r border-t border-[#e7c278]/76" />
                     <span className="absolute bottom-[15%] left-[13%] h-[24px] w-[24px] border-b border-l border-[#e7c278]/76" />
@@ -820,9 +823,25 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
                   </div>
                 )}
 
-                {photoScanLineActive && photoOverlayProfile.showScanLine && (
-                  <div className="absolute inset-x-0 top-0 h-[28%] opacity-0 [backdrop-filter:brightness(1.06)_contrast(1.05)_saturate(1.03)] [animation:debrief-photo-scan-pass_var(--scan-ms)_linear_infinite]" style={{ ["--scan-ms" as string]: `${photoOverlayProfile.scanDurationMs + 2600}ms` }}>
+                {photoOverlayProfile.showScanLine && (
+                  <div
+                    className={`absolute inset-x-0 top-0 h-[28%] transition-opacity duration-700 [backdrop-filter:brightness(1.06)_contrast(1.05)_saturate(1.03)] ${photoScanLineActive ? "opacity-100" : "opacity-0"} [animation:debrief-photo-scan-pass_var(--scan-ms)_linear_infinite]`}
+                    style={{ ["--scan-ms" as string]: `${photoOverlayProfile.scanDurationMs + 2600}ms` }}
+                  >
                     <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.92),transparent)]" />
+                  </div>
+                )}
+
+                {photoOverlayProfile.showText && (
+                  <div className={`absolute left-1/2 top-[18%] -translate-x-1/2 transition-opacity duration-700 ${photoAnalysisTextVisible ? "opacity-100" : "opacity-0"}`} key={`analysis-text-${photoOverlayEpoch}`}>
+                    <DecryptText
+                      text={photoAnalysisText}
+                      active={photoAnalysisTextVisible}
+                      durationMs={760}
+                      revealDelayMs={100}
+                      playCompleteSfx={false}
+                      className="font-mono text-[11px] uppercase tracking-[0.3em] text-[#d7b06b]/90 [text-shadow:0_0_10px_rgba(214,173,74,0.24)] md:text-[12px]"
+                    />
                   </div>
                 )}
               </>
@@ -960,7 +979,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
                   <img
                     src="/images/credits/eli.png"
                     alt="Retrato oficial Mandarin"
-                    className="block h-[162px] w-auto border border-gold/60 bg-black/18 object-contain shadow-[0_0_12px_rgba(214,173,74,0.2)] [animation:debrief-portrait-breathe_9.5s_ease-in-out_infinite] md:h-[204px]"
+                    className="block h-[194px] w-auto border border-gold/60 bg-black/18 object-contain shadow-[0_0_12px_rgba(214,173,74,0.2)] [animation:debrief-portrait-breathe_9.5s_ease-in-out_infinite] md:h-[245px]"
                   />
                   <p className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim">MANDARIN</p>
                   <p className="mt-1 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim/85">AURUM VII</p>
@@ -973,7 +992,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
                   <img
                     src="/images/credits/nata.png"
                     alt="Retrato oficial Minerva"
-                    className="block h-[162px] w-auto -scale-x-100 border border-gold/60 bg-black/18 object-contain shadow-[0_0_12px_rgba(214,173,74,0.2)] [animation:debrief-portrait-breathe_10.2s_ease-in-out_infinite] md:h-[204px]"
+                    className="block h-[194px] w-auto -scale-x-100 border border-gold/60 bg-black/18 object-contain shadow-[0_0_12px_rgba(214,173,74,0.2)] [animation:debrief-portrait-breathe_10.2s_ease-in-out_infinite] md:h-[245px]"
                   />
                   <p className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim">MINERVA</p>
                   <p className="mt-1 text-center font-mono text-[9px] uppercase tracking-[0.28em] text-gold-dim/85">IMPERIUM</p>
