@@ -29,6 +29,44 @@ const OPERATION = {
     "https://www.google.com/maps/dir/?api=1&destination=39.469900,-0.376300",
 };
 
+const PROTOCOL_ORDERS = [
+  {
+    number: "01",
+    label: "Desplazamiento",
+    text: "Diríjase al punto de extracción siguiendo las coordenadas proporcionadas.",
+  },
+  {
+    number: "02",
+    label: "Credenciales",
+    text: "Descifre las credenciales.",
+  },
+  {
+    number: "03",
+    label: "Inteligencia",
+    text: 'Consulte "Pista Visual" si fuera necesario.',
+  },
+  {
+    number: "04",
+    label: "Cobertura",
+    text: "Si detecta seguimiento, adopte cobertura civil tomando un cóctel con Minerva.",
+  },
+  {
+    number: "05",
+    label: "Recuperación",
+    text: "Recupere el activo.",
+  },
+  {
+    number: "06",
+    label: "Confirmación",
+    text: "Informe a la Comisión.",
+  },
+  {
+    number: "07",
+    label: "Extracción",
+    text: "Abandone la zona discretamente. El vehículo asignado aguardará en el punto de extracción.",
+  },
+] as const;
+
 function Missions() {
   const [nowCest, setNowCest] = useState("");
   const navigateButtonRef = useRef<HTMLAnchorElement | null>(null);
@@ -233,22 +271,26 @@ function Missions() {
 
     <Panel title="Protocolo Operativo" latin="Mandatum" className="mt-8">
 
-      <div className="space-y-4 text-gold">
+      <div className="mx-auto max-w-4xl">
+        <div className="border-y border-gold/30 py-5 text-center">
+          <p className="font-mono text-[9px] tracking-[0.45em] uppercase text-gold-dim">
+            OPERACIÓN CUMPLE
+          </p>
+          <p className="mt-2 font-mono text-[10px] tracking-[0.35em] uppercase text-gold/80">
+            AUTORIDAD: MAGISTRADA LIVIA
+          </p>
+        </div>
 
-        <p>• Diríjase al punto de extracción siguiendo las coordenadas proporcionadas.</p>
-
-        <p>• Descifre las credenciales.</p>
-
-        <p>• Consulte <strong>Pista Visual</strong> si precisa inteligencia adicional.</p>
-
-        <p>• Si detecta seguimiento, adopte cobertura civil tomando un cóctel con Minerva.</p>
-
-        <p>• Recupere el activo.</p>
-
-        <p>• Informe a la Comisión.</p>
-
-        <p>• Abandone la zona en el vehículo asignado.</p>
-
+        <div className="mt-6 space-y-4 sm:space-y-5">
+          {PROTOCOL_ORDERS.map((order, index) => (
+            <ProtocolOrderCard
+              key={order.number}
+              order={order}
+              index={index}
+              total={PROTOCOL_ORDERS.length}
+            />
+          ))}
+        </div>
       </div>
 
     </Panel>
@@ -662,6 +704,114 @@ function SealField({ label, value }: { label: string; value: string }) {
     <div className="border border-gold-dim p-3">
       <p className="font-mono text-[9px] tracking-[0.3em] text-gold-dim uppercase">{label}</p>
       <p className="font-display text-2xl text-gold mt-1">{value}</p>
+    </div>
+  );
+}
+
+function ProtocolOrderCard({
+  order,
+  index,
+  total,
+}: {
+  order: (typeof PROTOCOL_ORDERS)[number];
+  index: number;
+  total: number;
+}) {
+  const [revealStage, setRevealStage] = useState(0);
+  const [flashVisible, setFlashVisible] = useState(true);
+
+  useEffect(() => {
+    const revealTimeline = [0, 120, 240, 360, 500];
+    const timers: number[] = [];
+
+    revealTimeline.forEach((delay, stage) => {
+      const id = window.setTimeout(() => {
+        setRevealStage(stage);
+      }, index * 100 + delay);
+      timers.push(id);
+    });
+
+    const flashId = window.setTimeout(() => setFlashVisible(false), index * 100 + 300);
+
+    return () => {
+      timers.forEach((timerId) => window.clearTimeout(timerId));
+      window.clearTimeout(flashId);
+    };
+  }, [index]);
+
+  const visibleTitleLength = Math.min(
+    order.label.length,
+    revealStage === 0 ? 0 : revealStage === 1 ? 1 : revealStage === 2 ? Math.max(2, Math.ceil(order.label.length * 0.45)) : revealStage === 3 ? Math.max(3, Math.ceil(order.label.length * 0.75)) : order.label.length,
+  );
+
+  const titleText =
+    visibleTitleLength >= order.label.length
+      ? order.label
+      : `${order.label.slice(0, visibleTitleLength)}${"█".repeat(order.label.length - visibleTitleLength)}`;
+
+  return (
+    <div
+      className="group relative overflow-hidden border border-gold/30 bg-black/55 px-5 py-6 transition-all duration-300 ease-out sm:px-6 sm:py-7 md:px-8 hover:border-gold/70 hover:bg-black/65 hover:-translate-y-[2px]"
+      style={{
+        opacity: revealStage === 0 ? 0 : 1,
+        animationDelay: `${index * 100}ms`,
+      }}
+    >
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(214,173,74,0.14)_0%,transparent_58%)] transition-opacity duration-300 ${
+          flashVisible ? "opacity-100" : "opacity-0"
+        }`}
+      />
+
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent"
+      />
+
+      <div className="relative grid gap-4 md:grid-cols-[96px_1fr] md:gap-6">
+        <div className="flex items-start md:justify-center">
+          <div className="min-w-[72px] border border-gold/25 bg-black/35 px-3 py-3 text-center">
+            <p className="font-display text-2xl tracking-[0.18em] text-gold">
+              {order.number}
+            </p>
+            <p className="mt-1 font-mono text-[9px] tracking-[0.3em] uppercase text-gold-dim">
+              Secuencia
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <p className="font-mono text-[9px] tracking-[0.38em] uppercase text-gold-dim">
+              {index === 0 ? "PROTOCOLO EMITIDO" : "ORDEN ACTIVA"}
+            </p>
+            <p className="font-display text-2xl sm:text-[2rem] tracking-[0.18em] uppercase text-gold">
+              {titleText}
+            </p>
+          </div>
+
+          <div className="h-px bg-gold/20" />
+
+          <p className="max-w-3xl text-balance font-mono text-[15px] leading-8 text-gold/86 sm:text-base sm:leading-8">
+            {order.text}
+          </p>
+
+          <div className="flex items-center gap-3 pt-1">
+            <span
+              className="h-2 w-2 rounded-full bg-gold/70 shadow-[0_0_0_1px_rgba(212,175,55,0.18)] animate-pulse"
+              style={{ animationDuration: "5.5s" }}
+            />
+            <p className="font-mono text-[10px] tracking-[0.32em] uppercase text-gold-dim">
+              PENDIENTE
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {index < total - 1 && (
+        <div aria-hidden className="mt-6 h-px bg-gold/18 sm:mt-7" />
+      )}
     </div>
   );
 }
