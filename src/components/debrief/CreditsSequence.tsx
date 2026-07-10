@@ -311,6 +311,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const preloadedVideoSrcRef = useRef<Record<string, string>>({});
   const preloadedVideoObjectUrlsRef = useRef<string[]>([]);
   const preFadeTriggeredRef = useRef(false);
+  const fullscreenVideoOriginalSrcRef = useRef<string | null>(null);
   const returnSequenceTimersRef = useRef<number[]>([]);
   const photoOverlayTimersRef = useRef<number[]>([]);
 
@@ -353,12 +354,14 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       }
     };
 
-    const playFullscreenVideo = (src: string, fallbackMs = 18000) =>
+    const playFullscreenVideo = (src: string, fallbackMs = 18000, originalSrc?: string) =>
       new Promise<void>((resolve) => {
         if (cancelled) {
           resolve();
           return;
         }
+
+        fullscreenVideoOriginalSrcRef.current = originalSrc ?? src;
 
         const fallbackId = window.setTimeout(() => {
           resolveActiveVideo();
@@ -376,6 +379,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
             if (!cancelled) {
               setFullscreenVideoSrc(null);
             }
+            fullscreenVideoOriginalSrcRef.current = null;
             resolve();
           }, 280);
           timersRef.current.push(hideId);
@@ -498,7 +502,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           const playableSrc = await resolvePlayableVideoSrc(media.src);
           if (cancelled) return;
 
-          await playFullscreenVideo(playableSrc, 30000);
+          await playFullscreenVideo(playableSrc, 30000, media.src);
           if (cancelled) return;
 
           await wait(300);
@@ -550,7 +554,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       const besoPlayableSrc = await resolvePlayableVideoSrc(besoVideo);
       if (cancelled) return;
 
-      await playFullscreenVideo(besoPlayableSrc, 30000);
+      await playFullscreenVideo(besoPlayableSrc, 30000, besoVideo);
       if (cancelled) return;
 
       await wait(220);
@@ -581,6 +585,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       activeVideoResolveRef.current = null;
       setFullscreenVideoVisible(false);
       setFullscreenVideoSrc(null);
+      fullscreenVideoOriginalSrcRef.current = null;
 
       photoOverlayTimersRef.current.forEach((id) => window.clearTimeout(id));
       photoOverlayTimersRef.current = [];
@@ -739,6 +744,12 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const handleFullscreenVideoTimeUpdate = () => {
     const video = fullscreenVideoRef.current;
     if (!video || preFadeTriggeredRef.current) return;
+
+    const originalSrc = fullscreenVideoOriginalSrcRef.current ?? "";
+    const isPerroVideo = /perro\.mp4/i.test(originalSrc);
+    if (isPerroVideo) {
+      return;
+    }
 
     const { duration, currentTime } = video;
     if (!Number.isFinite(duration) || duration <= 0) return;
