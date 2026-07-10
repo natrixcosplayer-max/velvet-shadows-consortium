@@ -14,6 +14,7 @@ let temporaryMusicTarget: number | null = null;
 let temporaryMusicTargetTimer: ReturnType<typeof setTimeout> | null = null;
 let musicPausedForComms = false;
 let emailMusicDucked = false;
+let devAudioMuted = false;
 
 const MUSIC_VOLUME = 0.07392;
 const MUSIC_DUCK_VOLUME = 0.005;
@@ -30,11 +31,59 @@ const EMAIL_VOICES: Record<string, string> = {
 };
 
 const EMAIL_CONTROLLED_KEY = "atrium-email";
+const DEV_AUDIO_MUTE_KEY = "dev-audio-muted";
 
 let audioContext: AudioContext | null = null;
 let musicSourceNode: MediaElementAudioSourceNode | null = null;
 let musicGainNode: GainNode | null = null;
 let gainAutomationVersion = 0;
+
+function loadDevAudioMutedState() {
+  if (typeof window === "undefined") return;
+  devAudioMuted = window.localStorage.getItem(DEV_AUDIO_MUTE_KEY) === "1";
+}
+
+function persistDevAudioMutedState() {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(DEV_AUDIO_MUTE_KEY, devAudioMuted ? "1" : "0");
+}
+
+function applyDevAudioMutedState() {
+  if (music) {
+    music.muted = devAudioMuted;
+  }
+
+  if (unlockSound) {
+    if (devAudioMuted) {
+      unlockSound.muted = true;
+    }
+  }
+
+  if (controlledAudio) {
+    controlledAudio.muted = devAudioMuted;
+  }
+
+  if (emailVoice) {
+    emailVoice.muted = devAudioMuted;
+  }
+}
+
+loadDevAudioMutedState();
+
+export function isDevAudioMuted() {
+  return devAudioMuted;
+}
+
+export function setDevAudioMuted(muted: boolean) {
+  devAudioMuted = muted;
+  persistDevAudioMutedState();
+  applyDevAudioMutedState();
+}
+
+export function toggleDevAudioMuted() {
+  setDevAudioMuted(!devAudioMuted);
+  return devAudioMuted;
+}
 
 function ensureAudioContext() {
   if (typeof window === "undefined") return null;
@@ -216,6 +265,7 @@ export function playMusic(
   music.preload = "auto";
   music.loop = loop;
   music.volume = 1;
+  music.muted = devAudioMuted;
 
   const safeStartVolume = Math.max(0, Math.min(1, startVolume));
   musicBaseVolume = Math.max(0, Math.min(1, baseVolume));
@@ -359,6 +409,8 @@ export function primeUnlockSound() {
 }
 
 export async function playUnlockSound(volume = 0.45) {
+  if (devAudioMuted) return;
+
   const sound = ensureUnlockSound();
 
   cancelMusicGainAutomation();
@@ -391,6 +443,8 @@ export async function playUnlockSound(volume = 0.45) {
 }
 
 export function playSfx(src: string, volume = 1) {
+  if (devAudioMuted) return;
+
   if (!hasUserGesture) {
     attachGestureUnlockListeners();
   }
@@ -401,6 +455,7 @@ export function playSfx(src: string, volume = 1) {
   }
 
   const sfx = new Audio(src);
+  sfx.muted = devAudioMuted;
   sfx.volume = volume;
   sfx.play().catch(() => {});
 }
@@ -442,6 +497,7 @@ export function playControlledAudio(key: string, src: string, volume = 0.22, loo
   controlledAudio.preload = "auto";
   controlledAudio.loop = loop;
   controlledAudio.volume = volume;
+  controlledAudio.muted = devAudioMuted;
 
   const playPromise = controlledAudio.play();
   if (playPromise) {
@@ -484,6 +540,7 @@ export function playEmailVoice(id: string) {
   emailVoice = audio;
   audio.preload = "auto";
   audio.volume = 0.58;
+  audio.muted = devAudioMuted;
 
   emailMusicDucked = Boolean(music && !music.paused);
   if (emailMusicDucked) {

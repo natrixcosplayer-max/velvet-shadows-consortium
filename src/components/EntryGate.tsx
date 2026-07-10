@@ -1,9 +1,12 @@
 import altaLogo from "../assets/alta.png";
+import { useState } from "react";
 import {
   fadeMusicVolume,
+  isDevAudioMuted,
   playMusic,
   playSfx,
   primeUnlockSound,
+  setDevAudioMuted,
 } from "../audio/atrium-audio-engine";
 
 type Props = {
@@ -11,6 +14,14 @@ type Props = {
 };
 
 export function EntryGate({ onEnter }: Props) {
+  const [devMuted, setDevMuted] = useState(() => (import.meta.env.DEV ? isDevAudioMuted() : false));
+
+  const toggleDevMute = () => {
+    const next = !devMuted;
+    setDevAudioMuted(next);
+    setDevMuted(next);
+  };
+
   return (
     <main className="fixed inset-0 bg-background flex items-center justify-center scanlines overflow-hidden">
 
@@ -31,6 +42,17 @@ export function EntryGate({ onEnter }: Props) {
         aria-hidden
         className="absolute inset-0 pointer-events-none [background:radial-gradient(circle_at_center,transparent_55%,rgba(0,0,0,0.55)_100%)]"
       />
+
+      {import.meta.env.DEV && (
+        <button
+          type="button"
+          onClick={toggleDevMute}
+          className="absolute right-4 top-4 z-20 border border-gold-dim bg-background/70 px-3 py-1.5 font-mono text-[10px] tracking-[0.22em] text-gold-dim uppercase hover:border-gold hover:text-gold"
+          aria-label="Alternar mute de desarrollo"
+        >
+          {devMuted ? "DEV AUDIO OFF" : "DEV AUDIO ON"}
+        </button>
+      )}
 
       <div className="relative text-center max-w-xl w-full px-8 animate-flicker">
 

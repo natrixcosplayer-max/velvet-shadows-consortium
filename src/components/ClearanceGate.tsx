@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Sigil } from "./AppShell";
 import altaLogo from "../assets/alta.png";
-import { attenuateMusicTemporarily, playUnlockSound, primeUnlockSound } from "../audio/atrium-audio-engine";
+import {
+  attenuateMusicTemporarily,
+  isDevAudioMuted,
+  playSfx,
+  playUnlockSound,
+  primeUnlockSound,
+  setDevAudioMuted,
+} from "../audio/atrium-audio-engine";
 const LINES = [
   "> ESTABLECIENDO CANAL CIFRADO...",
   "> VALIDANDO CREDENCIALES DEL OPERATIVO...",
@@ -16,7 +23,14 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
   const [progress, setProgress] = useState(0);
   const [showAccessButton, setShowAccessButton] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [devMuted, setDevMuted] = useState(() => (import.meta.env.DEV ? isDevAudioMuted() : false));
   const isProcessingRef = useRef(false);
+
+  const toggleDevMute = () => {
+    const next = !devMuted;
+    setDevAudioMuted(next);
+    setDevMuted(next);
+  };
 
   const handleAccess = () => {
     if (isProcessingRef.current) return;
@@ -40,11 +54,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
     setShowAccessButton(false);
 
     const t = setTimeout(() => {
-      if (typeof window !== "undefined") {
-        const beep = new Audio("/sounds/beep.mp3");
-        beep.currentTime = 0;
-        beep.play().catch(() => {});
-      }
+      playSfx("/sounds/beep.mp3", 0.24);
       setStep((s) => s + 1);
     }, 1800 + Math.random() * 800);
 
@@ -65,6 +75,17 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex items-center justify-center font-mono text-sm scanlines overflow-hidden"> 
+
+      {import.meta.env.DEV && (
+        <button
+          type="button"
+          onClick={toggleDevMute}
+          className="absolute right-4 top-4 z-20 border border-gold-dim bg-background/70 px-3 py-1.5 font-mono text-[10px] tracking-[0.22em] text-gold-dim uppercase hover:border-gold hover:text-gold"
+          aria-label="Alternar mute de desarrollo"
+        >
+          {devMuted ? "DEV AUDIO OFF" : "DEV AUDIO ON"}
+        </button>
+      )}
 
 
       <div className="absolute inset-0 pointer-events-none grid-bg opacity-45 [mask-image:radial-gradient(circle_at_center,black_55%,transparent_100%)]" />

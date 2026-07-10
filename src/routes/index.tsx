@@ -79,9 +79,9 @@ function Atrium() {
   const [lineShiftPx, setLineShiftPx] = useState(0);
   const [packetLossTarget, setPacketLossTarget] = useState<{ line: number; word: string } | null>(null);
   const [interferenceSweepY, setInterferenceSweepY] = useState<number | null>(null);
+  const [titleInterference, setTitleInterference] = useState(false);
 
   useEffect(() => {
-    const seenBefore = typeof window !== "undefined" && window.sessionStorage.getItem("comunicado-seen") === "1";
     let cancelled = false;
     const timeouts: ReturnType<typeof setTimeout>[] = [];
     const addTimeout = (fn: () => void, ms: number) => {
@@ -91,47 +91,39 @@ function Atrium() {
       timeouts.push(id);
     };
 
-    if (seenBefore) {
-      setShowComunicado(true);
-      setShowAgent(true);
-      setShowIdentity(true);
-      setVisibleOrderCount(ORDER_BLOCKS.length);
-      setShowFinalOrder(true);
-    } else {
-      let timeline = 0;
+    let timeline = 0;
 
-      addTimeout(() => setShowComunicado(true), timeline);
-      timeline += 500;
+    addTimeout(() => setShowComunicado(true), timeline);
+    timeline += 780;
 
-      addTimeout(() => setShowAgent(true), timeline);
-      timeline += 500;
+    addTimeout(() => setShowAgent(true), timeline);
+    timeline += 900;
 
-      addTimeout(() => setShowIdentity(true), timeline);
-      timeline += 550;
+    addTimeout(() => setShowIdentity(true), timeline);
+    timeline += 980;
 
-      ORDER_BLOCKS.forEach((line, index) => {
-        addTimeout(() => {
-          setVisibleOrderCount(index + 1);
-          if (line.includes("OPERATIVO")) {
-            setOperativoPulse(true);
-            addTimeout(() => setOperativoPulse(false), 1300);
-          }
-        }, timeline + index * 820);
-      });
-
-      timeline += ORDER_BLOCKS.length * 820;
-
-      addTimeout(() => setShowFinalOrder(true), timeline + 360);
+    ORDER_BLOCKS.forEach((line, index) => {
       addTimeout(() => {
-        playSfx("/sounds/luxbeep2.mp3", 0.2);
-        window.dispatchEvent(new CustomEvent("operativo-attention"));
-        navigator.vibrate?.(20);
-      }, timeline + 1020);
+        setVisibleOrderCount(index + 1);
+        if (line.includes("OPERATIVO")) {
+          setOperativoPulse(true);
+          addTimeout(() => setOperativoPulse(false), 1300);
+        }
+      }, timeline + index * 1260);
+    });
 
-      addTimeout(() => {
-        window.sessionStorage.setItem("comunicado-seen", "1");
-      }, timeline + 1000);
-    }
+    timeline += ORDER_BLOCKS.length * 1260;
+
+    addTimeout(() => setShowFinalOrder(true), timeline + 840);
+    addTimeout(() => {
+      playSfx("/sounds/luxbeep2.mp3", 0.2);
+      window.dispatchEvent(new CustomEvent("operativo-attention"));
+      navigator.vibrate?.(20);
+    }, timeline + 1680);
+
+    addTimeout(() => {
+      window.sessionStorage.setItem("comunicado-seen", "1");
+    }, timeline + 1760);
 
     return () => {
       cancelled = true;
@@ -154,7 +146,7 @@ function Atrium() {
 
     setSignalPhase("intro");
     addTimeout(() => setSignalPhase("interference"), 260);
-    addTimeout(() => setSignalPhase("stable"), 1320);
+    addTimeout(() => setSignalPhase("stable"), 1900);
 
     return () => {
       cancelled = true;
@@ -192,36 +184,36 @@ function Atrium() {
     };
 
     const triggerSignalEvent = () => {
-      const shift = Math.floor(Math.random() * 7) - 3;
+      const shift = Math.floor(Math.random() * 13) - 6;
       const glitchDuration = signalPhase === "interference"
-        ? 80 + Math.floor(Math.random() * 100)
-        : 60 + Math.floor(Math.random() * 40);
+        ? 90 + Math.floor(Math.random() * 110)
+        : 80 + Math.floor(Math.random() * 80);
 
       setTransmissionShift(shift);
       setTransmissionGlitch(true);
 
-      const shouldFlicker = Math.random() < (signalPhase === "interference" ? 0.8 : 0.45);
+      const shouldFlicker = Math.random() < (signalPhase === "interference" ? 0.92 : 0.62);
       if (shouldFlicker) {
-        const flickerDuration = Math.random() < 0.5 ? 16 : 34;
+        const flickerDuration = Math.random() < 0.5 ? 16 : 50;
         setTransmissionFlicker(true);
         addTimeout(() => setTransmissionFlicker(false), flickerDuration);
       }
 
-      const shouldDisplaceLine = Math.random() < (signalPhase === "interference" ? 0.5 : 0.2);
+      const shouldDisplaceLine = Math.random() < (signalPhase === "interference" ? 0.9 : 0.68);
       if (shouldDisplaceLine) {
         const targetLine = pickVisibleLineIndex();
         if (targetLine !== null) {
-          const amount = (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 3));
+          const amount = (Math.random() < 0.5 ? -1 : 1) * (2 + Math.floor(Math.random() * 5));
           setLineShiftIndex(targetLine);
           setLineShiftPx(amount);
           addTimeout(() => {
             setLineShiftIndex(null);
             setLineShiftPx(0);
-          }, 34);
+          }, 52);
         }
       }
 
-      const shouldSweep = Math.random() < (signalPhase === "interference" ? 0.55 : 0.25);
+      const shouldSweep = Math.random() < (signalPhase === "interference" ? 0.78 : 0.42);
       if (shouldSweep) {
         setInterferenceSweepY(10 + Math.floor(Math.random() * 80));
         addTimeout(() => setInterferenceSweepY(null), 72 + Math.floor(Math.random() * 40));
@@ -235,7 +227,7 @@ function Atrium() {
       if (visibleOrderCount > 4) packetLossCandidates.push({ line: 6, word: "OPERATIVO" });
       if (showFinalOrder) packetLossCandidates.push({ line: ORDER_BLOCKS.length + 2, word: "ÓRDENES" });
 
-      const shouldDropWord = packetLossCandidates.length > 0 && Math.random() < (signalPhase === "interference" ? 0.35 : 0.14);
+      const shouldDropWord = packetLossCandidates.length > 0 && Math.random() < (signalPhase === "interference" ? 0.48 : 0.22);
       if (shouldDropWord) {
         const selection = packetLossCandidates[Math.floor(Math.random() * packetLossCandidates.length)];
         setPacketLossTarget(selection);
@@ -249,8 +241,8 @@ function Atrium() {
     };
 
     const scheduleNextEvent = () => {
-      const minDelay = signalPhase === "interference" ? 900 : 12000;
-      const maxDelay = signalPhase === "interference" ? 3600 : 20000;
+      const minDelay = signalPhase === "interference" ? 420 : 1700;
+      const maxDelay = signalPhase === "interference" ? 1500 : 4200;
       const delay = minDelay + Math.floor(Math.random() * (maxDelay - minDelay + 1));
 
       addTimeout(() => {
@@ -266,6 +258,36 @@ function Atrium() {
       timeouts.forEach((id) => clearTimeout(id));
     };
   }, [signalPhase, showAgent, showIdentity, visibleOrderCount, showFinalOrder]);
+
+  useEffect(() => {
+    if (!showAgent) return;
+
+    let cancelled = false;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    const addTimeout = (fn: () => void, ms: number) => {
+      const id = setTimeout(() => {
+        if (!cancelled) fn();
+      }, ms);
+      timeouts.push(id);
+    };
+
+    const scheduleTitleInterference = () => {
+      const delay = 900 + Math.floor(Math.random() * 900);
+      addTimeout(() => {
+        setTitleInterference(true);
+        addTimeout(() => setTitleInterference(false), 120 + Math.floor(Math.random() * 70));
+        scheduleTitleInterference();
+      }, delay);
+    };
+
+    scheduleTitleInterference();
+
+    return () => {
+      cancelled = true;
+      timeouts.forEach((id) => clearTimeout(id));
+    };
+  }, [showAgent]);
 
   const renderSignalWord = (line: number, word: string, className = "") => (
     <span className={`${className} ${packetLossTarget?.line === line && packetLossTarget.word === word ? "signal-packet-loss" : ""}`.trim()}>
@@ -348,9 +370,14 @@ function Atrium() {
       <section className="relative mb-16 overflow-hidden">
         <div className="pointer-events-none absolute inset-0 alta-mesa-secure-scanlines" />
         <div className={`pointer-events-none absolute inset-0 alta-mesa-secure-grain ${signalPhase === "interference" ? "is-interference" : "is-stable"}`} />
-        <div className={`pointer-events-none absolute inset-0 bg-black transition-opacity duration-75 ${transmissionFlicker ? "opacity-[0.09]" : "opacity-0"}`} />
+        <div className={`pointer-events-none absolute inset-0 alta-mesa-terminal-artifacts ${transmissionGlitch ? "is-glitch" : ""}`} />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.11] [background-image:linear-gradient(oklch(0.78_0.13_85_/_13%)_1px,transparent_1px),linear-gradient(90deg,oklch(0.78_0.13_85_/_13%)_1px,transparent_1px)] [background-size:32px_32px] animate-comm-grid-drift" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-gold/80 to-transparent opacity-[0.62] [animation:scan_4.8s_linear_infinite]" />
+        <div className="pointer-events-none absolute inset-x-0 top-6 h-px bg-gradient-to-r from-transparent via-gold/62 to-transparent opacity-[0.56] [animation:scan_7.6s_linear_infinite]" />
+        <div className="pointer-events-none absolute inset-x-0 top-12 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent opacity-[0.34] [animation:scan_10.4s_linear_infinite]" />
+        <div className={`pointer-events-none absolute inset-0 bg-black transition-opacity duration-75 ${transmissionFlicker ? "opacity-[0.16]" : "opacity-0"}`} />
         <div
-          className={`pointer-events-none absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-gold/55 to-transparent transition-opacity duration-75 ${interferenceSweepY === null ? "opacity-0" : "opacity-85"}`}
+          className={`pointer-events-none absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-gold/70 to-transparent transition-opacity duration-75 ${interferenceSweepY === null ? "opacity-0" : "opacity-95"}`}
           style={interferenceSweepY === null ? undefined : ({ top: `${interferenceSweepY}%` } as CSSProperties)}
         />
 
@@ -359,23 +386,23 @@ function Atrium() {
           style={{ "--comm-shift": `${transmissionShift}px` } as CSSProperties}
         >
           <div className="space-y-3">
-            <p className={`font-mono text-[10px] uppercase tracking-[0.34em] text-gold-dim/76 transition-opacity duration-[360ms] ${showComunicado ? "opacity-100" : "opacity-0"}`}>
+            <p className={`font-mono text-[10px] uppercase tracking-[0.34em] text-gold-dim/76 transition-opacity duration-[520ms] ${showComunicado ? "opacity-100" : "opacity-0"}`}>
               CANAL CLASIFICADO
             </p>
-            <p className={`font-display text-[18px] uppercase tracking-[0.2em] text-gold-dim/84 transition-opacity duration-[420ms] ${showComunicado ? "opacity-100" : "opacity-0"}`}>
+            <p className={`signal-text-transmission font-display text-[18px] uppercase tracking-[0.2em] text-gold-dim/84 transition-opacity duration-[560ms] ${showComunicado ? "opacity-100" : "opacity-0"}`}>
               COMUNICADO OFICIAL
             </p>
           </div>
 
           <div className="space-y-4">
             <h2
-              className={`font-display text-[36px] tracking-[0.12em] text-gold transition-opacity duration-[420ms] md:text-[48px] ${showAgent ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 0 ? "signal-line-jitter" : ""}`}
+              className={`signal-text-transmission font-display text-[36px] tracking-[0.12em] text-gold transition-opacity duration-[620ms] md:text-[48px] ${showAgent ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 0 ? "signal-line-jitter" : ""} ${titleInterference ? "agent-title-interference" : ""}`}
               style={lineShiftIndex === 0 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
             >
               AGENTE {renderSignalWord(0, "MANDARIN")}
             </h2>
             <p
-              className={`font-mono text-[10px] uppercase tracking-[0.3em] text-gold-dim/80 transition-opacity duration-[360ms] ${showIdentity ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 1 ? "signal-line-jitter" : ""}`}
+              className={`signal-text-transmission font-mono text-[10px] uppercase tracking-[0.3em] text-gold-dim/80 transition-opacity duration-[520ms] ${showIdentity ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 1 ? "signal-line-jitter" : ""}`}
               style={lineShiftIndex === 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
             >
               ✓ IDENTIDAD {renderSignalWord(1, "VERIFICADA")}
@@ -388,7 +415,7 @@ function Atrium() {
               return (
                 <p
                   key={`comm-order-${index}`}
-                  className={`font-display text-[14px] leading-[2] tracking-[0.035em] text-gold/76 transition-opacity duration-[420ms] md:text-[16px] ${isVisible ? "opacity-100" : "opacity-0"} ${lineShiftIndex === index + 2 ? "signal-line-jitter" : ""}`}
+                  className={`signal-text-transmission font-display text-[14px] leading-[2] tracking-[0.035em] text-gold/76 transition-opacity duration-[640ms] md:text-[16px] ${isVisible ? "opacity-100" : "opacity-0"} ${lineShiftIndex === index + 2 ? "signal-line-jitter" : ""}`}
                   style={lineShiftIndex === index + 2 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
                 >
                   {renderParagraph(paragraph, index + 2)}
@@ -397,14 +424,14 @@ function Atrium() {
             })}
 
             <p
-              className={`font-display text-[20px] uppercase tracking-[0.17em] text-gold-bright [text-shadow:0_0_9px_oklch(0.88_0.16_88_/_0.3)] [animation:alta-mesa-lumen_2.8s_ease-in-out_infinite] transition-opacity duration-[620ms] md:text-[24px] ${showFinalOrder ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 2 ? "signal-line-jitter" : ""}`}
+              className={`signal-text-transmission font-display text-[20px] uppercase tracking-[0.17em] text-gold-bright [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.38)] [animation:alta-mesa-lumen_2.1s_ease-in-out_infinite] transition-opacity duration-[900ms] md:text-[24px] ${showFinalOrder ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 2 ? "signal-line-jitter" : ""}`}
               style={lineShiftIndex === ORDER_BLOCKS.length + 2 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
             >
               EJECUTE SUS {renderSignalWord(ORDER_BLOCKS.length + 2, "ÓRDENES")}.
             </p>
           </div>
 
-          <p className={`pt-3 font-mono text-[9px] uppercase tracking-[0.32em] text-gold-dim/70 transition-opacity duration-[420ms] ${showFinalOrder ? "opacity-100" : "opacity-0"}`}>
+          <p className={`signal-text-transmission pt-3 font-mono text-[9px] uppercase tracking-[0.32em] text-gold-dim/70 transition-opacity duration-[560ms] ${showFinalOrder ? "opacity-100" : "opacity-0"}`}>
             EX COMMISSIONE ALTA MESA
           </p>
         </div>
