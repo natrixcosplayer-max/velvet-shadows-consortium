@@ -8,10 +8,9 @@ import osakaPortrait from "../assets/agents/osaka.jpg";
 import altaPortrait from "../assets/alta.png";
 
 import {
-  fadeMusicVolume,
+  pauseMusicForComms,
   playEmailVoice,
-  playMusic,
-  setMusicBaseVolume,
+  resumeMusicAfterComms,
   stopEmailVoice,
 } from "../audio/audiomanager";
 
@@ -51,8 +50,7 @@ function Comms() {
   useEffect(() => {
     if (pathname !== "/comms") return;
 
-    // Keep john.mp3 running but quieter while Comms is open.
-    setMusicBaseVolume(0.064, 220);
+    void pauseMusicForComms(1800);
 
     const alreadyAutoplayed =
       typeof window !== "undefined" && window.sessionStorage.getItem(XIMO_AUTOPLAY_SESSION_KEY) === "1";
@@ -79,9 +77,7 @@ function Comms() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", handlePageHide);
       stopEmailVoice(80);
-      setMusicBaseVolume(0.08, 320);
-      playMusic("/sounds/john.mp3", 0, true, 42);
-      fadeMusicVolume(0.08, 320);
+      resumeMusicAfterComms(1500);
     };
   }, [pathname]);
 

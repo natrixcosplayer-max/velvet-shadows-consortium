@@ -13,6 +13,9 @@ let musicRestoreSuppressed = false;
 let musicPinnedDuck = false;
 let temporaryMusicTarget: number | null = null;
 let temporaryMusicTargetTimer: ReturnType<typeof setTimeout> | null = null;
+let musicPausedForComms = false;
+let emailVoice: HTMLAudioElement | null = null;
+let emailMusicDucked = false;
 
 const MUSIC_VOLUME = 0.08;
 const MUSIC_DUCK_VOLUME = 0.005;
@@ -26,6 +29,40 @@ const EMAIL_VOICES: Record<string, string> = {
   "5": "/sounds/russian.wav",
 };
 const EMAIL_CONTROLLED_KEY = "comms-email";
+
+function isIPhoneSafari() {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /iPhone/i.test(ua) && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS/i.test(ua);
+}
+
+function logJohnVolumeAroundUnlock(stage: string) {
+  if (!isIPhoneSafari()) return;
+
+  console.log(`[audio][unlock] ${stage}`, {
+    johnVolume: music?.volume ?? null,
+    johnPaused: music?.paused ?? null,
+    johnMuted: music?.muted ?? null,
+    johnCurrentTime: music?.currentTime ?? null,
+  });
+}
+
+function ensureUnlockSound() {
+  if (unlockSound) return unlockSound;
+
+  unlockSound = new Audio("/sounds/unlock.mp3");
+  unlockSound.preload = "auto";
+  unlockSound.volume = 0;
+  unlockSound.muted = true;
+  return unlockSound;
+}
+
+function getPreferredMusicTarget() {
+  if (musicRestoreSuppressed) return 0;
+  if (musicPinnedDuck) return MUSIC_DUCK_VOLUME;
+  if (temporaryMusicTarget !== null) return temporaryMusicTarget;
+  return musicBaseVolume;
+}
 
 function attachGestureUnlockListeners() {
   if (listenersAttached || typeof window === "undefined") return;
@@ -114,6 +151,7 @@ export function stopMusic() {
     temporaryMusicTargetTimer = null;
   }
   temporaryMusicTarget = null;
+  musicPausedForComms = false;
 }
 
 export function seekMusic(seconds: number) {
@@ -124,12 +162,18 @@ export function seekMusic(seconds: number) {
 
 export function fadeMusicVolume(
   target: number,
-  ms = 500
+  ms = 500,
+  onComplete?: () => void
 ) {
   if (!music) return;
 
-  const start = music.volume;
-  const step = (target - start) / (ms / 40);
+  if (ms <= 0) {
+    music.volume = target;
+    onComplete?.();
+    return;
+  }
+
+  const step = (target - music.volume) / (ms / 40);
 
 if (musicFade) {
   clearInterval(musicFade);
@@ -158,6 +202,7 @@ if (musicFade) {
   clearInterval(musicFade);
   musicFade = null;
 }
+      onComplete?.();
     }
 
   }, 40);
@@ -178,30 +223,62 @@ function duckMusicImmediate() {
 }
 
 export function restoreMusic() {
-  if (musicRestoreSuppressed) {
-    fadeMusicVolume(0, 180);
-    return;
-  }
-
-  if (musicPinnedDuck) {
-    fadeMusicVolume(MUSIC_DUCK_VOLUME, 180);
-    return;
-  }
-
-  if (temporaryMusicTarget !== null) {
-    fadeMusicVolume(temporaryMusicTarget, 220);
-    return;
-  }
-
-  fadeMusicVolume(musicBaseVolume, 1200);
+  fadeMusicVolume(getPreferredMusicTarget(), 1200);
 }
 
 export function setMusicBaseVolume(volume: number, ms = 300) {
   musicBaseVolume = Math.max(0, Math.min(1, volume));
 
-  if (!music || musicRestoreSuppressed || musicPinnedDuck || temporaryMusicTarget !== null) return;
+  if (!music || musicPausedForComms || emailMusicDucked || musicRestoreSuppressed || musicPinnedDuck || temporaryMusicTarget !== null) return;
 
   fadeMusicVolume(musicBaseVolume, ms);
+}
+
+export function pauseMusicForComms(ms = 1800): Promise<void> {
+  return new Promise((resolve) => {
+    if (!music || music.paused) {
+      musicPausedForComms = false;
+      resolve();
+      return;
+    }
+
+    musicPausedForComms = true;
+    fadeMusicVolume(0, ms, () => {
+      if (music) {
+        music.pause();
+      }
+      resolve();
+    });
+  });
+}
+
+export function resumeMusicAfterComms(ms = 1500) {
+  if (!music || !musicPausedForComms) return;
+
+  musicPausedForComms = false;
+  const target = getPreferredMusicTarget();
+
+  if (musicFade) {
+    clearInterval(musicFade);
+    musicFade = null;
+  }
+
+  music.volume = 0;
+  const resume = music.play();
+  if (resume) {
+    resume
+      .then(() => {
+        pendingMusicPlay = false;
+        fadeMusicVolume(target, ms);
+      })
+      .catch(() => {
+        pendingMusicPlay = true;
+        attachGestureUnlockListeners();
+      });
+    return;
+  }
+
+  fadeMusicVolume(target, ms);
 }
 
 export function attenuateMusicTemporarily(reductionPercent = 0.7, durationMs = 7000) {
@@ -390,16 +467,10 @@ let unlockSound: HTMLAudioElement | null = null;
 // Debe llamarse SÍNCRONAMENTE desde un gesto real del usuario (botón ACCEDER).
 export function primeUnlockSound() {
   hasUserGesture = true;
-
-  if (unlockSound) return;
-
-  unlockSound = new Audio("/sounds/unlock.mp3");
-  unlockSound.preload = "auto";
-  unlockSound.volume = 0;
-  unlockSound.muted = true;
+  const sound = ensureUnlockSound();
 
   // Reproducir en silencio dentro del gesto desbloquea el elemento en iOS.
-  unlockSound
+  sound
     .play()
     .then(() => {
       if (!unlockSound) return;
@@ -415,36 +486,61 @@ export function primeUnlockSound() {
     });
 }
 
-export async function playUnlockSound(volume = 0.45, duckMs = 0) {
-  const sound = unlockSound || new Audio("/sounds/unlock.mp3");
+export async function playUnlockSound(volume = 0.45) {
+  const sound = ensureUnlockSound();
 
   if (!sound) return;
 
-  // Atrium priority: pull john.mp3 down hard while unlock cue is active.
-  if (music) {
-    if (duckMs > 0) {
-      fadeMusicVolume(UNLOCK_DUCK_VOLUME, duckMs);
-    } else {
-      if (musicFade) {
-        clearInterval(musicFade);
-        musicFade = null;
-      }
-      music.volume = UNLOCK_DUCK_VOLUME;
-    }
+  logJohnVolumeAroundUnlock("before ducking");
+
+  // 1) Cancelar cualquier fade activo.
+  if (musicFade) {
+    clearInterval(musicFade);
+    musicFade = null;
   }
 
+  // 2) Aplicar ducking inmediato reutilizando la ruta única.
+  if (music) {
+    duckMusicImmediate();
+  }
+
+  // 3) Esperar un frame para que Safari aplique el volumen antes de unlock.
+  await new Promise<void>((resolve) => {
+    if (typeof window === "undefined" || typeof window.requestAnimationFrame !== "function") {
+      resolve();
+      return;
+    }
+    window.requestAnimationFrame(() => resolve());
+  });
+
+  // 4) Verificar volumen ya aplicado.
+  if (music) {
+    const expected = UNLOCK_DUCK_VOLUME;
+    console.log("[audio][unlock] john.volume check before unlock.play()", {
+      current: music.volume,
+      expected,
+      matchesExpected: Math.abs(music.volume - expected) < 0.0001,
+      paused: music.paused,
+      muted: music.muted,
+    });
+    logJohnVolumeAroundUnlock("during unlock (after RAF, before play)");
+  }
+
+  // 5) Reproducir unlock sólo después de verificar el volumen.
   sound.currentTime = 0;
   sound.volume = volume;
   sound.muted = false;
 
   sound.onended = () => {
     restoreMusic();
+    logJohnVolumeAroundUnlock("after unlock (restore requested)");
   };
 
   const result = sound.play();
   if (result) {
     result.catch(() => {
       restoreMusic();
+      logJohnVolumeAroundUnlock("after unlock (play failed, restore requested)");
       pendingUnlockVolume = volume;
       attachGestureUnlockListeners();
     });
@@ -636,14 +732,64 @@ export function playEmailVoice(id: string) {
   const voiceSrc = EMAIL_VOICES[id];
 
   if (!voiceSrc) {
-    stopControlledAudio(EMAIL_CONTROLLED_KEY);
+    stopEmailVoice();
     return;
   }
 
-  // Single controlled key guarantees hard cut of previous mail and immediate start of the new one.
-  playControlledAudio(EMAIL_CONTROLLED_KEY, voiceSrc, 0.58, false);
+  stopControlledAudio(EMAIL_CONTROLLED_KEY);
+
+  if (emailVoice) {
+    emailVoice.pause();
+    emailVoice.currentTime = 0;
+    emailVoice = null;
+  }
+
+  const audio = new Audio(voiceSrc);
+  emailVoice = audio;
+  audio.preload = "auto";
+  audio.volume = 0.58;
+
+  emailMusicDucked = Boolean(music && !music.paused);
+  if (emailMusicDucked) {
+    const duckTarget = Math.max(0, Math.min(1, getPreferredMusicTarget() * 0.2));
+    fadeMusicVolume(duckTarget, 380);
+  }
+
+  const restoreAfterEmail = () => {
+    if (!emailMusicDucked) return;
+    emailMusicDucked = false;
+    fadeMusicVolume(getPreferredMusicTarget(), 380);
+  };
+
+  audio.onended = () => {
+    if (emailVoice === audio) {
+      emailVoice = null;
+    }
+    restoreAfterEmail();
+  };
+
+  const playPromise = audio.play();
+  if (playPromise) {
+    playPromise.catch(() => {
+      if (emailVoice === audio) {
+        emailVoice = null;
+      }
+      restoreAfterEmail();
+    });
+  }
 }
 
 export function stopEmailVoice(_ms = 300) {
   stopControlledAudio(EMAIL_CONTROLLED_KEY);
+
+  if (emailVoice) {
+    emailVoice.pause();
+    emailVoice.currentTime = 0;
+    emailVoice = null;
+  }
+
+  if (emailMusicDucked) {
+    emailMusicDucked = false;
+    fadeMusicVolume(getPreferredMusicTarget(), 380);
+  }
 }

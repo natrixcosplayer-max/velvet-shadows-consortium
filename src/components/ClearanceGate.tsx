@@ -164,7 +164,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
                 onClick={() => {
                   primeUnlockSound();
                   attenuateMusicTemporarily(0.5, 9000);
-                  void playUnlockSound(0.62, 2000);
+                  void playUnlockSound(0.62);
                   onComplete();
                 }}
                 className="mx-auto flex flex-col items-center border border-gold bg-black px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition"
