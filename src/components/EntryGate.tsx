@@ -1,5 +1,5 @@
 import altaLogo from "../assets/alta.png";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   fadeMusicVolume,
   isDevAudioMuted,
@@ -15,6 +15,16 @@ type Props = {
 
 export function EntryGate({ onEnter }: Props) {
   const [devMuted, setDevMuted] = useState(() => (import.meta.env.DEV ? isDevAudioMuted() : false));
+  const [goldPress, setGoldPress] = useState(false);
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pressTimerRef.current) {
+        clearTimeout(pressTimerRef.current);
+      }
+    };
+  }, []);
 
   const toggleDevMute = () => {
     const next = !devMuted;
@@ -79,18 +89,43 @@ export function EntryGate({ onEnter }: Props) {
         <button
           onPointerDown={() => {
             primeUnlockSound();
+            setGoldPress(true);
           }}
           onTouchStart={() => {
             primeUnlockSound();
+            setGoldPress(true);
+          }}
+          onTouchEnd={() => {
+            setGoldPress(false);
+          }}
+          onTouchCancel={() => {
+            setGoldPress(false);
+          }}
+          onPointerUp={() => {
+            setGoldPress(false);
+          }}
+          onPointerLeave={() => {
+            setGoldPress(false);
           }}
           onClick={() => {
-          primeUnlockSound();
-          onEnter();
-          playSfx("/sounds/luxbeep.mp3", 0.14);
-          playMusic("/sounds/john.mp3", 0, true, 42);
-          fadeMusicVolume(0.064, 650);
-        }}
-          className="mx-auto flex flex-col items-center border border-gold px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition animate-pulse-gold"
+            const proceed = () => {
+              primeUnlockSound();
+              onEnter();
+              playSfx("/sounds/luxbeep.mp3", 0.14);
+              playMusic("/sounds/john.mp3", 0, true, 42);
+              fadeMusicVolume(0.064, 650);
+            };
+
+            if (pressTimerRef.current) {
+              clearTimeout(pressTimerRef.current);
+            }
+
+            pressTimerRef.current = setTimeout(() => {
+              setGoldPress(false);
+              proceed();
+            }, 120);
+          }}
+          className={`mx-auto flex flex-col items-center border border-gold px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition animate-pulse-gold ${goldPress ? "bg-gold/28 text-gold-bright shadow-[0_0_18px_rgba(212,175,55,0.52)]" : ""}`}
         >
           <span>acceder</span>
         </button>

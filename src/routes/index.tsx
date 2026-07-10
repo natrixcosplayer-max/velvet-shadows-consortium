@@ -17,7 +17,6 @@ export const Route = createFileRoute("/")({
 
 const SKIP_COMMISSION_GATES_KEY = "skip-commission-gates-once";
 const ORDER_BLOCKS = [
-  "Identidad verificada.",
   "La Comisión le asigna un operativo de prioridad máxima.",
   "Recupere el activo.",
   "No comprometa la seguridad, el anonimato ni los intereses de la Alta Mesa.",
@@ -67,7 +66,6 @@ function Index() {
 function Atrium() {
   const [showComunicado, setShowComunicado] = useState(false);
   const [showAgent, setShowAgent] = useState(false);
-  const [showIdentity, setShowIdentity] = useState(false);
   const [visibleOrderCount, setVisibleOrderCount] = useState(0);
   const [showFinalOrder, setShowFinalOrder] = useState(false);
   const [operativoPulse, setOperativoPulse] = useState(false);
@@ -78,6 +76,7 @@ function Atrium() {
   const [lineShiftIndex, setLineShiftIndex] = useState<number | null>(null);
   const [lineShiftPx, setLineShiftPx] = useState(0);
   const [packetLossTarget, setPacketLossTarget] = useState<{ line: number; word: string } | null>(null);
+  const [encryptedSwapTarget, setEncryptedSwapTarget] = useState<{ line: number; word: string; replacement: string } | null>(null);
   const [interferenceSweepY, setInterferenceSweepY] = useState<number | null>(null);
   const [titleInterference, setTitleInterference] = useState(false);
   const [isIPhone, setIsIPhone] = useState(false);
@@ -100,13 +99,10 @@ function Atrium() {
     let timeline = 0;
 
     addTimeout(() => setShowComunicado(true), timeline);
-    timeline += 780;
+    timeline += 2000;
 
     addTimeout(() => setShowAgent(true), timeline);
-    timeline += 900;
-
-    addTimeout(() => setShowIdentity(true), timeline);
-    timeline += 980;
+    timeline += 2000;
 
     ORDER_BLOCKS.forEach((line, index) => {
       addTimeout(() => {
@@ -115,21 +111,21 @@ function Atrium() {
           setOperativoPulse(true);
           addTimeout(() => setOperativoPulse(false), 1300);
         }
-      }, timeline + index * 1260);
+      }, timeline + index * 2000);
     });
 
-    timeline += ORDER_BLOCKS.length * 1260;
+    timeline += ORDER_BLOCKS.length * 2000;
 
-    addTimeout(() => setShowFinalOrder(true), timeline + 840);
+    addTimeout(() => setShowFinalOrder(true), timeline + 2000);
     addTimeout(() => {
       playSfx("/sounds/luxbeep2.mp3", 0.2);
       window.dispatchEvent(new CustomEvent("operativo-attention"));
       navigator.vibrate?.(20);
-    }, timeline + 1680);
+    }, timeline + 2800);
 
     addTimeout(() => {
       window.sessionStorage.setItem("comunicado-seen", "1");
-    }, timeline + 1760);
+    }, timeline + 3000);
 
     return () => {
       cancelled = true;
@@ -177,13 +173,12 @@ function Atrium() {
       const visible: number[] = [];
 
       if (showAgent) visible.push(0);
-      if (showIdentity) visible.push(1);
 
       for (let i = 0; i < visibleOrderCount; i += 1) {
-        visible.push(2 + i);
+        visible.push(1 + i);
       }
 
-      if (showFinalOrder) visible.push(2 + ORDER_BLOCKS.length);
+      if (showFinalOrder) visible.push(1 + ORDER_BLOCKS.length);
 
       if (!visible.length) return null;
       return visible[Math.floor(Math.random() * visible.length)];
@@ -226,12 +221,10 @@ function Atrium() {
       }
 
       const packetLossCandidates: Array<{ line: number; word: string }> = [];
-      if (showAgent) packetLossCandidates.push({ line: 0, word: "MANDARIN" });
-      if (showIdentity) packetLossCandidates.push({ line: 1, word: "VERIFICADA" });
-      if (visibleOrderCount > 1) packetLossCandidates.push({ line: 3, word: "Comisión" });
-      if (visibleOrderCount > 2) packetLossCandidates.push({ line: 4, word: "activo" });
-      if (visibleOrderCount > 4) packetLossCandidates.push({ line: 6, word: "OPERATIVO" });
-      if (showFinalOrder) packetLossCandidates.push({ line: ORDER_BLOCKS.length + 2, word: "ÓRDENES" });
+      if (visibleOrderCount > 1) packetLossCandidates.push({ line: 2, word: "Comisión" });
+      if (visibleOrderCount > 2) packetLossCandidates.push({ line: 3, word: "activo" });
+      if (visibleOrderCount > 4) packetLossCandidates.push({ line: 5, word: "OPERATIVO" });
+      if (showFinalOrder) packetLossCandidates.push({ line: ORDER_BLOCKS.length + 1, word: "ÓRDENES" });
 
       const shouldDropWord = packetLossCandidates.length > 0 && Math.random() < (signalPhase === "interference" ? 0.48 : 0.22);
       if (shouldDropWord) {
@@ -263,7 +256,7 @@ function Atrium() {
       cancelled = true;
       timeouts.forEach((id) => clearTimeout(id));
     };
-  }, [signalPhase, showAgent, showIdentity, visibleOrderCount, showFinalOrder]);
+  }, [signalPhase, showAgent, visibleOrderCount, showFinalOrder]);
 
   useEffect(() => {
     if (!showAgent) return;
@@ -295,11 +288,62 @@ function Atrium() {
     };
   }, [showAgent]);
 
-  const renderSignalWord = (line: number, word: string, className = "") => (
-    <span className={`${className} ${packetLossTarget?.line === line && packetLossTarget.word === word ? "signal-packet-loss" : ""}`.trim()}>
-      {word}
-    </span>
-  );
+  useEffect(() => {
+    if (!showAgent) return;
+
+    let cancelled = false;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    const addTimeout = (fn: () => void, ms: number) => {
+      const id = setTimeout(() => {
+        if (!cancelled) fn();
+      }, ms);
+      timeouts.push(id);
+    };
+
+    const scheduleEncryptedSwap = () => {
+      const delay = 7000 + Math.floor(Math.random() * 7000);
+      addTimeout(() => {
+        const candidates: Array<{ line: number; word: string; replacement: string }> = [];
+
+        if (visibleOrderCount > 0) candidates.push({ line: 1, word: "Comisión", replacement: "C0MISION" });
+        if (visibleOrderCount > 1) candidates.push({ line: 2, word: "activo", replacement: "ASSET-7" });
+        if (visibleOrderCount > 3) candidates.push({ line: 4, word: "OPERATIVO", replacement: "0P-7X" });
+        if (showFinalOrder) candidates.push({ line: ORDER_BLOCKS.length + 1, word: "ÓRDENES", replacement: "MANDATVM" });
+
+        if (!candidates.length) {
+          scheduleEncryptedSwap();
+          return;
+        }
+
+        const selected = candidates[Math.floor(Math.random() * candidates.length)];
+        setEncryptedSwapTarget(selected);
+        setTransmissionGlitch(true);
+
+        addTimeout(() => setEncryptedSwapTarget(null), 180);
+        addTimeout(() => setTransmissionGlitch(false), 200);
+        scheduleEncryptedSwap();
+      }, delay);
+    };
+
+    scheduleEncryptedSwap();
+
+    return () => {
+      cancelled = true;
+      timeouts.forEach((id) => clearTimeout(id));
+    };
+  }, [showAgent, showFinalOrder, visibleOrderCount]);
+
+  const renderSignalWord = (line: number, word: string, className = "") => {
+    const isEncryptedSwap = encryptedSwapTarget?.line === line && encryptedSwapTarget.word === word;
+    const isPacketLoss = packetLossTarget?.line === line && packetLossTarget.word === word;
+
+    return (
+      <span className={`${className} ${isPacketLoss ? "signal-packet-loss" : ""} ${isEncryptedSwap ? "signal-encrypted-swap" : ""}`.trim()}>
+        {isEncryptedSwap ? encryptedSwapTarget.replacement : word}
+      </span>
+    );
+  };
 
   const renderParagraph = (text: string, line: number) => {
     const marker = "OPERATIVO";
@@ -402,17 +446,11 @@ function Atrium() {
 
           <div className="space-y-4">
             <h2
-              className={`signal-text-transmission font-display tracking-[0.12em] text-gold transition-opacity duration-[620ms] md:text-[48px] ${isIPhone ? "text-[43px]" : "text-[36px]"} ${showAgent ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 0 ? "signal-line-jitter" : ""} ${titleInterference ? "agent-title-interference" : ""}`}
+              className={`signal-text-transmission font-display tracking-[0.12em] text-gold transition-opacity duration-[980ms] md:text-[48px] ${isIPhone ? "text-[43px]" : "text-[36px]"} ${showAgent ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 0 ? "signal-line-jitter" : ""} ${titleInterference ? "agent-title-interference" : ""}`}
               style={lineShiftIndex === 0 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
             >
-              AGENTE {renderSignalWord(0, "MANDARIN")}
+              AGENTE MANDARIN
             </h2>
-            <p
-              className={`signal-text-transmission font-mono uppercase tracking-[0.3em] text-gold-dim/80 transition-opacity duration-[520ms] ${isIPhone ? "text-[12px]" : "text-[10px]"} ${showIdentity ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 1 ? "signal-line-jitter" : ""}`}
-              style={lineShiftIndex === 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
-            >
-              ✓ IDENTIDAD {renderSignalWord(1, "VERIFICADA")}
-            </p>
           </div>
 
           <div className="space-y-8 md:space-y-10">
@@ -421,19 +459,19 @@ function Atrium() {
               return (
                 <p
                   key={`comm-order-${index}`}
-                  className={`signal-text-transmission font-display leading-[2] tracking-[0.035em] text-gold/76 transition-opacity duration-[640ms] md:text-[16px] ${isIPhone ? "text-[17px]" : "text-[14px]"} ${isVisible ? "opacity-100" : "opacity-0"} ${lineShiftIndex === index + 2 ? "signal-line-jitter" : ""}`}
-                  style={lineShiftIndex === index + 2 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
+                  className={`signal-text-transmission font-display leading-[2] tracking-[0.035em] text-gold/76 transition-opacity duration-[980ms] md:text-[16px] ${isIPhone ? "text-[17px]" : "text-[14px]"} ${isVisible ? "opacity-100" : "opacity-0"} ${lineShiftIndex === index + 1 ? "signal-line-jitter" : ""}`}
+                  style={lineShiftIndex === index + 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
                 >
-                  {renderParagraph(paragraph, index + 2)}
+                  {renderParagraph(paragraph, index + 1)}
                 </p>
               );
             })}
 
             <p
-              className={`signal-text-transmission font-display uppercase tracking-[0.17em] text-gold-bright [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.38)] [animation:alta-mesa-lumen_2.1s_ease-in-out_infinite] transition-opacity duration-[900ms] md:text-[24px] ${isIPhone ? "text-[24px]" : "text-[20px]"} ${showFinalOrder ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 2 ? "signal-line-jitter" : ""}`}
-              style={lineShiftIndex === ORDER_BLOCKS.length + 2 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
+              className={`signal-text-transmission font-display uppercase tracking-[0.17em] text-gold-bright [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.38)] [animation:alta-mesa-lumen_2.1s_ease-in-out_infinite] transition-opacity duration-[1200ms] md:text-[24px] ${isIPhone ? "text-[24px]" : "text-[20px]"} ${showFinalOrder ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 1 ? "signal-line-jitter" : ""}`}
+              style={lineShiftIndex === ORDER_BLOCKS.length + 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
             >
-              EJECUTE SUS {renderSignalWord(ORDER_BLOCKS.length + 2, "ÓRDENES")}.
+              EJECUTE SUS {renderSignalWord(ORDER_BLOCKS.length + 1, "ÓRDENES")}.
             </p>
           </div>
 

@@ -77,6 +77,9 @@ function Missions() {
   const [reliability, setReliability] = useState("99.8 %");
   const [originIndex, setOriginIndex] = useState(0);
   const [signalPhase, setSignalPhase] = useState(0);
+  const [moduleGlowId, setModuleGlowId] = useState<string | null>(null);
+  const moduleGlowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastModuleFeedbackAtRef = useRef(0);
 
   const ORIGIN_STATES = [
     "SAT-COM VII",
@@ -105,6 +108,24 @@ function Missions() {
     if (!sectionRef.current) return;
 
     sectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const triggerModuleFeedback = (moduleNumber: string) => {
+    const now = Date.now();
+    if (now - lastModuleFeedbackAtRef.current < 180) return;
+    lastModuleFeedbackAtRef.current = now;
+
+    playSfx("/sounds/luxbeep2.mp3", 0.24);
+    setModuleGlowId(moduleNumber);
+
+    if (moduleGlowTimerRef.current) {
+      clearTimeout(moduleGlowTimerRef.current);
+    }
+
+    moduleGlowTimerRef.current = setTimeout(() => {
+      setModuleGlowId((current) => (current === moduleNumber ? null : current));
+      moduleGlowTimerRef.current = null;
+    }, 260);
   };
 
   useEffect(() => {
@@ -156,6 +177,14 @@ function Missions() {
       setSignalPhase((prev) => (prev + 1) % 6);
     }, 1200);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (moduleGlowTimerRef.current) {
+        clearTimeout(moduleGlowTimerRef.current);
+      }
+    };
   }, []);
 
   return (
@@ -304,14 +333,10 @@ function Missions() {
             return (
               <li
                 key={order.number}
-                className={`protocol-operativo-row py-4 sm:py-5 ${onActivate ? "is-interactive" : ""}`}
+                className="protocol-operativo-row py-4 sm:py-5"
               >
                 <div className="grid gap-2 sm:grid-cols-[96px_1fr] sm:gap-5">
-                  <p
-                    className={`font-display text-xl tracking-[0.16em] text-gold sm:text-2xl ${
-                      onActivate ? "protocol-operativo-number-interactive" : ""
-                    }`}
-                  >
+                  <p className="font-display text-xl tracking-[0.16em] text-gold sm:text-2xl">
                     {order.number}
                   </p>
 
@@ -327,7 +352,9 @@ function Missions() {
                       <button
                         type="button"
                         onClick={onActivate}
-                        className="protocol-operativo-cta mt-3 font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim"
+                        onPointerDown={() => triggerModuleFeedback(order.number)}
+                        onTouchStart={() => triggerModuleFeedback(order.number)}
+                        className={`protocol-operativo-cta mt-3 font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim ${moduleGlowId === order.number ? "border-gold text-gold bg-gold/15 shadow-[0_0_16px_rgba(212,175,55,0.45)]" : ""}`}
                         aria-label={`Abrir modulo ${order.number}: ${order.label}`}
                       >
                         <span>Abrir modulo</span>
