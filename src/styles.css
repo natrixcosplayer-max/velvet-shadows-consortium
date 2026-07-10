@@ -807,6 +807,20 @@
   0%, 100% { filter: brightness(1); }
   50% { filter: brightness(1.03); }
 }
+@keyframes alta-mesa-lumen {
+  0%, 100% {
+    text-shadow: 0 0 0 oklch(0.88 0.16 88 / 0);
+    filter: brightness(0.98);
+  }
+  50% {
+    text-shadow: 0 0 10px oklch(0.88 0.16 88 / 0.25);
+    filter: brightness(1.03);
+  }
+}
+
+.alta-mesa-text-lumen :is(h2, p, strong) {
+  animation: alta-mesa-lumen 3.2s ease-in-out infinite;
+}
 .protocol-operativo-row.is-interactive {
   position: relative;
   border-radius: 0.6rem;

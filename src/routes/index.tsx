@@ -16,6 +16,13 @@ export const Route = createFileRoute("/")({
 });
 
 const SKIP_COMMISSION_GATES_KEY = "skip-commission-gates-once";
+const ORDER_BLOCKS = [
+  "Identidad verificada.",
+  "La Comisión le asigna un operativo de prioridad máxima.",
+  "Recupere el activo.",
+  "No comprometa la seguridad, el anonimato ni los intereses de la Alta Mesa.",
+  "Consulte el expediente OPERATIVO.",
+] as const;
 
 function Index() {
   const [entered, setEntered] = useState(false);
@@ -56,13 +63,6 @@ function Index() {
 }
 
 function Atrium() {
-  const orderBlocks = [
-    "Identidad verificada.",
-    "La Comisión le asigna un operativo de prioridad máxima.",
-    "Recupere el activo.",
-    "No comprometa la seguridad, el anonimato ni los intereses de la Alta Mesa.",
-    "Consulte el expediente OPERATIVO.",
-  ];
   const [showComunicado, setShowComunicado] = useState(false);
   const [showAgent, setShowAgent] = useState(false);
   const [showIdentity, setShowIdentity] = useState(false);
@@ -70,6 +70,8 @@ function Atrium() {
   const [showFinalOrder, setShowFinalOrder] = useState(false);
   const [sequenceComplete, setSequenceComplete] = useState(false);
   const [operativoPulse, setOperativoPulse] = useState(false);
+  const [transmissionGlitch, setTransmissionGlitch] = useState(false);
+  const [transmissionFlicker, setTransmissionFlicker] = useState(false);
 
   useEffect(() => {
     const seenBefore = typeof window !== "undefined" && window.sessionStorage.getItem("comunicado-seen") === "1";
@@ -86,7 +88,7 @@ function Atrium() {
       setShowComunicado(true);
       setShowAgent(true);
       setShowIdentity(true);
-      setVisibleOrderCount(orderBlocks.length);
+      setVisibleOrderCount(ORDER_BLOCKS.length);
       setShowFinalOrder(true);
       setSequenceComplete(true);
     } else {
@@ -101,7 +103,7 @@ function Atrium() {
       addTimeout(() => setShowIdentity(true), timeline);
       timeline += 550;
 
-      orderBlocks.forEach((line, index) => {
+      ORDER_BLOCKS.forEach((line, index) => {
         addTimeout(() => {
           setVisibleOrderCount(index + 1);
           if (line.includes("OPERATIVO")) {
@@ -111,7 +113,7 @@ function Atrium() {
         }, timeline + index * 820);
       });
 
-      timeline += orderBlocks.length * 820;
+      timeline += ORDER_BLOCKS.length * 820;
 
       addTimeout(() => setShowFinalOrder(true), timeline + 180);
       addTimeout(() => {
@@ -130,7 +132,37 @@ function Atrium() {
       cancelled = true;
       timeouts.forEach((id) => clearTimeout(id));
     };
-  }, [orderBlocks]);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    const addTimeout = (fn: () => void, ms: number) => {
+      const id = setTimeout(() => {
+        if (!cancelled) fn();
+      }, ms);
+      timeouts.push(id);
+    };
+
+    const schedulePulse = () => {
+      const delay = 5200 + Math.floor(Math.random() * 2800);
+      addTimeout(() => {
+        setTransmissionGlitch(true);
+        setTransmissionFlicker(true);
+        addTimeout(() => setTransmissionGlitch(false), 140);
+        addTimeout(() => setTransmissionFlicker(false), 280);
+        schedulePulse();
+      }, delay);
+    };
+
+    schedulePulse();
+
+    return () => {
+      cancelled = true;
+      timeouts.forEach((id) => clearTimeout(id));
+    };
+  }, []);
 
   const renderParagraph = (text: string) => {
     const marker = "OPERATIVO";
@@ -184,8 +216,12 @@ function Atrium() {
         <StatBlock label="Estatus" value="In Bonis" sub="Sin deudas pendientes" />
       </div>
 
-      <section className="mb-16">
-        <div className={`mx-auto max-w-[700px] space-y-12 px-1 md:px-4 ${sequenceComplete ? "animate-alta-mesa-breathe" : ""}`}>
+      <section className="relative mb-16 overflow-hidden scanlines">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.16] [background-image:linear-gradient(oklch(0.78_0.13_85_/_13%)_1px,transparent_1px),linear-gradient(90deg,oklch(0.78_0.13_85_/_13%)_1px,transparent_1px)] [background-size:34px_34px] animate-comm-grid-drift" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-gold/90 to-transparent opacity-[0.68] [animation:scan_3.9s_linear_infinite]" />
+        <div className={`pointer-events-none absolute inset-0 bg-gold/15 transition-opacity duration-200 ${transmissionFlicker ? "opacity-28" : "opacity-0"}`} />
+
+        <div className={`relative mx-auto max-w-[700px] space-y-12 px-1 md:px-4 alta-mesa-text-lumen ${sequenceComplete ? "animate-alta-mesa-breathe" : ""} ${transmissionGlitch ? "animate-hud-micro-glitch" : ""}`}>
           <div className="space-y-4">
             <p className={`font-mono text-[10px] uppercase tracking-[0.34em] text-gold-dim/80 transition-opacity duration-[420ms] ${showComunicado ? "opacity-100" : "opacity-0"}`}>
               CANAL CLASIFICADO
@@ -205,7 +241,7 @@ function Atrium() {
           </div>
 
           <div className="space-y-10 md:space-y-12">
-            {orderBlocks.map((paragraph, index) => {
+            {ORDER_BLOCKS.map((paragraph, index) => {
               const isVisible = visibleOrderCount > index;
               return (
                 <p
@@ -218,9 +254,9 @@ function Atrium() {
             })}
 
             <p
-              className={`font-display text-[22px] uppercase tracking-[0.17em] text-gold-bright [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.35)] transition-opacity duration-[520ms] md:text-[28px] ${showFinalOrder ? "opacity-100" : "opacity-0"}`}
+              className={`font-display text-[22px] uppercase tracking-[0.17em] text-gold-bright [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.35)] [animation:alta-mesa-lumen_2.4s_ease-in-out_infinite] transition-opacity duration-[520ms] md:text-[28px] ${showFinalOrder ? "opacity-100" : "opacity-0"}`}
             >
-              LA MISIÓN COMIENZA AHORA.
+              EJECUTE SUS ÓRDENES.
             </p>
           </div>
 
