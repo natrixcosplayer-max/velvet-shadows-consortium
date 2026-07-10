@@ -312,6 +312,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
   const preloadedVideoObjectUrlsRef = useRef<string[]>([]);
   const preFadeTriggeredRef = useRef(false);
   const fullscreenVideoOriginalSrcRef = useRef<string | null>(null);
+  const fullscreenVideoDisablePrefadeRef = useRef(false);
   const returnSequenceTimersRef = useRef<number[]>([]);
   const photoOverlayTimersRef = useRef<number[]>([]);
 
@@ -354,7 +355,12 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       }
     };
 
-    const playFullscreenVideo = (src: string, fallbackMs = 18000, originalSrc?: string) =>
+    const playFullscreenVideo = (
+      src: string,
+      fallbackMs = 18000,
+      originalSrc?: string,
+      disablePrefade = false,
+    ) =>
       new Promise<void>((resolve) => {
         if (cancelled) {
           resolve();
@@ -362,6 +368,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
         }
 
         fullscreenVideoOriginalSrcRef.current = originalSrc ?? src;
+        fullscreenVideoDisablePrefadeRef.current = disablePrefade;
 
         const fallbackId = window.setTimeout(() => {
           resolveActiveVideo();
@@ -380,6 +387,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
               setFullscreenVideoSrc(null);
             }
             fullscreenVideoOriginalSrcRef.current = null;
+            fullscreenVideoDisablePrefadeRef.current = false;
             resolve();
           }, 280);
           timersRef.current.push(hideId);
@@ -502,7 +510,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           const playableSrc = await resolvePlayableVideoSrc(media.src);
           if (cancelled) return;
 
-          await playFullscreenVideo(playableSrc, 30000, media.src);
+          await playFullscreenVideo(playableSrc, 30000, media.src, media.src === perroVideo);
           if (cancelled) return;
 
           await wait(300);
@@ -586,6 +594,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
       setFullscreenVideoVisible(false);
       setFullscreenVideoSrc(null);
       fullscreenVideoOriginalSrcRef.current = null;
+      fullscreenVideoDisablePrefadeRef.current = false;
 
       photoOverlayTimersRef.current.forEach((id) => window.clearTimeout(id));
       photoOverlayTimersRef.current = [];
@@ -745,9 +754,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
     const video = fullscreenVideoRef.current;
     if (!video || preFadeTriggeredRef.current) return;
 
-    const originalSrc = fullscreenVideoOriginalSrcRef.current ?? "";
-    const isPerroVideo = /perro\.mp4/i.test(originalSrc);
-    if (isPerroVideo) {
+    if (fullscreenVideoDisablePrefadeRef.current) {
       return;
     }
 
