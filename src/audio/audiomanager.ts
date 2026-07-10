@@ -11,6 +11,8 @@ let pendingMusicPlay = false;
 let pendingUnlockVolume: number | null = null;
 let musicRestoreSuppressed = false;
 let musicPinnedDuck = false;
+let temporaryMusicTarget: number | null = null;
+let temporaryMusicTargetTimer: ReturnType<typeof setTimeout> | null = null;
 
 const MUSIC_VOLUME = 0.08;
 const MUSIC_DUCK_VOLUME = 0.005;
@@ -106,6 +108,12 @@ export function stopMusic() {
   music.currentTime = 0;
   music = null;
   pendingMusicPlay = false;
+
+  if (temporaryMusicTargetTimer) {
+    clearTimeout(temporaryMusicTargetTimer);
+    temporaryMusicTargetTimer = null;
+  }
+  temporaryMusicTarget = null;
 }
 
 export function seekMusic(seconds: number) {
@@ -180,15 +188,40 @@ export function restoreMusic() {
     return;
   }
 
+  if (temporaryMusicTarget !== null) {
+    fadeMusicVolume(temporaryMusicTarget, 220);
+    return;
+  }
+
   fadeMusicVolume(musicBaseVolume, 1200);
 }
 
 export function setMusicBaseVolume(volume: number, ms = 300) {
   musicBaseVolume = Math.max(0, Math.min(1, volume));
 
-  if (!music || musicRestoreSuppressed || musicPinnedDuck) return;
+  if (!music || musicRestoreSuppressed || musicPinnedDuck || temporaryMusicTarget !== null) return;
 
   fadeMusicVolume(musicBaseVolume, ms);
+}
+
+export function attenuateMusicTemporarily(reductionPercent = 0.7, durationMs = 7000) {
+  const reduction = Math.max(0, Math.min(1, reductionPercent));
+  const target = Math.max(0, Math.min(1, musicBaseVolume * (1 - reduction)));
+
+  temporaryMusicTarget = target;
+
+  if (temporaryMusicTargetTimer) {
+    clearTimeout(temporaryMusicTargetTimer);
+    temporaryMusicTargetTimer = null;
+  }
+
+  restoreMusic();
+
+  temporaryMusicTargetTimer = setTimeout(() => {
+    temporaryMusicTarget = null;
+    temporaryMusicTargetTimer = null;
+    restoreMusic();
+  }, Math.max(0, durationMs));
 }
 
 export function setMusicPinnedDuck(pinned: boolean) {
@@ -382,18 +415,22 @@ export function primeUnlockSound() {
     });
 }
 
-export async function playUnlockSound(volume = 0.45) {
+export async function playUnlockSound(volume = 0.45, duckMs = 0) {
   const sound = unlockSound || new Audio("/sounds/unlock.mp3");
 
   if (!sound) return;
 
   // Atrium priority: pull john.mp3 down hard while unlock cue is active.
   if (music) {
-    if (musicFade) {
-      clearInterval(musicFade);
-      musicFade = null;
+    if (duckMs > 0) {
+      fadeMusicVolume(UNLOCK_DUCK_VOLUME, duckMs);
+    } else {
+      if (musicFade) {
+        clearInterval(musicFade);
+        musicFade = null;
+      }
+      music.volume = UNLOCK_DUCK_VOLUME;
     }
-    music.volume = UNLOCK_DUCK_VOLUME;
   }
 
   sound.currentTime = 0;

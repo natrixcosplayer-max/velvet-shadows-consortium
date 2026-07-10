@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Sigil } from "./AppShell";
 import altaLogo from "../assets/alta.png";
+import { attenuateMusicTemporarily, playUnlockSound, primeUnlockSound } from "../audio/audiomanager";
 const LINES = [
   "> ESTABLECIENDO CANAL CIFRADO...",
   "> VALIDANDO CREDENCIALES DEL OPERATIVO...",
@@ -13,15 +14,16 @@ const LINES = [
 export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [fadeOut, setFadeOut] = useState(false);
+  const [showAccessButton, setShowAccessButton] = useState(false);
 
   useEffect(() => {
     if (step >= LINES.length) {
-      setFadeOut(true);
-
-      const t = setTimeout(onComplete, 1000);
+      setProgress(100);
+      const t = setTimeout(() => setShowAccessButton(true), 300);
       return () => clearTimeout(t);
     }
+
+    setShowAccessButton(false);
 
     const t = setTimeout(() => {
       if (typeof window !== "undefined") {
@@ -36,6 +38,8 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
   }, [step, onComplete]);
 
   useEffect(() => {
+    if (step >= LINES.length) return;
+
     const id = setInterval(() => {
       setProgress((p) =>
         Math.min(100, p + 100 / LINES.length / 6)
@@ -146,6 +150,29 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
             />
 
           </div>
+
+          {showAccessButton && (
+            <div className="mt-6 flex justify-center animate-fade-up">
+              <button
+                type="button"
+                onPointerDown={() => {
+                  primeUnlockSound();
+                }}
+                onTouchStart={() => {
+                  primeUnlockSound();
+                }}
+                onClick={() => {
+                  primeUnlockSound();
+                  attenuateMusicTemporarily(0.5, 9000);
+                  void playUnlockSound(0.62, 2000);
+                  onComplete();
+                }}
+                className="mx-auto flex flex-col items-center border border-gold bg-black px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition"
+              >
+                <span>ACCEDER</span>
+              </button>
+            </div>
+          )}
 
         </div>
 

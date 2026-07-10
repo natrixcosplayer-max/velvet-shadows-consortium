@@ -3,7 +3,6 @@ import {
   fadeMusicVolume,
   playMusic,
   playSfx,
-  playUnlockSound,
   primeUnlockSound,
 } from "../audio/audiomanager";
 
@@ -64,7 +63,6 @@ export function EntryGate({ onEnter }: Props) {
           }}
           onClick={() => {
           primeUnlockSound();
-          void playUnlockSound(0.62);
           onEnter();
           playSfx("/sounds/luxbeep.mp3", 0.14);
           playMusic("/sounds/john.mp3", 0, true, 42);
