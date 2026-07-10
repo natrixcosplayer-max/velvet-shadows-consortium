@@ -330,9 +330,7 @@ function Missions() {
                         className="protocol-operativo-cta mt-3 font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim"
                         aria-label={`Abrir modulo ${order.number}: ${order.label}`}
                       >
-                        <span className="protocol-operativo-cta-tag">Tocar</span>
-                        <span className="protocol-operativo-cta-text">Abrir modulo</span>
-                        <span className="protocol-operativo-cta-index">#{order.number}</span>
+                        <span>Abrir modulo</span>
                       </button>
                     )}
                   </div>

@@ -56,38 +56,25 @@ function Index() {
 }
 
 function Atrium() {
-  const syncLines = [
-    "SINCRONIZANDO COMISION...",
-    "Verificando identidad...",
-    "Descifrando canal seguro...",
-    "Recuperando expediente...",
-    "Descargando comunicado...",
+  const orderBlocks = [
+    "Identidad verificada.",
+    "La Comisión le asigna un operativo de prioridad máxima.",
+    "Recupere el activo.",
+    "No comprometa la seguridad, el anonimato ni los intereses de la Alta Mesa.",
+    "Consulte el expediente OPERATIVO.",
   ];
-  const paragraphs = [
-    "Su identidad ha sido verificada satisfactoriamente por la Comision.",
-    "Mediante la presente queda requerido para ejecutar una mision de alta prioridad.",
-    "El activo asignado debera ser recuperado sin comprometer la seguridad, el anonimato ni los intereses de la Comision.",
-    "Las instrucciones operativas, la inteligencia disponible y los parametros de la mision han sido depositados en el expediente OPERATIVO. Proceda a su consulta inmediata.",
-    "Toda comunicacion ajena a este canal queda expresamente prohibida hasta la finalizacion de la operacion.",
-  ];
-  const [introComplete, setIntroComplete] = useState(false);
-  const [syncVisibleCount, setSyncVisibleCount] = useState(0);
-  const [titleVisible, setTitleVisible] = useState(false);
-  const [nameText, setNameText] = useState("");
-  const [identityVerified, setIdentityVerified] = useState(false);
-  const [typedParagraphs, setTypedParagraphs] = useState<string[]>(Array(paragraphs.length).fill(""));
-  const [activeParagraph, setActiveParagraph] = useState(0);
-  const [messageDone, setMessageDone] = useState(false);
-  const [showAuthenticated, setShowAuthenticated] = useState(false);
+  const [showComunicado, setShowComunicado] = useState(false);
+  const [showAgent, setShowAgent] = useState(false);
+  const [showIdentity, setShowIdentity] = useState(false);
+  const [visibleOrderCount, setVisibleOrderCount] = useState(0);
+  const [showFinalOrder, setShowFinalOrder] = useState(false);
+  const [sequenceComplete, setSequenceComplete] = useState(false);
   const [operativoPulse, setOperativoPulse] = useState(false);
-  const [borderSweepVisible, setBorderSweepVisible] = useState(false);
 
   useEffect(() => {
     const seenBefore = typeof window !== "undefined" && window.sessionStorage.getItem("comunicado-seen") === "1";
     let cancelled = false;
     const timeouts: ReturnType<typeof setTimeout>[] = [];
-    const intervals: ReturnType<typeof setInterval>[] = [];
-
     const addTimeout = (fn: () => void, ms: number) => {
       const id = setTimeout(() => {
         if (!cancelled) fn();
@@ -95,139 +82,70 @@ function Atrium() {
       timeouts.push(id);
     };
 
-    const addInterval = (fn: () => void, ms: number) => {
-      const id = setInterval(() => {
-        if (!cancelled) fn();
-      }, ms);
-      intervals.push(id);
-      return id;
-    };
-
-    const revealName = (fast = false) => {
-      const target = "AGENTE MANDARIN";
-      if (fast) {
-        setNameText(target);
-        setIdentityVerified(true);
-        return;
-      }
-
-      let i = 0;
-      const interval = addInterval(() => {
-        i += 1;
-        setNameText(target.slice(0, i));
-        if (i >= target.length) {
-          clearInterval(interval);
-          setIdentityVerified(true);
-        }
-      }, 52);
-    };
-
-    const revealParagraphs = (fast = false) => {
-      if (fast) {
-        setTypedParagraphs(paragraphs);
-        setActiveParagraph(paragraphs.length);
-        setMessageDone(true);
-        setShowAuthenticated(true);
-        return;
-      }
-
-      let paragraphIndex = 0;
-      let charIndex = 0;
-
-      const interval = addInterval(() => {
-        setTypedParagraphs((prev) => {
-          if (paragraphIndex >= paragraphs.length) return prev;
-
-          const next = [...prev];
-          const full = paragraphs[paragraphIndex];
-          charIndex += 1;
-          next[paragraphIndex] = full.slice(0, charIndex);
-
-          if (!operativoPulse && paragraphIndex === 3 && next[paragraphIndex].includes("OPERATIVO")) {
-            setOperativoPulse(true);
-            addTimeout(() => setOperativoPulse(false), 1450);
-          }
-
-          if (charIndex >= full.length) {
-            paragraphIndex += 1;
-            charIndex = 0;
-            setActiveParagraph(paragraphIndex);
-
-            if (paragraphIndex >= paragraphs.length) {
-              clearInterval(interval);
-              setMessageDone(true);
-
-              addTimeout(() => {
-                setShowAuthenticated(true);
-                playSfx("/sounds/luxbeep2.mp3", 0.2);
-                window.dispatchEvent(new CustomEvent("operativo-attention"));
-                navigator.vibrate?.(20);
-              }, 500);
-            }
-          }
-
-          return next;
-        });
-      }, 18);
-    };
-
-    const startSweepCycle = () => {
-      const schedule = () => {
-        const delay = 15000 + Math.floor(Math.random() * 5000);
-        addTimeout(() => {
-          setBorderSweepVisible(true);
-          addTimeout(() => setBorderSweepVisible(false), 1150);
-          schedule();
-        }, delay);
-      };
-      schedule();
-    };
-
     if (seenBefore) {
-      setSyncVisibleCount(syncLines.length);
-      setIntroComplete(true);
-      setTitleVisible(true);
-      revealName(true);
-      revealParagraphs(true);
-      startSweepCycle();
+      setShowComunicado(true);
+      setShowAgent(true);
+      setShowIdentity(true);
+      setVisibleOrderCount(orderBlocks.length);
+      setShowFinalOrder(true);
+      setSequenceComplete(true);
     } else {
-      syncLines.forEach((_, idx) => {
+      let timeline = 0;
+
+      addTimeout(() => setShowComunicado(true), timeline);
+      timeline += 500;
+
+      addTimeout(() => setShowAgent(true), timeline);
+      timeline += 500;
+
+      addTimeout(() => setShowIdentity(true), timeline);
+      timeline += 550;
+
+      orderBlocks.forEach((line, index) => {
         addTimeout(() => {
-          setSyncVisibleCount(idx + 1);
-        }, idx * 360);
+          setVisibleOrderCount(index + 1);
+          if (line.includes("OPERATIVO")) {
+            setOperativoPulse(true);
+            addTimeout(() => setOperativoPulse(false), 1300);
+          }
+        }, timeline + index * 820);
       });
 
-      addTimeout(() => {
-        setIntroComplete(true);
-        setTitleVisible(true);
-      }, 2000);
+      timeline += orderBlocks.length * 820;
 
-      addTimeout(() => revealName(false), 2320);
-      addTimeout(() => revealParagraphs(false), 2980);
+      addTimeout(() => setShowFinalOrder(true), timeline + 180);
+      addTimeout(() => {
+        setSequenceComplete(true);
+        playSfx("/sounds/luxbeep2.mp3", 0.2);
+        window.dispatchEvent(new CustomEvent("operativo-attention"));
+        navigator.vibrate?.(20);
+      }, timeline + 880);
+
       addTimeout(() => {
         window.sessionStorage.setItem("comunicado-seen", "1");
-      }, 4200);
-
-      startSweepCycle();
+      }, timeline + 1000);
     }
 
     return () => {
       cancelled = true;
       timeouts.forEach((id) => clearTimeout(id));
-      intervals.forEach((id) => clearInterval(id));
     };
-  }, []);
+  }, [orderBlocks]);
 
-  const renderParagraph = (text: string, index: number) => {
-    if (index !== 3) {
-      return text;
-    }
-
+  const renderParagraph = (text: string) => {
     const marker = "OPERATIVO";
-    const markerIndex = text.indexOf(marker);
-    if (markerIndex === -1) {
-      return text;
+    const finalMarker = "La misión comienza ahora.";
+
+    if (text === finalMarker) {
+      return (
+        <strong className="text-gold-bright uppercase tracking-[0.18em] [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.35)]">
+          LA MISIÓN COMIENZA AHORA
+        </strong>
+      );
     }
+
+    const markerIndex = text.indexOf(marker);
+    if (markerIndex === -1) return text;
 
     const before = text.slice(0, markerIndex);
     const marked = text.slice(markerIndex, markerIndex + marker.length);
@@ -266,68 +184,51 @@ function Atrium() {
         <StatBlock label="Estatus" value="In Bonis" sub="Sin deudas pendientes" />
       </div>
 
-     <Panel
-      className="mb-8 !border-gold/80 bg-[linear-gradient(180deg,oklch(0.22_0.03_78_/_0.82),oklch(0.12_0.01_60_/_0.88))] shadow-[0_0_0_1px_oklch(0.88_0.16_88_/_0.22),0_0_40px_-14px_oklch(0.88_0.16_88_/_0.36)]"
->
-
-      <div className="absolute inset-0 pointer-events-none opacity-100 animate-comm-grid-drift [background-image:linear-gradient(oklch(0.78_0.13_85_/_7.2%)_1px,transparent_1px),linear-gradient(90deg,oklch(0.78_0.13_85_/_7.2%)_1px,transparent_1px)] [background-size:32px_32px]" />
-
-      <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay [background-image:radial-gradient(circle,oklch(0.9_0.08_88_/_0.22)_0.7px,transparent_0.9px)] [background-size:3px_3px]" />
-      <div className={`absolute left-0 right-0 top-0 h-px pointer-events-none bg-gradient-to-r from-transparent via-gold to-transparent opacity-0 ${borderSweepVisible ? "animate-comm-top-sweep" : ""}`} />
-
-      <div className="relative z-10 space-y-6 scanlines">
-      <div className="mb-5 flex items-baseline justify-between gap-3 border-b border-gold-dim pb-3">
-        <h2 className={`font-display text-xl text-gold transition-opacity duration-500 ${titleVisible ? "opacity-100" : "opacity-0"}`}>COMUNICADO OFICIAL</h2>
-        <span className="font-mono text-[10px] tracking-[0.3em] text-gold-dim uppercase">Ex Commissione Alta Mesa</span>
-      </div>
-      <div className={`-mt-2 h-px w-44 bg-gradient-to-r from-gold/80 to-transparent transition-opacity duration-500 ${titleVisible ? "opacity-100" : "opacity-0"}`} />
-
-      {!introComplete ? (
-        <div className="space-y-3 pt-2 font-mono text-sm text-muted-foreground leading-7">
-          {syncLines.map((line, idx) => (
-            <p key={line} className={`transition-opacity duration-300 ${idx < syncVisibleCount ? "opacity-100" : "opacity-0"}`}>
-              {line}
+      <section className="mb-16">
+        <div className={`mx-auto max-w-[700px] space-y-12 px-1 md:px-4 ${sequenceComplete ? "animate-alta-mesa-breathe" : ""}`}>
+          <div className="space-y-4">
+            <p className={`font-mono text-[10px] uppercase tracking-[0.34em] text-gold-dim/80 transition-opacity duration-[420ms] ${showComunicado ? "opacity-100" : "opacity-0"}`}>
+              CANAL CLASIFICADO
             </p>
-          ))}
-        </div>
-      ) : (
-        <>
-      <p className="font-display text-3xl text-gold">
-        {nameText}
-      </p>
-      {identityVerified && (
-        <p className="font-mono text-[11px] tracking-[0.22em] text-gold-dim uppercase">✔ IDENTIDAD VERIFICADA</p>
-      )}
+            <p className={`font-display text-[20px] uppercase tracking-[0.24em] text-gold/68 transition-opacity duration-[420ms] ${showComunicado ? "opacity-100" : "opacity-0"}`}>
+              COMUNICADO OFICIAL
+            </p>
+          </div>
 
-      <div className="space-y-4 text-muted-foreground leading-8 text-lg">
+          <div className="space-y-5">
+            <h2 className={`font-display text-[40px] tracking-[0.12em] text-gold transition-opacity duration-[420ms] md:text-[52px] ${showAgent ? "opacity-100" : "opacity-0"}`}>
+              AGENTE MANDARIN
+            </h2>
+            <p className={`font-mono text-[10px] uppercase tracking-[0.3em] text-gold-dim/82 transition-opacity duration-[420ms] ${showIdentity ? "opacity-100" : "opacity-0"}`}>
+              ✓ IDENTIDAD VERIFICADA
+            </p>
+          </div>
 
-        {typedParagraphs.map((paragraph, index) => (
-          <p key={`comm-${index}`}>
-            {renderParagraph(paragraph, index)}
-            {!messageDone && activeParagraph === index && <span className="animate-blink">█</span>}
+          <div className="space-y-10 md:space-y-12">
+            {orderBlocks.map((paragraph, index) => {
+              const isVisible = visibleOrderCount > index;
+              return (
+                <p
+                  key={`comm-order-${index}`}
+                  className={`font-display text-[17px] leading-[1.95] tracking-[0.03em] text-gold/79 transition-opacity duration-[440ms] md:text-[20px] ${isVisible ? "opacity-100" : "opacity-0"}`}
+                >
+                  {renderParagraph(paragraph)}
+                </p>
+              );
+            })}
+
+            <p
+              className={`font-display text-[22px] uppercase tracking-[0.17em] text-gold-bright [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.35)] transition-opacity duration-[520ms] md:text-[28px] ${showFinalOrder ? "opacity-100" : "opacity-0"}`}
+            >
+              LA MISIÓN COMIENZA AHORA.
+            </p>
+          </div>
+
+          <p className={`pt-4 font-mono text-[10px] uppercase tracking-[0.32em] text-gold-dim/74 transition-opacity duration-[420ms] ${showFinalOrder ? "opacity-100" : "opacity-0"}`}>
+            EX COMMISSIONE ALTA MESA
           </p>
-        ))}
-
-      </div>
-
-      {showAuthenticated && (
-        <p className="font-mono text-[11px] tracking-[0.22em] text-gold-dim uppercase">✔ MENSAJE AUTENTICADO</p>
-      )}
-
-      </>
-      )}
-
-    <div className="border-t border-gold-dim pt-5">
-
-      <p className="font-display text-gold text-xl">
-        Ex Commissione Alta Mesa
-      </p>
-
-    </div>
-
-  </div>
-
-</Panel>
+        </div>
+      </section>
 
 <div className="grid md:grid-cols-4 gap-4 mb-8">
 
