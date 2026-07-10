@@ -155,7 +155,7 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
       break;
 
     case "/atlas":
-      sound = "/sounds/luxbeep2.mp3";
+      sound = "/sounds/luxbeep.mp3";
       break;
 
     case "/treasury":

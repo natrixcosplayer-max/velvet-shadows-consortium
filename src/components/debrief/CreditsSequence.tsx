@@ -530,6 +530,12 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
           setPhotoCurrentDirection(nextDirection);
           setPhotoPrevious(lastPhoto);
           setPhotoCurrent(nextPhoto);
+          if (isFirstPhoto) {
+            // Let the first still mount at opacity 0 before enabling transition to avoid pop-in.
+            setPhotoVisible(false);
+            await wait(40);
+            if (cancelled) return;
+          }
           setPhotoVisible(true);
           setCreditVisible(false);
 

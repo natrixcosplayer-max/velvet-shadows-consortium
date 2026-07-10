@@ -307,7 +307,11 @@ function Missions() {
                 className={`protocol-operativo-row py-4 sm:py-5 ${onActivate ? "is-interactive" : ""}`}
               >
                 <div className="grid gap-2 sm:grid-cols-[96px_1fr] sm:gap-5">
-                  <p className="font-display text-xl tracking-[0.16em] text-gold sm:text-2xl">
+                  <p
+                    className={`font-display text-xl tracking-[0.16em] text-gold sm:text-2xl ${
+                      onActivate ? "protocol-operativo-number-interactive" : ""
+                    }`}
+                  >
                     {order.number}
                   </p>
 
@@ -324,10 +328,11 @@ function Missions() {
                         type="button"
                         onClick={onActivate}
                         className="protocol-operativo-cta mt-3 font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim"
+                        aria-label={`Abrir modulo ${order.number}: ${order.label}`}
                       >
-                        <span aria-hidden className="protocol-operativo-dot" />
-                        <span>[ ABRIR MÓDULO ]</span>
-                        <span aria-hidden className="protocol-operativo-arrow">→</span>
+                        <span className="protocol-operativo-cta-tag">Tocar</span>
+                        <span className="protocol-operativo-cta-text">Abrir modulo</span>
+                        <span className="protocol-operativo-cta-index">#{order.number}</span>
                       </button>
                     )}
                   </div>
