@@ -389,7 +389,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
             fullscreenVideoOriginalSrcRef.current = null;
             fullscreenVideoDisablePrefadeRef.current = false;
             resolve();
-          }, 280);
+          }, 520);
           timersRef.current.push(hideId);
         };
 

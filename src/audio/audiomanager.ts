@@ -17,7 +17,7 @@ let musicPausedForComms = false;
 let emailVoice: HTMLAudioElement | null = null;
 let emailMusicDucked = false;
 
-const MUSIC_VOLUME = 0.08;
+const MUSIC_VOLUME = 0.064;
 const MUSIC_DUCK_VOLUME = 0.005;
 const UNLOCK_DUCK_VOLUME = 0.001;
 let musicBaseVolume = MUSIC_VOLUME;
@@ -527,8 +527,9 @@ export async function playUnlockSound(volume = 0.45) {
   }
 
   // 5) Reproducir unlock sólo después de verificar el volumen.
+  const safeVolume = Math.max(0, Math.min(1, volume));
   sound.currentTime = 0;
-  sound.volume = volume;
+  sound.volume = safeVolume;
   sound.muted = false;
 
   sound.onended = () => {
@@ -541,7 +542,7 @@ export async function playUnlockSound(volume = 0.45) {
     result.catch(() => {
       restoreMusic();
       logJohnVolumeAroundUnlock("after unlock (play failed, restore requested)");
-      pendingUnlockVolume = volume;
+      pendingUnlockVolume = safeVolume;
       attachGestureUnlockListeners();
     });
   }

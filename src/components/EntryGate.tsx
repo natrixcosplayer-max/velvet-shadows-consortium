@@ -66,7 +66,7 @@ export function EntryGate({ onEnter }: Props) {
           onEnter();
           playSfx("/sounds/luxbeep.mp3", 0.14);
           playMusic("/sounds/john.mp3", 0, true, 42);
-          fadeMusicVolume(0.08, 650);
+          fadeMusicVolume(0.064, 650);
         }}
           className="mx-auto flex flex-col items-center border border-gold px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition animate-pulse-gold"
         >
