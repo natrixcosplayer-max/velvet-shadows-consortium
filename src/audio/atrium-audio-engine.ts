@@ -202,7 +202,13 @@ function removeGestureUnlockListeners() {
 
 attachGestureUnlockListeners();
 
-export function playMusic(src: string, volume = MUSIC_VOLUME, loop = true, startTime = 0) {
+export function playMusic(
+  src: string,
+  startVolume = MUSIC_VOLUME,
+  loop = true,
+  startTime = 0,
+  baseVolume = MUSIC_VOLUME
+) {
   if (music) return;
 
   ensureAudioContext();
@@ -211,9 +217,10 @@ export function playMusic(src: string, volume = MUSIC_VOLUME, loop = true, start
   music.loop = loop;
   music.volume = 1;
 
-  musicBaseVolume = Math.max(0, Math.min(1, volume));
+  const safeStartVolume = Math.max(0, Math.min(1, startVolume));
+  musicBaseVolume = Math.max(0, Math.min(1, baseVolume));
   ensureMusicGraph();
-  void scheduleMusicGain(musicBaseVolume, 0);
+  void scheduleMusicGain(safeStartVolume, 0);
 
   const startPlayback = () => {
     if (!music) return;
