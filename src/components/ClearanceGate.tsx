@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sigil } from "./AppShell";
 import altaLogo from "../assets/alta.png";
-import { attenuateMusicTemporarily, playUnlockSound, primeUnlockSound } from "../audio/audiomanager";
+import { attenuateMusicTemporarily, playUnlockSound, primeUnlockSound } from "../audio/atrium-audio-engine";
 const LINES = [
   "> ESTABLECIENDO CANAL CIFRADO...",
   "> VALIDANDO CREDENCIALES DEL OPERATIVO...",
@@ -15,6 +15,20 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showAccessButton, setShowAccessButton] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const isProcessingRef = useRef(false);
+
+  const handleAccess = () => {
+    if (isProcessingRef.current) return;
+
+    isProcessingRef.current = true;
+    setIsProcessing(true);
+
+    primeUnlockSound();
+    attenuateMusicTemporarily(0.5, 9000);
+    void playUnlockSound(1);
+    onComplete();
+  };
 
   useEffect(() => {
     if (step >= LINES.length) {
@@ -156,18 +170,16 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
               <button
                 type="button"
                 onPointerDown={() => {
-                  primeUnlockSound();
+                  handleAccess();
                 }}
                 onTouchStart={() => {
-                  primeUnlockSound();
+                  handleAccess();
                 }}
                 onClick={() => {
-                  primeUnlockSound();
-                  attenuateMusicTemporarily(0.5, 9000);
-                  void playUnlockSound(1);
-                  onComplete();
+                  handleAccess();
                 }}
-                className="mx-auto flex flex-col items-center border border-gold bg-black px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition"
+                disabled={isProcessing}
+                className="mx-auto flex flex-col items-center border border-gold bg-black px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <span>ACCEDER</span>
               </button>

@@ -5,7 +5,7 @@ import minervaPortraitVideo from "../assets/agents/minerva-1.mp4";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
-import { playControlledAudio, playSfx, stopControlledAudio } from "../audio/audiomanager";
+import { playControlledAudio, playSfx, stopControlledAudio } from "../audio/atrium-audio-engine";
 
 const MANDARIN_VIDEO_VERSION = "20260709-2";
 const MINERVA_VIDEO_VERSION = "20260709-1";

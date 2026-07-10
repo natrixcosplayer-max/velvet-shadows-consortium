@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell, Panel, StatBlock } from "../components/AppShell";
 import { ClearanceGate } from "../components/ClearanceGate";
-import { playSfx } from "../audio/audiomanager";
+import { playSfx } from "../audio/atrium-audio-engine";
 
 export const Route = createFileRoute("/")({
   head: () => ({

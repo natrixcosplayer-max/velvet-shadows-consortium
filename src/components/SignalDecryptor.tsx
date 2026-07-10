@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { playSfx } from "../audio/audiomanager";
+import { playSfx } from "../audio/atrium-audio-engine";
 
 type SignalDecryptorProps = {
   image: string;

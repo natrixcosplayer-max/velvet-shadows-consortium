@@ -4,7 +4,7 @@ import {
   playMusic,
   playSfx,
   primeUnlockSound,
-} from "../audio/audiomanager";
+} from "../audio/atrium-audio-engine";
 
 type Props = {
   onEnter: () => void;

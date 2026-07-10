@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
-import { playSfx } from "../audio/audiomanager";
+import { playSfx } from "../audio/atrium-audio-engine";
 
 export const Route = createFileRoute("/treasury")({
   head: () => ({ meta: [{ title: "Tesorería — Continental" }, { name: "description", content: "Economía de monedas y marcadores." }] }),

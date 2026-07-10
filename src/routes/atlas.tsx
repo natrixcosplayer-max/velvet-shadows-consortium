@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 import mapaImage from "../assets/graphics/mapa.jpg";
-import { playSfx } from "../audio/audiomanager";
+import { playSfx } from "../audio/atrium-audio-engine";
 import { useIsMobile } from "../hooks/use-mobile";
 
 export const Route = createFileRoute("/atlas")({

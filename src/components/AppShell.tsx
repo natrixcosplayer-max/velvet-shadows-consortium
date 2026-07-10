@@ -3,7 +3,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import altaLogo from "../assets/alta.png";
 import {
   playSfx,
-} from "../audio/audiomanager";
+} from "../audio/atrium-audio-engine";
 
 const SKIP_COMMISSION_GATES_KEY = "skip-commission-gates-once";
 const UNLOCK_SOUND_PLAYED_KEY = "unlock-sound-played";

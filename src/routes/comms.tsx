@@ -12,7 +12,7 @@ import {
   playEmailVoice,
   resumeMusicAfterComms,
   stopEmailVoice,
-} from "../audio/audiomanager";
+} from "../audio/atrium-audio-engine";
 
 export const Route = createFileRoute("/comms")({
   head: () => ({ meta: [{ title: "Comunicaciones — Continental" }, { name: "description", content: "Comunicaciones cifradas." }] }),

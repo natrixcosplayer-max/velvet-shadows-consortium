@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AppShell, Panel } from "../components/AppShell";
 import { SignalDecryptor } from "../components/SignalDecryptor";
-import { playSfx } from "../audio/audiomanager";
+import { playSfx } from "../audio/atrium-audio-engine";
 import mercado from "../assets/graphics/mercado.jpg";
 
 export const Route = createFileRoute("/missions")({
