@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell, Panel, StatBlock } from "../components/AppShell";
 import { ClearanceGate } from "../components/ClearanceGate";
-import { playSfx, playUnlockSound } from "../audio/audiomanager";
+import { playSfx } from "../audio/audiomanager";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -81,16 +81,6 @@ function Atrium() {
   const [showAuthenticated, setShowAuthenticated] = useState(false);
   const [operativoPulse, setOperativoPulse] = useState(false);
   const [borderSweepVisible, setBorderSweepVisible] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const id = window.setTimeout(() => {
-      void playUnlockSound(0.62);
-    }, 120);
-
-    return () => window.clearTimeout(id);
-  }, []);
 
   useEffect(() => {
     const seenBefore = typeof window !== "undefined" && window.sessionStorage.getItem("comunicado-seen") === "1";

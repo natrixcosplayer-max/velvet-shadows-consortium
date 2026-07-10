@@ -10,6 +10,7 @@ let listenersAttached = false;
 let pendingMusicPlay = false;
 let pendingUnlockVolume: number | null = null;
 let musicRestoreSuppressed = false;
+let musicPinnedDuck = false;
 
 const MUSIC_VOLUME = 0.08;
 const MUSIC_DUCK_VOLUME = 0.005;
@@ -174,15 +175,38 @@ export function restoreMusic() {
     return;
   }
 
+  if (musicPinnedDuck) {
+    fadeMusicVolume(MUSIC_DUCK_VOLUME, 180);
+    return;
+  }
+
   fadeMusicVolume(musicBaseVolume, 1200);
 }
 
 export function setMusicBaseVolume(volume: number, ms = 300) {
   musicBaseVolume = Math.max(0, Math.min(1, volume));
 
-  if (!music || musicRestoreSuppressed) return;
+  if (!music || musicRestoreSuppressed || musicPinnedDuck) return;
 
   fadeMusicVolume(musicBaseVolume, ms);
+}
+
+export function setMusicPinnedDuck(pinned: boolean) {
+  musicPinnedDuck = pinned;
+
+  if (!music || musicRestoreSuppressed) return;
+
+  if (musicFade) {
+    clearInterval(musicFade);
+    musicFade = null;
+  }
+
+  if (musicPinnedDuck) {
+    music.volume = MUSIC_DUCK_VOLUME;
+    return;
+  }
+
+  fadeMusicVolume(musicBaseVolume, 320);
 }
 
 export function setMusicRestoreSuppressed(suppressed: boolean) {

@@ -70,6 +70,9 @@ const PROTOCOL_ORDERS = [
 function Missions() {
   const [nowCest, setNowCest] = useState("");
   const navigateButtonRef = useRef<HTMLAnchorElement | null>(null);
+  const coordinatesSectionRef = useRef<HTMLDivElement | null>(null);
+  const sealedCodeSectionRef = useRef<HTMLDivElement | null>(null);
+  const visualReferenceSectionRef = useRef<HTMLDivElement | null>(null);
   const [objectiveElapsed, setObjectiveElapsed] = useState(17);
   const [reliability, setReliability] = useState("99.8 %");
   const [originIndex, setOriginIndex] = useState(0);
@@ -96,6 +99,12 @@ function Missions() {
     setTimeout(() => {
       navigateButtonRef.current?.focus({ preventScroll: true });
     }, 320);
+  };
+
+  const jumpToSection = (sectionRef: React.RefObject<HTMLDivElement | null>) => {
+    if (!sectionRef.current) return;
+
+    sectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   useEffect(() => {
@@ -274,27 +283,64 @@ function Missions() {
       <div className="mx-auto max-w-4xl">
         <div className="border-y border-gold/30 py-5 text-center">
           <p className="font-mono text-[9px] tracking-[0.45em] uppercase text-gold-dim">
-            OPERACIÓN CUMPLE
+            OPERACIÓN CUMPLIUM
           </p>
           <p className="mt-2 font-mono text-[10px] tracking-[0.35em] uppercase text-gold/80">
-            AUTORIDAD: MAGISTRADA LIVIA
+            AUTORIDAD: COMISIÓN
           </p>
         </div>
 
-        <div className="mt-6 space-y-4 sm:space-y-5">
-          {PROTOCOL_ORDERS.map((order, index) => (
-            <ProtocolOrderCard
-              key={order.number}
-              order={order}
-              index={index}
-              total={PROTOCOL_ORDERS.length}
-            />
-          ))}
-        </div>
+        <ol className="mt-6 divide-y divide-gold/20 border-y border-gold/20">
+          {PROTOCOL_ORDERS.map((order) => {
+            const onActivate =
+              order.number === "01"
+                ? () => jumpToSection(coordinatesSectionRef)
+                : order.number === "02"
+                  ? () => jumpToSection(sealedCodeSectionRef)
+                  : order.number === "03"
+                    ? () => jumpToSection(visualReferenceSectionRef)
+                    : undefined;
+
+            return (
+              <li
+                key={order.number}
+                className={`protocol-operativo-row py-4 sm:py-5 ${onActivate ? "is-interactive" : ""}`}
+              >
+                <div className="grid gap-2 sm:grid-cols-[96px_1fr] sm:gap-5">
+                  <p className="font-display text-xl tracking-[0.16em] text-gold sm:text-2xl">
+                    {order.number}
+                  </p>
+
+                  <div>
+                    <p className="font-mono text-[10px] tracking-[0.32em] uppercase text-gold/90">
+                      {order.label}
+                    </p>
+                    <p className="mt-2 font-mono text-sm leading-7 text-gold/85 sm:text-base">
+                      {order.text}
+                    </p>
+
+                    {onActivate && (
+                      <button
+                        type="button"
+                        onClick={onActivate}
+                        className="protocol-operativo-cta mt-3 font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim"
+                      >
+                        <span aria-hidden className="protocol-operativo-dot" />
+                        <span>[ ABRIR MÓDULO ]</span>
+                        <span aria-hidden className="protocol-operativo-arrow">→</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
       </div>
 
     </Panel>
 
+    <div ref={coordinatesSectionRef}>
     <Panel title="Coordenadas" latin="Geolocatio" className="mt-8">
 
       <div className="grid md:grid-cols-[1fr_280px] gap-8 items-center">
@@ -362,6 +408,7 @@ function Missions() {
       </figure>
 
     </Panel>
+    </div>
 
     <Panel title="Nivel de Riesgo" latin="Periculum" className="mt-8">
       <p className="font-display text-2xl text-red-400">
@@ -417,9 +464,13 @@ function Missions() {
       </div>
     </Panel>
 
-    <SealedCode />
+    <div ref={sealedCodeSectionRef}>
+      <SealedCode />
+    </div>
 
-    <VisualReferenceSequence />
+    <div ref={visualReferenceSectionRef}>
+      <VisualReferenceSequence />
+    </div>
 
     <Panel title="Observaciones de la Comisión" className="mt-8">
 
@@ -712,10 +763,12 @@ function ProtocolOrderCard({
   order,
   index,
   total,
+  onActivate,
 }: {
   order: (typeof PROTOCOL_ORDERS)[number];
   index: number;
   total: number;
+  onActivate?: () => void;
 }) {
   const [revealStage, setRevealStage] = useState(0);
   const [flashVisible, setFlashVisible] = useState(true);
@@ -749,9 +802,28 @@ function ProtocolOrderCard({
       ? order.label
       : `${order.label.slice(0, visibleTitleLength)}${"█".repeat(order.label.length - visibleTitleLength)}`;
 
+  const isInteractive = typeof onActivate === "function";
+
   return (
     <div
-      className="group relative overflow-hidden border border-gold/30 bg-black/55 px-5 py-6 transition-all duration-300 ease-out sm:px-6 sm:py-7 md:px-8 hover:border-gold/70 hover:bg-black/65 hover:-translate-y-[2px]"
+      role={isInteractive ? "button" : undefined}
+      tabIndex={isInteractive ? 0 : undefined}
+      onClick={isInteractive ? onActivate : undefined}
+      onKeyDown={
+        isInteractive
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onActivate?.();
+              }
+            }
+          : undefined
+      }
+      className={`group relative overflow-hidden border border-gold/30 bg-black/55 px-5 py-6 transition-all duration-300 ease-out sm:px-6 sm:py-7 md:px-8 hover:border-gold/70 hover:bg-black/65 hover:-translate-y-[2px] ${
+        isInteractive
+          ? "cursor-pointer active:translate-y-[1px] active:border-gold/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold/70"
+          : ""
+      }`}
       style={{
         opacity: revealStage === 0 ? 0 : 1,
         animationDelay: `${index * 100}ms`,
@@ -786,9 +858,14 @@ function ProtocolOrderCard({
             <p className="font-mono text-[9px] tracking-[0.38em] uppercase text-gold-dim">
               {index === 0 ? "PROTOCOLO EMITIDO" : "ORDEN ACTIVA"}
             </p>
-            <p className="font-display text-2xl sm:text-[2rem] tracking-[0.18em] uppercase text-gold">
+            <p className="font-display font-bold text-2xl sm:text-[2rem] tracking-[0.18em] uppercase text-gold">
               {titleText}
             </p>
+            {isInteractive && (
+              <p className="font-mono text-[9px] tracking-[0.28em] uppercase text-gold/75 md:hidden animate-pulse">
+                tocar para abrir modulo
+              </p>
+            )}
           </div>
 
           <div className="h-px bg-gold/20" />

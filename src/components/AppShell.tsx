@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import altaLogo from "../assets/alta.png";
 import {
   playSfx,
+  setMusicPinnedDuck,
 } from "../audio/audiomanager";
 
 const SKIP_COMMISSION_GATES_KEY = "skip-commission-gates-once";
@@ -25,6 +26,8 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
   const [hudChannel, setHudChannel] = useState("CANAL SEGURO");
   const [hudCipher, setHudCipher] = useState("AES-512");
   const [hudGlitch, setHudGlitch] = useState(false);
+
+  const isIPhone = () => (typeof navigator !== "undefined" ? /iPhone/i.test(navigator.userAgent || "") : false);
 
   useEffect(() => {
     const tick = () => {
@@ -91,6 +94,9 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
           <Link
             to="/"
             onClick={() => {
+              if (isIPhone()) {
+                setMusicPinnedDuck(false);
+              }
               window.sessionStorage.removeItem(SKIP_COMMISSION_GATES_KEY);
               window.sessionStorage.removeItem(UNLOCK_SOUND_PLAYED_KEY);
               window.sessionStorage.removeItem(COMMUNICADO_SEEN_KEY);
@@ -119,7 +125,12 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
           </div>
           <button
             className="md:hidden text-gold border border-gold-dim px-2 py-1 text-xs font-mono"
-            onClick={() => setMobileOpen((v) => !v)}
+            onClick={() => {
+              if (isIPhone()) {
+                setMusicPinnedDuck(false);
+              }
+              setMobileOpen((v) => !v);
+            }}
             aria-label="Alternar navegación"
           >
             {mobileOpen ? "CERRAR" : "MENÚ"}
@@ -134,6 +145,10 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
                   key={item.to}
                   to={item.to}
                   onClick={() => {
+  if (isIPhone()) {
+    setMusicPinnedDuck(item.to === "/comms");
+  }
+
   let sound = "/sounds/luxbeep.mp3";
 
   switch (item.to) {

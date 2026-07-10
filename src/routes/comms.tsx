@@ -111,10 +111,10 @@ function Comms() {
                       setOpen(t);
                     }
                   }}
-                  className={`w-full text-left p-4 border-b border-gold-dim/40 hover:bg-secondary/40 transition ${unreadIds.includes(t.id) ? "bg-gold/20" : ""} ${open.id === t.id ? "bg-secondary/60 border-l-2 border-l-gold" : ""}`}
+                  className={`w-full text-left p-4 border-b border-gold-dim/40 hover:bg-secondary/40 transition ${open.id === t.id ? "bg-secondary/60 border-l-2 border-l-gold" : ""}`}
                 >
                   <div className="flex justify-between items-baseline">
-                    <span className={`font-display ${unreadIds.includes(t.id) ? "text-gold-bright" : "text-gold"}`}>{t.from}</span>
+                    <span className="font-display text-gold">{t.from}</span>
                     <span className="font-mono text-[10px] text-gold-dim">{t.at}</span>
                   </div>
                   <p className="text-xs text-foreground/80 mt-1 truncate">{t.subject}</p>
