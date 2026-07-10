@@ -77,9 +77,10 @@ function Missions() {
   const [reliability, setReliability] = useState("99.8 %");
   const [originIndex, setOriginIndex] = useState(0);
   const [signalPhase, setSignalPhase] = useState(0);
-  const [moduleGlowId, setModuleGlowId] = useState<string | null>(null);
-  const moduleGlowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pressedCtaId, setPressedCtaId] = useState<string | null>(null);
+  const pressedCtaTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastModuleFeedbackAtRef = useRef(0);
+  const lastTapSfxAtRef = useRef(0);
 
   const ORIGIN_STATES = [
     "SAT-COM VII",
@@ -110,22 +111,43 @@ function Missions() {
     sectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const playTapSfx = () => {
+    const now = Date.now();
+    if (now - lastTapSfxAtRef.current < 180) return;
+    lastTapSfxAtRef.current = now;
+    playSfx("/sounds/luxbeep2.mp3", 0.24);
+  };
+
   const triggerModuleFeedback = (moduleNumber: string) => {
     const now = Date.now();
     if (now - lastModuleFeedbackAtRef.current < 180) return;
     lastModuleFeedbackAtRef.current = now;
 
-    playSfx("/sounds/luxbeep2.mp3", 0.24);
-    setModuleGlowId(moduleNumber);
+    playTapSfx();
+    setPressedCtaId(`module-${moduleNumber}`);
 
-    if (moduleGlowTimerRef.current) {
-      clearTimeout(moduleGlowTimerRef.current);
+    if (pressedCtaTimerRef.current) {
+      clearTimeout(pressedCtaTimerRef.current);
     }
 
-    moduleGlowTimerRef.current = setTimeout(() => {
-      setModuleGlowId((current) => (current === moduleNumber ? null : current));
-      moduleGlowTimerRef.current = null;
+    pressedCtaTimerRef.current = setTimeout(() => {
+      setPressedCtaId((current) => (current === `module-${moduleNumber}` ? null : current));
+      pressedCtaTimerRef.current = null;
     }, 260);
+  };
+
+  const triggerCtaPress = (id: string) => {
+    playTapSfx();
+    setPressedCtaId(id);
+
+    if (pressedCtaTimerRef.current) {
+      clearTimeout(pressedCtaTimerRef.current);
+    }
+
+    pressedCtaTimerRef.current = setTimeout(() => {
+      setPressedCtaId((current) => (current === id ? null : current));
+      pressedCtaTimerRef.current = null;
+    }, 240);
   };
 
   useEffect(() => {
@@ -181,8 +203,8 @@ function Missions() {
 
   useEffect(() => {
     return () => {
-      if (moduleGlowTimerRef.current) {
-        clearTimeout(moduleGlowTimerRef.current);
+      if (pressedCtaTimerRef.current) {
+        clearTimeout(pressedCtaTimerRef.current);
       }
     };
   }, []);
@@ -354,7 +376,7 @@ function Missions() {
                         onClick={onActivate}
                         onPointerDown={() => triggerModuleFeedback(order.number)}
                         onTouchStart={() => triggerModuleFeedback(order.number)}
-                        className={`protocol-operativo-cta mt-3 font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim ${moduleGlowId === order.number ? "border-gold text-gold bg-gold/15 shadow-[0_0_16px_rgba(212,175,55,0.45)]" : ""}`}
+                        className={`protocol-operativo-cta mt-3 font-mono text-[10px] tracking-[0.28em] uppercase text-gold-dim ${pressedCtaId === `module-${order.number}` ? "border-gold bg-gold text-black shadow-[0_0_20px_rgba(212,175,55,0.62)]" : ""}`}
                         aria-label={`Abrir modulo ${order.number}: ${order.label}`}
                       >
                         <span>Abrir modulo</span>
@@ -403,7 +425,9 @@ function Missions() {
     href="https://maps.app.goo.gl/huh44bQw9ePxUGBx9"
     target="_blank"
     rel="noopener noreferrer"
-    className="border border-gold p-4 text-center uppercase font-mono tracking-[0.25em] text-gold hover:bg-gold hover:text-primary-foreground transition animate-pulse-gold"
+    onPointerDown={() => triggerCtaPress("map-location")}
+    onTouchStart={() => triggerCtaPress("map-location")}
+    className={`border border-gold p-4 text-center uppercase font-mono tracking-[0.25em] text-gold hover:bg-gold hover:text-primary-foreground transition animate-pulse-gold ${pressedCtaId === "map-location" ? "bg-gold text-black shadow-[0_0_24px_rgba(212,175,55,0.68)]" : ""}`}
   >
     📍 Ver ubicación
   </a>
@@ -413,7 +437,9 @@ function Missions() {
     href="https://www.google.com/maps/dir/?api=1&destination=C%2F+de+Ciril+Amor%C3%B3s%2C+62%2C+46004+Val%C3%A8ncia&travelmode=walking"
     target="_blank"
     rel="noopener noreferrer"
-    className="border border-gold p-4 text-center uppercase font-mono tracking-[0.25em] text-gold hover:bg-gold hover:text-primary-foreground transition animate-pulse-gold"
+    onPointerDown={() => triggerCtaPress("map-nav")}
+    onTouchStart={() => triggerCtaPress("map-nav")}
+    className={`border border-gold p-4 text-center uppercase font-mono tracking-[0.25em] text-gold hover:bg-gold hover:text-primary-foreground transition animate-pulse-gold ${pressedCtaId === "map-nav" ? "bg-gold text-black shadow-[0_0_24px_rgba(212,175,55,0.68)]" : ""}`}
   >
     🧭 Iniciar navegación
   </a>
