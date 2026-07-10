@@ -80,6 +80,12 @@ function Atrium() {
   const [packetLossTarget, setPacketLossTarget] = useState<{ line: number; word: string } | null>(null);
   const [interferenceSweepY, setInterferenceSweepY] = useState<number | null>(null);
   const [titleInterference, setTitleInterference] = useState(false);
+  const [isIPhone, setIsIPhone] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    setIsIPhone(/iPhone/i.test(navigator.userAgent));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -396,13 +402,13 @@ function Atrium() {
 
           <div className="space-y-4">
             <h2
-              className={`signal-text-transmission font-display text-[36px] tracking-[0.12em] text-gold transition-opacity duration-[620ms] md:text-[48px] ${showAgent ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 0 ? "signal-line-jitter" : ""} ${titleInterference ? "agent-title-interference" : ""}`}
+              className={`signal-text-transmission font-display tracking-[0.12em] text-gold transition-opacity duration-[620ms] md:text-[48px] ${isIPhone ? "text-[43px]" : "text-[36px]"} ${showAgent ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 0 ? "signal-line-jitter" : ""} ${titleInterference ? "agent-title-interference" : ""}`}
               style={lineShiftIndex === 0 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
             >
               AGENTE {renderSignalWord(0, "MANDARIN")}
             </h2>
             <p
-              className={`signal-text-transmission font-mono text-[10px] uppercase tracking-[0.3em] text-gold-dim/80 transition-opacity duration-[520ms] ${showIdentity ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 1 ? "signal-line-jitter" : ""}`}
+              className={`signal-text-transmission font-mono uppercase tracking-[0.3em] text-gold-dim/80 transition-opacity duration-[520ms] ${isIPhone ? "text-[12px]" : "text-[10px]"} ${showIdentity ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 1 ? "signal-line-jitter" : ""}`}
               style={lineShiftIndex === 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
             >
               ✓ IDENTIDAD {renderSignalWord(1, "VERIFICADA")}
@@ -415,7 +421,7 @@ function Atrium() {
               return (
                 <p
                   key={`comm-order-${index}`}
-                  className={`signal-text-transmission font-display text-[14px] leading-[2] tracking-[0.035em] text-gold/76 transition-opacity duration-[640ms] md:text-[16px] ${isVisible ? "opacity-100" : "opacity-0"} ${lineShiftIndex === index + 2 ? "signal-line-jitter" : ""}`}
+                  className={`signal-text-transmission font-display leading-[2] tracking-[0.035em] text-gold/76 transition-opacity duration-[640ms] md:text-[16px] ${isIPhone ? "text-[17px]" : "text-[14px]"} ${isVisible ? "opacity-100" : "opacity-0"} ${lineShiftIndex === index + 2 ? "signal-line-jitter" : ""}`}
                   style={lineShiftIndex === index + 2 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
                 >
                   {renderParagraph(paragraph, index + 2)}
@@ -424,7 +430,7 @@ function Atrium() {
             })}
 
             <p
-              className={`signal-text-transmission font-display text-[20px] uppercase tracking-[0.17em] text-gold-bright [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.38)] [animation:alta-mesa-lumen_2.1s_ease-in-out_infinite] transition-opacity duration-[900ms] md:text-[24px] ${showFinalOrder ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 2 ? "signal-line-jitter" : ""}`}
+              className={`signal-text-transmission font-display uppercase tracking-[0.17em] text-gold-bright [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.38)] [animation:alta-mesa-lumen_2.1s_ease-in-out_infinite] transition-opacity duration-[900ms] md:text-[24px] ${isIPhone ? "text-[24px]" : "text-[20px]"} ${showFinalOrder ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 2 ? "signal-line-jitter" : ""}`}
               style={lineShiftIndex === ORDER_BLOCKS.length + 2 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
             >
               EJECUTE SUS {renderSignalWord(ORDER_BLOCKS.length + 2, "ÓRDENES")}.
