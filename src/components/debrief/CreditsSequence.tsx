@@ -643,9 +643,32 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
     if (!photoVisible || !photoCurrent) return;
 
     const basename = getPhotoBasename(photoCurrent);
+    const isNata1 = basename === "nata1";
     const profile = getPhotoOverlayProfile(basename);
     const hash = hashString(basename);
     const phrase = PHOTO_ANALYSIS_TEXT_POOL[hash % PHOTO_ANALYSIS_TEXT_POOL.length];
+
+    if (isNata1) {
+      setPhotoOverlayProfile({
+        showTracking: false,
+        showScanLine: false,
+        showText: false,
+        showGlitch: false,
+        particleCount: 0,
+        scanDurationMs: 0,
+        scanDelayMs: 0,
+      });
+      setPhotoAnalysisText(phrase);
+      setPhotoOverlayEpoch((value) => value + 1);
+      setPhotoBlackFade(false);
+      setPhotoFocusBlur(false);
+      setPhotoTrackingVisible(false);
+      setPhotoScanLineActive(false);
+      setPhotoGlitchActive(false);
+      setPhotoAnalysisTextVisible(false);
+      return;
+    }
+
     setPhotoOverlayProfile(profile);
     setPhotoAnalysisText(phrase);
     setPhotoOverlayEpoch((value) => value + 1);
