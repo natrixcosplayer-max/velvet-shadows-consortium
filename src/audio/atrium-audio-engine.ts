@@ -15,7 +15,7 @@ let temporaryMusicTargetTimer: ReturnType<typeof setTimeout> | null = null;
 let musicPausedForComms = false;
 let emailMusicDucked = false;
 
-const MUSIC_VOLUME = 0.064;
+const MUSIC_VOLUME = 0.0672;
 const MUSIC_DUCK_VOLUME = 0.005;
 const UNLOCK_DUCK_VOLUME = 0.001;
 

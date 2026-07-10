@@ -120,6 +120,9 @@ export function AppShell({ children, title, latin }: { children: ReactNode; titl
           <button
             className="md:hidden text-gold border border-gold-dim px-2 py-1 text-xs font-mono"
             onClick={() => {
+              if (typeof navigator !== "undefined" && /iPhone/i.test(navigator.userAgent)) {
+                playSfx("/sounds/luxbeep.mp3", 0.45);
+              }
               setMobileOpen((v) => !v);
             }}
             aria-label="Alternar navegación"
