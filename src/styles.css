@@ -810,16 +810,85 @@
 @keyframes alta-mesa-lumen {
   0%, 100% {
     text-shadow: 0 0 0 oklch(0.88 0.16 88 / 0);
-    filter: brightness(0.98);
+    filter: brightness(0.992);
   }
   50% {
-    text-shadow: 0 0 10px oklch(0.88 0.16 88 / 0.25);
-    filter: brightness(1.03);
+    text-shadow: 0 0 6px oklch(0.88 0.16 88 / 0.16);
+    filter: brightness(1.01);
   }
+}
+@keyframes alta-mesa-grain-drift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-14px, 12px); }
+}
+@keyframes alta-mesa-signal-settle {
+  0%, 100% { filter: brightness(0.995); }
+  45% { filter: brightness(1.01); }
+  78% { filter: brightness(1.004); }
 }
 
 .alta-mesa-text-lumen :is(h2, p, strong) {
-  animation: alta-mesa-lumen 3.2s ease-in-out infinite;
+  animation: alta-mesa-lumen 5.8s ease-in-out infinite;
+}
+
+.alta-mesa-transmission {
+  --comm-shift: 0px;
+  transform: translateX(var(--comm-shift));
+  transition: transform 85ms linear, filter 120ms linear;
+  filter: brightness(1);
+}
+
+.alta-mesa-transmission.is-interference {
+  animation: alta-mesa-signal-settle 3.6s ease-in-out infinite;
+}
+
+.alta-mesa-transmission.is-stable {
+  animation: none;
+}
+
+.alta-mesa-transmission.is-glitch {
+  filter: brightness(0.986)
+    drop-shadow(-1px 0 rgba(255, 70, 70, 0.14))
+    drop-shadow(1px 0 rgba(72, 128, 255, 0.12));
+}
+
+.alta-mesa-secure-scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    oklch(0.88 0.16 88 / 0.025) 2px,
+    oklch(0.88 0.16 88 / 0.025) 3px
+  );
+  mix-blend-mode: soft-light;
+  opacity: 0.24;
+}
+
+.alta-mesa-secure-grain {
+  background-image:
+    radial-gradient(circle at 24% 32%, oklch(1 0 0 / 7%) 0 0.8px, transparent 1px),
+    radial-gradient(circle at 78% 68%, oklch(1 0 0 / 6%) 0 0.9px, transparent 1.1px),
+    radial-gradient(circle at 46% 80%, oklch(0.1 0 0 / 8%) 0 0.7px, transparent 0.95px);
+  background-size: 3px 3px, 4px 4px, 5px 5px;
+  animation: alta-mesa-grain-drift 280ms steps(2, end) infinite;
+  mix-blend-mode: overlay;
+}
+
+.alta-mesa-secure-grain.is-interference {
+  opacity: 0.072;
+}
+
+.alta-mesa-secure-grain.is-stable {
+  opacity: 0.032;
+}
+
+.signal-line-jitter {
+  --line-shift: 0px;
+  transform: translateX(var(--line-shift));
+}
+
+.signal-packet-loss {
+  opacity: 0;
 }
 .protocol-operativo-row.is-interactive {
   position: relative;
