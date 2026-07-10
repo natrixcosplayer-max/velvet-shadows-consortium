@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type CSSProperties } from "react";
 import { AppShell, Panel, StatBlock } from "../components/AppShell";
 import { ClearanceGate } from "../components/ClearanceGate";
-import { playSfx } from "../audio/atrium-audio-engine";
+import { ensureMusicPlayback, playSfx } from "../audio/atrium-audio-engine";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -472,6 +472,10 @@ function Atrium() {
 
   <Link
     to="/missions"
+    onClick={() => {
+      ensureMusicPlayback(180);
+      playSfx("/sounds/operatives.mp3", 0.32);
+    }}
     className="border border-gold-dim p-8 hover:border-gold transition block animate-pulse-gold"
   >
 
@@ -487,6 +491,10 @@ function Atrium() {
 
   <Link
     to="/dossiers"
+    onClick={() => {
+      ensureMusicPlayback(180);
+      playSfx("/sounds/dossier.mp3", 0.3);
+    }}
     className="border border-gold-dim p-8 hover:border-gold transition block animate-pulse-gold"
   >
 

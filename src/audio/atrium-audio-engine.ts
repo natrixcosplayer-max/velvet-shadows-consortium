@@ -372,6 +372,36 @@ export function resumeMusicAfterComms(ms = 1500) {
   fadeMusicVolume(target, ms);
 }
 
+export function ensureMusicPlayback(ms = 260) {
+  if (!music) return;
+
+  const target = getPreferredMusicTarget();
+  cancelMusicGainAutomation();
+
+  if (!music.paused) {
+    void scheduleMusicGain(target, ms);
+    return;
+  }
+
+  resumeAudioContext();
+  const resume = music.play();
+
+  if (resume) {
+    resume
+      .then(() => {
+        pendingMusicPlay = false;
+        void scheduleMusicGain(target, ms);
+      })
+      .catch(() => {
+        pendingMusicPlay = true;
+        attachGestureUnlockListeners();
+      });
+    return;
+  }
+
+  void scheduleMusicGain(target, ms);
+}
+
 export function attenuateMusicTemporarily(reductionPercent = 0.7, durationMs = 7000) {
   const reduction = Math.max(0, Math.min(1, reductionPercent));
   const target = Math.max(0, Math.min(1, musicBaseVolume * (1 - reduction)));
