@@ -210,17 +210,17 @@ function Atrium() {
 
             <div className="relative z-10 space-y-6 md:space-y-7">
               <div className="space-y-3">
-                <p className={`font-mono text-[10px] uppercase tracking-[0.34em] text-gold-dim/76 transition-all duration-500 ${visibleCommuniqueStep >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
+                <p className={`font-mono text-[12px] uppercase tracking-[0.34em] text-gold-dim/76 transition-all duration-500 ${visibleCommuniqueStep >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                   CANAL CLASIFICADO
                 </p>
-                <p className={`font-display text-[18px] uppercase tracking-[0.2em] text-gold-dim/84 transition-all duration-500 ${visibleCommuniqueStep >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
+                <p className={`font-display text-[21px] uppercase tracking-[0.2em] text-gold-dim/84 transition-all duration-500 ${visibleCommuniqueStep >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                   COMUNICADO OFICIAL
                 </p>
               </div>
 
               <div className={`${isIPhone ? "space-y-6" : "space-y-4"}`}>
                 <h2
-                  className={`font-display tracking-[0.12em] text-gold text-[36px] md:text-[48px] transition-all duration-500 ${visibleCommuniqueStep >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
+                  className={`font-display tracking-[0.12em] text-gold text-[41px] md:text-[55px] transition-all duration-500 ${visibleCommuniqueStep >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                 >
                   AGENTE MANDARIN
                 </h2>
@@ -230,7 +230,7 @@ function Atrium() {
                   return (
                     <p
                       key={`comm-order-${index}`}
-                      className={`font-display ${isIPhone ? "leading-[2.4]" : "leading-[2.15]"} tracking-[0.035em] text-gold/78 text-[14px] md:text-[16px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
+                      className={`font-display ${isIPhone ? "leading-[2.4]" : "leading-[2.15]"} tracking-[0.035em] text-gold/78 text-[16px] md:text-[18px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                     >
                       {renderParagraph(paragraph, index + 1)}
                     </p>
@@ -238,13 +238,13 @@ function Atrium() {
                 })}
 
                 <p
-                  className={`font-display uppercase tracking-[0.17em] text-gold-bright text-[20px] md:text-[24px] transition-all duration-500 ${isIPhone ? "comm-final-order" : ""} ${visibleCommuniqueStep >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
+                  className={`font-display font-bold uppercase tracking-[0.17em] text-gold-bright text-[23px] md:text-[28px] transition-all duration-500 ${isIPhone ? "comm-final-order" : ""} ${visibleCommuniqueStep >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                 >
                   EJECUTE SUS ÓRDENES.
                 </p>
               </div>
 
-              <p className={`pt-3 font-mono text-[9px] uppercase tracking-[0.32em] text-gold-dim/70 transition-all duration-500 ${isIPhone ? "comm-final-signoff" : ""} ${visibleCommuniqueStep >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
+              <p className={`pt-3 font-mono text-[10px] uppercase tracking-[0.32em] text-gold-dim/70 transition-all duration-500 ${isIPhone ? "comm-final-signoff" : ""} ${visibleCommuniqueStep >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                 EX COMMISSIONE ALTA MESA
               </p>
             </div>

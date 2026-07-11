@@ -92,7 +92,7 @@ export function EntryGate({ onEnter }: Props) {
           EX COMMISSIO
         </h1>
 
-        <h2 className={`relative z-10 whitespace-nowrap font-display leading-none text-gold mb-10 ${isIPhone ? "mt-4 text-[clamp(2.05rem,7.6vw,3.05rem)]" : "mt-2 text-[clamp(1.45rem,4.2vw,2.35rem)]"}`}>
+        <h2 className={`relative z-10 whitespace-nowrap font-display leading-none text-gold mb-10 ${isIPhone ? "mt-3.5 text-[clamp(2.05rem,7.6vw,3.05rem)]" : "mt-1.5 text-[clamp(1.45rem,4.2vw,2.35rem)]"}`}>
           ALTA MESA
         </h2>
 
