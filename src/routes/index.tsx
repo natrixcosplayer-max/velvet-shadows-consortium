@@ -106,19 +106,19 @@ function Atrium() {
           setOperativoPulse(true);
           addTimeout(() => setOperativoPulse(false), 950);
         }
+
       }, 6200 + index * 2800);
     });
 
-    addTimeout(() => setShowFinalOrder(true), 6200 + ORDER_BLOCKS.length * 2800 + 1000);
     addTimeout(() => {
       playSfx("/sounds/luxbeep2.mp3", 0.2);
       window.dispatchEvent(new CustomEvent("operativo-attention"));
       navigator.vibrate?.(20);
-    }, 6200 + ORDER_BLOCKS.length * 2800 + 1800);
+    }, 6200 + ORDER_BLOCKS.length * 2800 + 1120);
 
     addTimeout(() => {
       window.sessionStorage.setItem("comunicado-seen", "1");
-    }, 6200 + ORDER_BLOCKS.length * 2800 + 2000);
+    }, 6200 + ORDER_BLOCKS.length * 2800 + 1320);
 
     return () => {
       cancelled = true;
@@ -217,7 +217,6 @@ function Atrium() {
       if (visibleOrderCount > 1) packetLossCandidates.push({ line: 2, word: "Comisión" });
       if (visibleOrderCount > 2) packetLossCandidates.push({ line: 3, word: "activo" });
       if (visibleOrderCount > 4) packetLossCandidates.push({ line: 5, word: "OPERATIVO" });
-      if (showFinalOrder) packetLossCandidates.push({ line: ORDER_BLOCKS.length + 1, word: "ÓRDENES" });
 
       const shouldDropWord = packetLossCandidates.length > 0 && Math.random() < (signalPhase === "interference" ? 0.48 : 0.22);
       if (shouldDropWord) {
@@ -295,14 +294,21 @@ function Atrium() {
     };
 
     const scheduleEncryptedSwap = () => {
-      const delay = 7000 + Math.floor(Math.random() * 7000);
+      const delay = 3600 + Math.floor(Math.random() * 4200);
       addTimeout(() => {
         const candidates: Array<{ line: number; word: string; replacement: string }> = [];
 
         if (visibleOrderCount > 0) candidates.push({ line: 1, word: "Comisión", replacement: "C0MISION" });
         if (visibleOrderCount > 1) candidates.push({ line: 2, word: "activo", replacement: "ASSET-7" });
-        if (visibleOrderCount > 3) candidates.push({ line: 4, word: "OPERATIVO", replacement: "0P-7X" });
-        if (showFinalOrder) candidates.push({ line: ORDER_BLOCKS.length + 1, word: "ÓRDENES", replacement: "MANDATVM" });
+        if (visibleOrderCount > 2) {
+          candidates.push({ line: 3, word: "seguridad", replacement: "segurid4d" });
+          candidates.push({ line: 3, word: "anonimato", replacement: "anonimat0" });
+          candidates.push({ line: 3, word: "Mesa", replacement: "M3SA" });
+        }
+        if (visibleOrderCount > 3) {
+          candidates.push({ line: 4, word: "OPERATIVO", replacement: "0P-7X" });
+          candidates.push({ line: 4, word: "expediente", replacement: "exped13nte" });
+        }
 
         if (!candidates.length) {
           scheduleEncryptedSwap();
@@ -328,6 +334,10 @@ function Atrium() {
   }, [showAgent, showFinalOrder, visibleOrderCount]);
 
   const renderSignalWord = (line: number, word: string, className = "") => {
+    if (line === ORDER_BLOCKS.length + 1) {
+      return <span className={className}>{word}</span>;
+    }
+
     const isEncryptedSwap = encryptedSwapTarget?.line === line && encryptedSwapTarget.word === word;
     const isPacketLoss = packetLossTarget?.line === line && packetLossTarget.word === word;
 
@@ -367,7 +377,7 @@ function Atrium() {
       );
     }
 
-    const packetKeywords = ["Comisión", "activo"] as const;
+    const packetKeywords = ["Comisión", "activo", "seguridad", "anonimato", "Mesa", "expediente"] as const;
     for (const keyword of packetKeywords) {
       const keywordIndex = text.indexOf(keyword);
       if (keywordIndex !== -1) {
@@ -428,9 +438,10 @@ function Atrium() {
           className={`relative mx-auto max-w-[680px] space-y-10 px-4 text-left md:px-4 alta-mesa-transmission ${signalPhase === "interference" ? "is-interference" : "is-stable"} ${transmissionGlitch ? "is-glitch" : ""}`}
           style={{ "--comm-shift": `${transmissionShift}px` } as CSSProperties}
         >
-          <div className="relative overflow-hidden rounded-[24px] border border-gold/20 bg-[linear-gradient(180deg,oklch(0.05_0.003_60_/_0.98),oklch(0.075_0.003_60_/_0.985))] px-5 py-6 shadow-[0_0_0_1px_rgba(214,173,74,0.06)_inset,0_0_42px_rgba(214,173,74,0.09)] md:px-8 md:py-8">
+          <div className={`relative overflow-hidden rounded-[24px] border border-gold/20 bg-[linear-gradient(180deg,oklch(0.05_0.003_60_/_0.98),oklch(0.075_0.003_60_/_0.985))] px-5 py-6 shadow-[0_0_0_1px_rgba(214,173,74,0.06)_inset,0_0_42px_rgba(214,173,74,0.09)] md:px-8 md:py-8 ${isIPhone ? "comm-iphone" : ""}`}>
             <div className="pointer-events-none absolute inset-0 alta-mesa-comm-scanlines opacity-[0.18]" />
             <div className="pointer-events-none absolute inset-0 alta-mesa-comm-noise opacity-[0.55]" />
+            <div className="pointer-events-none absolute inset-x-0 top-[18%] z-[40] h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.24),rgba(214,173,74,0.58),rgba(214,173,74,0.24),transparent)] opacity-[0.32] [animation:comm-line-scan_7.4s_linear_infinite]" />
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(214,173,74,0.08),transparent_30%),radial-gradient(circle_at_center,rgba(0,0,0,0.1),transparent_58%)]" />
             <div className={`pointer-events-none absolute inset-0 border border-gold/10 transition-opacity duration-500 ${showComunicado ? "opacity-100" : "opacity-0"}`} />
 
@@ -468,7 +479,7 @@ function Atrium() {
                 })}
 
                 <p
-                  className={`comm-final-order font-display uppercase tracking-[0.17em] text-gold-bright md:text-[24px] ${isIPhone ? "text-[24px]" : "text-[20px]"} ${showFinalOrder ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 1 ? "signal-line-jitter" : ""}`}
+                  className={`comm-final-order comm-final-order-lock font-display uppercase tracking-[0.17em] text-gold-bright md:text-[24px] ${isIPhone ? "text-[24px]" : "text-[20px]"} ${visibleOrderCount >= ORDER_BLOCKS.length ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 1 ? "signal-line-jitter" : ""}`}
                   style={lineShiftIndex === ORDER_BLOCKS.length + 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
                 >
                   EJECUTE SUS {renderSignalWord(ORDER_BLOCKS.length + 1, "ÓRDENES")}.
