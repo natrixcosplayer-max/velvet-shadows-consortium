@@ -16,6 +16,7 @@ export const Route = createFileRoute("/")({
 });
 
 const SKIP_COMMISSION_GATES_KEY = "skip-commission-gates-once";
+const COMMUNIQUE_PLAYED_KEY = "index-communique-played";
 const ORDER_BLOCKS = [
   "La Comisión le asigna un operativo de prioridad máxima.",
   "Recupere el activo.",
@@ -63,9 +64,7 @@ function Index() {
 
 function Atrium() {
   const [showComunicado, setShowComunicado] = useState(false);
-  const [showAgent, setShowAgent] = useState(false);
-  const [visibleOrderCount, setVisibleOrderCount] = useState(0);
-  const [showFinalOrder, setShowFinalOrder] = useState(false);
+  const [visibleCommuniqueStep, setVisibleCommuniqueStep] = useState(0);
   const [isIPhone, setIsIPhone] = useState(false);
 
   useEffect(() => {
@@ -76,6 +75,20 @@ function Atrium() {
   useEffect(() => {
     let cancelled = false;
     const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    if (typeof window !== "undefined" && window.sessionStorage.getItem(COMMUNIQUE_PLAYED_KEY) === "1") {
+      setShowComunicado(true);
+      setVisibleCommuniqueStep(9);
+      return () => {
+        cancelled = true;
+        timeouts.forEach((id) => clearTimeout(id));
+      };
+    }
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(COMMUNIQUE_PLAYED_KEY, "1");
+    }
+
     const addTimeout = (fn: () => void, ms: number) => {
       const id = setTimeout(() => {
         if (!cancelled) fn();
@@ -84,18 +97,29 @@ function Atrium() {
     };
 
     addTimeout(() => setShowComunicado(true), 700);
-    addTimeout(() => setShowAgent(true), 3200);
 
-    ORDER_BLOCKS.forEach((line, index) => {
+    const commSteps = [
+      1250, // CANAL CLASIFICADO
+      1850, // COMUNICADO OFICIAL
+      2550, // AGENTE MANDARIN
+      3350, // 1
+      4050, // 2
+      4750, // 3
+      5450, // 4
+      6150, // EJECUTE SUS ÓRDENES.
+      6850, // EX COMMISSIONE ALTA MESA
+    ];
+
+    commSteps.forEach((ms, index) => {
       addTimeout(() => {
-        setVisibleOrderCount(index + 1);
-      }, 4400 + index * 1450);
+        setVisibleCommuniqueStep(index + 1);
+      }, ms);
     });
 
     addTimeout(() => {
       playSfx("/sounds/luxbeep2.mp3", 0.2);
       window.dispatchEvent(new CustomEvent("operativo-attention"));
-    }, 9800);
+    }, 7600);
 
     return () => {
       cancelled = true;
@@ -172,7 +196,7 @@ function Atrium() {
         <div
           className="relative z-10 mx-auto max-w-[680px] space-y-10 px-4 text-left md:px-4"
         >
-          <div className={`relative overflow-hidden rounded-[24px] border border-gold/55 bg-[linear-gradient(180deg,oklch(0.1_0.004_60_/_0.76),oklch(0.08_0.004_60_/_0.84))] px-5 py-5 shadow-[0_0_0_1px_rgba(214,173,74,0.2)_inset,0_0_34px_rgba(214,173,74,0.18),0_0_72px_rgba(214,173,74,0.08)] md:px-8 md:py-6 ${isIPhone ? "comm-iphone" : ""} scanlines animate-comm-terminal-pulse`}>
+          <div className={`relative overflow-hidden rounded-[24px] border border-gold/55 bg-[linear-gradient(180deg,oklch(0.08_0.004_60_/_0.88),oklch(0.055_0.004_60_/_0.94))] px-5 py-5 shadow-[0_0_0_1px_rgba(214,173,74,0.2)_inset,0_0_34px_rgba(214,173,74,0.18),0_0_72px_rgba(214,173,74,0.08)] md:px-8 md:py-6 ${isIPhone ? "comm-iphone" : ""} scanlines animate-comm-terminal-pulse`}>
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 rounded-[24px] border border-gold/28 shadow-[inset_0_0_0_1px_rgba(214,173,74,0.14),inset_0_0_32px_rgba(214,173,74,0.1),0_0_46px_rgba(214,173,74,0.2)]"
@@ -186,28 +210,27 @@ function Atrium() {
 
             <div className="relative z-10 space-y-5 md:space-y-6">
               <div className="space-y-3">
-                <p className={`font-mono text-[10px] uppercase tracking-[0.34em] text-gold-dim/76 ${showComunicado ? "opacity-100" : "opacity-0"}`}>
+                <p className={`font-mono text-[10px] uppercase tracking-[0.34em] text-gold-dim/76 transition-all duration-500 ${visibleCommuniqueStep >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                   CANAL CLASIFICADO
                 </p>
-                <p className={`font-display text-[18px] uppercase tracking-[0.2em] text-gold-dim/84 ${showComunicado ? "opacity-100" : "opacity-0"}`}>
+                <p className={`font-display text-[18px] uppercase tracking-[0.2em] text-gold-dim/84 transition-all duration-500 ${visibleCommuniqueStep >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                   COMUNICADO OFICIAL
                 </p>
               </div>
 
               <div className="space-y-4">
                 <h2
-                  className={`font-display tracking-[0.12em] text-gold text-[36px] md:text-[48px] ${showAgent ? "opacity-100" : "opacity-0"}`}
+                  className={`font-display tracking-[0.12em] text-gold text-[36px] md:text-[48px] transition-all duration-500 ${visibleCommuniqueStep >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                 >
                   AGENTE MANDARIN
                 </h2>
 
                 {ORDER_BLOCKS.map((paragraph, index) => {
-                  const isVisible = visibleOrderCount > index;
+                  const isVisible = visibleCommuniqueStep >= 4 + index;
                   return (
                     <p
                       key={`comm-order-${index}`}
-                      className={`font-display leading-[2] tracking-[0.035em] text-gold/78 text-[14px] md:text-[16px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0 animate-fade-up" : "opacity-0 translate-y-1"}`}
-                      style={isVisible ? ({ animationDelay: `${index * 120}ms` } as React.CSSProperties) : undefined}
+                      className={`font-display leading-[2] tracking-[0.035em] text-gold/78 text-[14px] md:text-[16px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                     >
                       {renderParagraph(paragraph, index + 1)}
                     </p>
@@ -215,14 +238,13 @@ function Atrium() {
                 })}
 
                 <p
-                  className={`font-display uppercase tracking-[0.17em] text-gold-bright text-[20px] md:text-[24px] transition-all duration-500 ${visibleOrderCount >= ORDER_BLOCKS.length ? "opacity-100 translate-y-0 animate-fade-up" : "opacity-0 translate-y-1"}`}
-                  style={visibleOrderCount >= ORDER_BLOCKS.length ? ({ animationDelay: "90ms" } as React.CSSProperties) : undefined}
+                  className={`font-display uppercase tracking-[0.17em] text-gold-bright text-[20px] md:text-[24px] transition-all duration-500 ${isIPhone ? "comm-final-order" : ""} ${visibleCommuniqueStep >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                 >
                   EJECUTE SUS ÓRDENES.
                 </p>
               </div>
 
-              <p className={`pt-1 font-mono text-[9px] uppercase tracking-[0.32em] text-gold-dim/70 ${showFinalOrder ? "opacity-100" : "opacity-0"}`}>
+              <p className={`pt-1 font-mono text-[9px] uppercase tracking-[0.32em] text-gold-dim/70 transition-all duration-500 ${isIPhone ? "comm-final-signoff" : ""} ${visibleCommuniqueStep >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                 EX COMMISSIONE ALTA MESA
               </p>
             </div>

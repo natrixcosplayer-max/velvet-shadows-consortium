@@ -8,9 +8,7 @@ import osakaPortrait from "../assets/agents/osaka.jpg";
 import altaPortrait from "../assets/alta.png";
 
 import {
-  pauseMusicForComms,
   playEmailVoice,
-  resumeMusicAfterComms,
   stopEmailVoice,
 } from "../audio/atrium-audio-engine";
 
@@ -50,8 +48,6 @@ function Comms() {
   useEffect(() => {
     if (pathname !== "/comms") return;
 
-    void pauseMusicForComms(1800);
-
     const alreadyAutoplayed =
       typeof window !== "undefined" && window.sessionStorage.getItem(XIMO_AUTOPLAY_SESSION_KEY) === "1";
 
@@ -77,7 +73,6 @@ function Comms() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", handlePageHide);
       stopEmailVoice(80);
-      resumeMusicAfterComms(1500);
     };
   }, [pathname]);
 
