@@ -523,7 +523,7 @@ export function CreditsSequence({ active }: CreditsSequenceProps) {
 
         const nextPhoto = media?.type === "image" ? (resolvedPhotoMap.get(media.basename) ?? null) : null;
         if (nextPhoto) {
-          const isFirstPhoto = mediaIndex === 0;
+          const isFirstPhoto = lastPhoto === null;
           const nextDirection: PhotoDriftDirection = mediaIndex % 2 === 0 ? "right" : "left";
           if (isFirstPhoto) {
             setFirstPhotoFadeFromBlack(true);
