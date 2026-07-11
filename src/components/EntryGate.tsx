@@ -88,11 +88,11 @@ export function EntryGate({ onEnter }: Props) {
           />
         </div>
 
-        <h1 className={`relative z-10 whitespace-nowrap font-display leading-none text-gold ${isIPhone ? "text-[clamp(2.35rem,9.2vw,4.1rem)]" : "text-[clamp(2rem,6vw,3.75rem)]"}`}>
+        <h1 className={`relative z-10 whitespace-nowrap font-display leading-none text-gold ${isIPhone ? "text-[clamp(2.55rem,10vw,4.35rem)]" : "text-[clamp(2rem,6vw,3.75rem)]"}`}>
           EX COMMISSIO
         </h1>
 
-        <h2 className={`relative z-10 whitespace-nowrap font-display leading-none text-gold mb-10 ${isIPhone ? "mt-3 text-[clamp(1.8rem,6.8vw,2.75rem)]" : "mt-2 text-[clamp(1.45rem,4.2vw,2.35rem)]"}`}>
+        <h2 className={`relative z-10 whitespace-nowrap font-display leading-none text-gold mb-10 ${isIPhone ? "mt-4 text-[clamp(2.05rem,7.6vw,3.05rem)]" : "mt-2 text-[clamp(1.45rem,4.2vw,2.35rem)]"}`}>
           ALTA MESA
         </h2>
 

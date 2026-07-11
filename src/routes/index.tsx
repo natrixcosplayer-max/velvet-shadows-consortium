@@ -196,14 +196,14 @@ function Atrium() {
         <div
           className="relative z-10 mx-auto max-w-[680px] space-y-10 px-4 text-left md:px-4"
         >
-          <div className={`relative overflow-hidden rounded-[24px] border border-gold/55 bg-[linear-gradient(180deg,oklch(0.08_0.004_60_/_0.88),oklch(0.055_0.004_60_/_0.94))] px-5 py-5 shadow-[0_0_0_1px_rgba(214,173,74,0.2)_inset,0_0_34px_rgba(214,173,74,0.18),0_0_72px_rgba(214,173,74,0.08)] md:px-8 md:py-6 ${isIPhone ? "comm-iphone" : ""} scanlines animate-comm-terminal-pulse`}>
+          <div className={`relative overflow-hidden rounded-[24px] border border-gold/55 ${isIPhone ? "bg-[linear-gradient(180deg,oklch(0.055_0.002_60_/_0.95),oklch(0.038_0.002_60_/_0.985))]" : "bg-[linear-gradient(180deg,oklch(0.08_0.004_60_/_0.88),oklch(0.055_0.004_60_/_0.94))]"} px-5 py-5 shadow-[0_0_0_1px_rgba(214,173,74,0.2)_inset,0_0_34px_rgba(214,173,74,0.18),0_0_72px_rgba(214,173,74,0.08)] md:px-8 md:py-6 ${isIPhone ? "comm-iphone" : ""} scanlines animate-comm-terminal-pulse`}>
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 rounded-[24px] border border-gold/28 shadow-[inset_0_0_0_1px_rgba(214,173,74,0.14),inset_0_0_32px_rgba(214,173,74,0.1),0_0_46px_rgba(214,173,74,0.2)]"
             />
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-[8px] rounded-[18px] border border-gold/14 bg-[radial-gradient(circle_at_top,rgba(214,173,74,0.11),transparent_62%)] opacity-90"
+              className={`pointer-events-none absolute inset-[8px] rounded-[18px] border ${isIPhone ? "border-gold/8 bg-[radial-gradient(circle_at_top,rgba(214,173,74,0.045),transparent_62%)] opacity-65" : "border-gold/14 bg-[radial-gradient(circle_at_top,rgba(214,173,74,0.11),transparent_62%)] opacity-90"}`}
             />
             <div className={`pointer-events-none absolute inset-x-0 ${movingScanlineTopClass} z-[40] h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.24),rgba(214,173,74,0.58),rgba(214,173,74,0.24),transparent)] ${movingScanlineOpacityClass} [animation:comm-line-scan_7.4s_linear_infinite]`} />
             <div className={`pointer-events-none absolute inset-0 border border-gold/10 transition-opacity duration-500 ${showComunicado ? "opacity-100" : "opacity-0"}`} />
@@ -218,7 +218,7 @@ function Atrium() {
                 </p>
               </div>
 
-              <div className="space-y-4">
+              <div className={`${isIPhone ? "space-y-6" : "space-y-4"}`}>
                 <h2
                   className={`font-display tracking-[0.12em] text-gold text-[36px] md:text-[48px] transition-all duration-500 ${visibleCommuniqueStep >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                 >
@@ -230,7 +230,7 @@ function Atrium() {
                   return (
                     <p
                       key={`comm-order-${index}`}
-                      className={`font-display leading-[2.15] tracking-[0.035em] text-gold/78 text-[14px] md:text-[16px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
+                      className={`font-display ${isIPhone ? "leading-[2.4]" : "leading-[2.15]"} tracking-[0.035em] text-gold/78 text-[14px] md:text-[16px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                     >
                       {renderParagraph(paragraph, index + 1)}
                     </p>
