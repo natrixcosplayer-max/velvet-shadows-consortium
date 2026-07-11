@@ -113,12 +113,6 @@ function Atrium() {
     addTimeout(() => {
       playSfx("/sounds/luxbeep2.mp3", 0.2);
       window.dispatchEvent(new CustomEvent("operativo-attention"));
-      navigator.vibrate?.(20);
-    }, 6200 + ORDER_BLOCKS.length * 2800 + 1120);
-
-    addTimeout(() => {
-      window.sessionStorage.setItem("comunicado-seen", "1");
-    }, 6200 + ORDER_BLOCKS.length * 2800 + 1320);
 
     return () => {
       cancelled = true;
@@ -333,6 +327,9 @@ function Atrium() {
     };
   }, [showAgent, showFinalOrder, visibleOrderCount]);
 
+  const movingScanlineTopClass = isIPhone ? "top-[13%]" : "top-[18%]";
+  const movingScanlineOpacityClass = isIPhone ? "opacity-[0.46]" : "opacity-[0.32]";
+
   const renderSignalWord = (line: number, word: string, className = "") => {
     if (line === ORDER_BLOCKS.length + 1) {
       return <span className={className}>{word}</span>;
@@ -441,7 +438,7 @@ function Atrium() {
           <div className={`relative overflow-hidden rounded-[24px] border border-gold/20 bg-[linear-gradient(180deg,oklch(0.05_0.003_60_/_0.98),oklch(0.075_0.003_60_/_0.985))] px-5 py-6 shadow-[0_0_0_1px_rgba(214,173,74,0.06)_inset,0_0_42px_rgba(214,173,74,0.09)] md:px-8 md:py-8 ${isIPhone ? "comm-iphone" : ""}`}>
             <div className="pointer-events-none absolute inset-0 alta-mesa-comm-scanlines opacity-[0.18]" />
             <div className="pointer-events-none absolute inset-0 alta-mesa-comm-noise opacity-[0.55]" />
-            <div className="pointer-events-none absolute inset-x-0 top-[18%] z-[40] h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.24),rgba(214,173,74,0.58),rgba(214,173,74,0.24),transparent)] opacity-[0.32] [animation:comm-line-scan_7.4s_linear_infinite]" />
+            <div className={`pointer-events-none absolute inset-x-0 ${movingScanlineTopClass} z-[40] h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.24),rgba(214,173,74,0.58),rgba(214,173,74,0.24),transparent)] ${movingScanlineOpacityClass} [animation:comm-line-scan_7.4s_linear_infinite]`} />
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(214,173,74,0.08),transparent_30%),radial-gradient(circle_at_center,rgba(0,0,0,0.1),transparent_58%)]" />
             <div className={`pointer-events-none absolute inset-0 border border-gold/10 transition-opacity duration-500 ${showComunicado ? "opacity-100" : "opacity-0"}`} />
 
@@ -457,20 +454,18 @@ function Atrium() {
 
               <div className="space-y-4">
                 <h2
-                  className={`comm-agent-reveal font-display tracking-[0.12em] text-gold transition-opacity duration-[700ms] md:text-[48px] ${isIPhone ? "text-[43px]" : "text-[36px]"} ${showAgent ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 0 ? "signal-line-jitter" : ""} ${titleInterference ? "agent-title-interference" : ""}`}
+                  className={`comm-agent-reveal font-display tracking-[0.12em] text-gold transition-opacity duration-[700ms] text-[36px] md:text-[48px] ${showAgent ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 0 ? "signal-line-jitter" : ""} ${titleInterference ? "agent-title-interference" : ""}`}
                   style={lineShiftIndex === 0 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
                 >
                   AGENTE MANDARIN
                 </h2>
-              </div>
 
-              <div className="space-y-7 md:space-y-8">
                 {ORDER_BLOCKS.map((paragraph, index) => {
                   const isVisible = visibleOrderCount > index;
                   return (
                     <p
                       key={`comm-order-${index}`}
-                      className={`comm-order-reveal font-display leading-[2] tracking-[0.035em] text-gold/78 md:text-[16px] ${isIPhone ? "text-[17px]" : "text-[14px]"} ${isVisible ? "opacity-100" : "opacity-0"} ${lineShiftIndex === index + 1 ? "signal-line-jitter" : ""}`}
+                      className={`comm-order-reveal font-display leading-[2] tracking-[0.035em] text-gold/78 text-[14px] md:text-[16px] ${isVisible ? "opacity-100" : "opacity-0"} ${lineShiftIndex === index + 1 ? "signal-line-jitter" : ""}`}
                       style={lineShiftIndex === index + 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
                     >
                       {renderParagraph(paragraph, index + 1)}
@@ -479,7 +474,7 @@ function Atrium() {
                 })}
 
                 <p
-                  className={`comm-final-order comm-final-order-lock font-display uppercase tracking-[0.17em] text-gold-bright md:text-[24px] ${isIPhone ? "text-[24px]" : "text-[20px]"} ${visibleOrderCount >= ORDER_BLOCKS.length ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 1 ? "signal-line-jitter" : ""}`}
+                  className={`comm-final-order comm-final-order-lock font-display uppercase tracking-[0.17em] text-gold-bright text-[20px] md:text-[24px] ${visibleOrderCount >= ORDER_BLOCKS.length ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 1 ? "signal-line-jitter" : ""}`}
                   style={lineShiftIndex === ORDER_BLOCKS.length + 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
                 >
                   EJECUTE SUS {renderSignalWord(ORDER_BLOCKS.length + 1, "ÓRDENES")}.
