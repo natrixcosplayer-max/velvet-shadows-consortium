@@ -16,9 +16,14 @@ type Props = {
 export function EntryGate({ onEnter }: Props) {
   const [devMuted, setDevMuted] = useState(() => (import.meta.env.DEV ? isDevAudioMuted() : false));
   const [goldPress, setGoldPress] = useState(false);
+  const [isIPhone, setIsIPhone] = useState(false);
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (typeof navigator !== "undefined") {
+      setIsIPhone(/iPhone/i.test(navigator.userAgent));
+    }
+
     return () => {
       if (pressTimerRef.current) {
         clearTimeout(pressTimerRef.current);
@@ -83,11 +88,11 @@ export function EntryGate({ onEnter }: Props) {
           />
         </div>
 
-        <h1 className="relative z-10 whitespace-nowrap font-display leading-none text-[clamp(2rem,6vw,3.75rem)] text-gold">
+        <h1 className={`relative z-10 whitespace-nowrap font-display leading-none text-gold ${isIPhone ? "text-[clamp(2.35rem,9.2vw,4.1rem)]" : "text-[clamp(2rem,6vw,3.75rem)]"}`}>
           EX COMMISSIO
         </h1>
 
-        <h2 className="relative z-10 font-display leading-none text-[clamp(1.45rem,4.2vw,2.35rem)] text-gold mb-10">
+        <h2 className={`relative z-10 whitespace-nowrap font-display leading-none text-gold mb-10 ${isIPhone ? "mt-3 text-[clamp(1.8rem,6.8vw,2.75rem)]" : "mt-2 text-[clamp(1.45rem,4.2vw,2.35rem)]"}`}>
           ALTA MESA
         </h2>
 
