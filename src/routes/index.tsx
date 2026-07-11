@@ -96,36 +96,29 @@ function Atrium() {
       timeouts.push(id);
     };
 
-    let timeline = 0;
-
-    addTimeout(() => setShowComunicado(true), timeline);
-    timeline += 2000;
-
-    addTimeout(() => setShowAgent(true), timeline);
-    timeline += 2000;
+    addTimeout(() => setShowComunicado(true), 700);
+    addTimeout(() => setShowAgent(true), 4200);
 
     ORDER_BLOCKS.forEach((line, index) => {
       addTimeout(() => {
         setVisibleOrderCount(index + 1);
         if (line.includes("OPERATIVO")) {
           setOperativoPulse(true);
-          addTimeout(() => setOperativoPulse(false), 1300);
+          addTimeout(() => setOperativoPulse(false), 950);
         }
-      }, timeline + index * 2000);
+      }, 6200 + index * 2800);
     });
 
-    timeline += ORDER_BLOCKS.length * 2000;
-
-    addTimeout(() => setShowFinalOrder(true), timeline + 2000);
+    addTimeout(() => setShowFinalOrder(true), 6200 + ORDER_BLOCKS.length * 2800 + 1000);
     addTimeout(() => {
       playSfx("/sounds/luxbeep2.mp3", 0.2);
       window.dispatchEvent(new CustomEvent("operativo-attention"));
       navigator.vibrate?.(20);
-    }, timeline + 2800);
+    }, 6200 + ORDER_BLOCKS.length * 2800 + 1800);
 
     addTimeout(() => {
       window.sessionStorage.setItem("comunicado-seen", "1");
-    }, timeline + 3000);
+    }, 6200 + ORDER_BLOCKS.length * 2800 + 2000);
 
     return () => {
       cancelled = true;
@@ -351,7 +344,7 @@ function Atrium() {
 
     if (text === finalMarker) {
       return (
-        <strong className="text-gold-bright uppercase tracking-[0.18em] [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.35)]">
+        <strong className="comm-final-sheen text-gold-bright uppercase tracking-[0.18em] [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.35)]">
           LA MISIÓN COMIENZA AHORA
         </strong>
       );
@@ -366,7 +359,7 @@ function Atrium() {
       return (
         <>
           {before}
-          <strong className={`text-gold-bright transition-shadow duration-700 ${operativoPulse ? "shadow-[0_0_8px_oklch(0.88_0.16_88_/_0.5)]" : ""}`}>
+          <strong className={`text-gold-bright transition-shadow duration-700 ${operativoPulse ? "comm-operativo-burst shadow-[0_0_8px_oklch(0.88_0.16_88_/_0.5)]" : ""}`}>
             {renderSignalWord(line, marked)}
           </strong>
           {after}
@@ -432,52 +425,61 @@ function Atrium() {
         />
 
         <div
-          className={`relative mx-auto max-w-[620px] space-y-10 px-1 text-left md:px-4 alta-mesa-text-lumen alta-mesa-transmission ${signalPhase === "interference" ? "is-interference" : "is-stable"} ${transmissionGlitch ? "is-glitch" : ""}`}
+          className={`relative mx-auto max-w-[680px] space-y-10 px-4 text-left md:px-4 alta-mesa-transmission ${signalPhase === "interference" ? "is-interference" : "is-stable"} ${transmissionGlitch ? "is-glitch" : ""}`}
           style={{ "--comm-shift": `${transmissionShift}px` } as CSSProperties}
         >
-          <div className="space-y-3">
-            <p className={`font-mono text-[10px] uppercase tracking-[0.34em] text-gold-dim/76 transition-opacity duration-[520ms] ${showComunicado ? "opacity-100" : "opacity-0"}`}>
-              CANAL CLASIFICADO
-            </p>
-            <p className={`signal-text-transmission font-display text-[18px] uppercase tracking-[0.2em] text-gold-dim/84 transition-opacity duration-[560ms] ${showComunicado ? "opacity-100" : "opacity-0"}`}>
-              COMUNICADO OFICIAL
-            </p>
-          </div>
+          <div className="relative overflow-hidden rounded-[24px] border border-gold/20 bg-[linear-gradient(180deg,oklch(0.05_0.003_60_/_0.98),oklch(0.075_0.003_60_/_0.985))] px-5 py-6 shadow-[0_0_0_1px_rgba(214,173,74,0.06)_inset,0_0_42px_rgba(214,173,74,0.09)] md:px-8 md:py-8">
+            <div className="pointer-events-none absolute inset-0 alta-mesa-comm-scanlines opacity-[0.18]" />
+            <div className="pointer-events-none absolute inset-0 alta-mesa-comm-noise opacity-[0.55]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(214,173,74,0.08),transparent_30%),radial-gradient(circle_at_center,rgba(0,0,0,0.1),transparent_58%)]" />
+            <div className={`pointer-events-none absolute inset-0 border border-gold/10 transition-opacity duration-500 ${showComunicado ? "opacity-100" : "opacity-0"}`} />
 
-          <div className="space-y-4">
-            <h2
-              className={`signal-text-transmission font-display tracking-[0.12em] text-gold transition-opacity duration-[980ms] md:text-[48px] ${isIPhone ? "text-[43px]" : "text-[36px]"} ${showAgent ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 0 ? "signal-line-jitter" : ""} ${titleInterference ? "agent-title-interference" : ""}`}
-              style={lineShiftIndex === 0 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
-            >
-              AGENTE MANDARIN
-            </h2>
-          </div>
-
-          <div className="space-y-8 md:space-y-10">
-            {ORDER_BLOCKS.map((paragraph, index) => {
-              const isVisible = visibleOrderCount > index;
-              return (
-                <p
-                  key={`comm-order-${index}`}
-                  className={`signal-text-transmission font-display leading-[2] tracking-[0.035em] text-gold/76 transition-opacity duration-[980ms] md:text-[16px] ${isIPhone ? "text-[17px]" : "text-[14px]"} ${isVisible ? "opacity-100" : "opacity-0"} ${lineShiftIndex === index + 1 ? "signal-line-jitter" : ""}`}
-                  style={lineShiftIndex === index + 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
-                >
-                  {renderParagraph(paragraph, index + 1)}
+            <div className="relative space-y-7 md:space-y-8">
+              <div className="space-y-3">
+                <p className={`comm-header-sync font-mono text-[10px] uppercase tracking-[0.34em] text-gold-dim/76 ${showComunicado ? "opacity-100" : "opacity-0"}`}>
+                  CANAL CLASIFICADO
                 </p>
-              );
-            })}
+                <p className={`comm-header-sync delay-150 font-display text-[18px] uppercase tracking-[0.2em] text-gold-dim/84 ${showComunicado ? "opacity-100" : "opacity-0"}`}>
+                  COMUNICADO OFICIAL
+                </p>
+              </div>
 
-            <p
-              className={`signal-text-transmission font-display uppercase tracking-[0.17em] text-gold-bright [text-shadow:0_0_12px_oklch(0.88_0.16_88_/_0.38)] [animation:alta-mesa-lumen_2.1s_ease-in-out_infinite] transition-opacity duration-[1200ms] md:text-[24px] ${isIPhone ? "text-[24px]" : "text-[20px]"} ${showFinalOrder ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 1 ? "signal-line-jitter" : ""}`}
-              style={lineShiftIndex === ORDER_BLOCKS.length + 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
-            >
-              EJECUTE SUS {renderSignalWord(ORDER_BLOCKS.length + 1, "ÓRDENES")}.
-            </p>
+              <div className="space-y-4">
+                <h2
+                  className={`comm-agent-reveal font-display tracking-[0.12em] text-gold transition-opacity duration-[700ms] md:text-[48px] ${isIPhone ? "text-[43px]" : "text-[36px]"} ${showAgent ? "opacity-100" : "opacity-0"} ${lineShiftIndex === 0 ? "signal-line-jitter" : ""} ${titleInterference ? "agent-title-interference" : ""}`}
+                  style={lineShiftIndex === 0 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
+                >
+                  AGENTE MANDARIN
+                </h2>
+              </div>
+
+              <div className="space-y-7 md:space-y-8">
+                {ORDER_BLOCKS.map((paragraph, index) => {
+                  const isVisible = visibleOrderCount > index;
+                  return (
+                    <p
+                      key={`comm-order-${index}`}
+                      className={`comm-order-reveal font-display leading-[2] tracking-[0.035em] text-gold/78 md:text-[16px] ${isIPhone ? "text-[17px]" : "text-[14px]"} ${isVisible ? "opacity-100" : "opacity-0"} ${lineShiftIndex === index + 1 ? "signal-line-jitter" : ""}`}
+                      style={lineShiftIndex === index + 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
+                    >
+                      {renderParagraph(paragraph, index + 1)}
+                    </p>
+                  );
+                })}
+
+                <p
+                  className={`comm-final-order font-display uppercase tracking-[0.17em] text-gold-bright md:text-[24px] ${isIPhone ? "text-[24px]" : "text-[20px]"} ${showFinalOrder ? "opacity-100" : "opacity-0"} ${lineShiftIndex === ORDER_BLOCKS.length + 1 ? "signal-line-jitter" : ""}`}
+                  style={lineShiftIndex === ORDER_BLOCKS.length + 1 ? ({ "--line-shift": `${lineShiftPx}px` } as CSSProperties) : undefined}
+                >
+                  EJECUTE SUS {renderSignalWord(ORDER_BLOCKS.length + 1, "ÓRDENES")}.
+                </p>
+              </div>
+
+              <p className={`comm-signature pt-3 font-mono text-[9px] uppercase tracking-[0.32em] text-gold-dim/70 ${showFinalOrder ? "opacity-100" : "opacity-0"}`}>
+                EX COMMISSIONE ALTA MESA
+              </p>
+            </div>
           </div>
-
-          <p className={`signal-text-transmission pt-3 font-mono text-[9px] uppercase tracking-[0.32em] text-gold-dim/70 transition-opacity duration-[560ms] ${showFinalOrder ? "opacity-100" : "opacity-0"}`}>
-            EX COMMISSIONE ALTA MESA
-          </p>
         </div>
       </section>
 
