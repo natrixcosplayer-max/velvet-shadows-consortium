@@ -1152,7 +1152,7 @@
   }
 
   .comm-iphone {
-    padding-bottom: 0.75rem;
+    padding-bottom: 1rem;
   }
 
   .comm-iphone .comm-final-order {
@@ -1160,13 +1160,13 @@
     line-height: 1;
     font-size: 0.95rem;
     letter-spacing: 0.06em;
-    margin-bottom: 0;
+    margin-bottom: 0.45rem;
   }
 
   .comm-iphone .comm-final-signoff {
-    padding-top: 0;
-    margin-top: -0.1rem;
-    margin-bottom: 0;
+    padding-top: 0.2rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.2rem;
   }
 }
 

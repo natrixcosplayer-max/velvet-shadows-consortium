@@ -76,7 +76,7 @@ export function EntryGate({ onEnter }: Props) {
           className="pointer-events-none absolute inset-x-6 top-16 -bottom-4 rounded-[2rem] bg-[radial-gradient(circle_at_center,rgba(214,173,74,0.16),transparent_68%)] blur-3xl opacity-95"
         />
 
-        <div className="relative z-10 w-32 h-32 mx-auto mb-8">
+        <div className="relative z-10 w-32 h-32 mx-auto mb-6">
           <div
             aria-hidden
             className="absolute inset-0 rounded-full bg-gold/25 blur-2xl scale-125"
