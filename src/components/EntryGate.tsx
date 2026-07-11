@@ -38,13 +38,13 @@ export function EntryGate({ onEnter }: Props) {
       {/* Rejilla digital de fondo */}
       <div
         aria-hidden
-        className="absolute inset-0 pointer-events-none grid-bg opacity-100 [mask-image:radial-gradient(circle_at_center,black_58%,transparent_100%)]"
+        className="absolute inset-0 pointer-events-none grid-bg opacity-60 [mask-image:radial-gradient(circle_at_center,black_58%,transparent_100%)]"
       />
 
       {/* Línea de escaneo que recorre la pantalla */}
       <div
         aria-hidden
-        className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent animate-scan"
+        className="absolute left-0 right-0 z-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent animate-scan"
       />
 
       {/* Viñeta / resplandor de tubo de rayos */}
@@ -64,9 +64,14 @@ export function EntryGate({ onEnter }: Props) {
         </button>
       )}
 
-      <div className="relative text-center max-w-xl w-full px-8 animate-flicker">
+      <div className="relative z-10 text-center max-w-xl w-full px-8 animate-flicker">
 
-        <div className="relative w-32 h-32 mx-auto mb-8">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-6 top-16 -bottom-4 rounded-[2rem] bg-[radial-gradient(circle_at_center,rgba(214,173,74,0.16),transparent_68%)] blur-3xl opacity-95"
+        />
+
+        <div className="relative z-10 w-32 h-32 mx-auto mb-8">
           <div
             aria-hidden
             className="absolute inset-0 rounded-full bg-gold/25 blur-2xl scale-125"
@@ -78,11 +83,11 @@ export function EntryGate({ onEnter }: Props) {
           />
         </div>
 
-        <h1 className="font-display text-5xl text-gold">
+        <h1 className="relative z-10 font-display text-5xl text-gold">
           EX COMMISSIO
         </h1>
 
-        <h2 className="font-display text-3xl text-gold mb-10">
+        <h2 className="relative z-10 font-display text-3xl text-gold mb-10">
           ALTA MESA
         </h2>
 
@@ -125,7 +130,7 @@ export function EntryGate({ onEnter }: Props) {
               proceed();
             }, 120);
           }}
-          className={`mx-auto flex flex-col items-center border border-gold px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition animate-pulse-gold ${goldPress ? "bg-gold/28 text-gold-bright shadow-[0_0_18px_rgba(212,175,55,0.52)]" : ""}`}
+          className={`relative z-10 mx-auto flex flex-col items-center border border-gold px-10 py-4 text-gold font-mono tracking-[0.3em] uppercase text-center hover:bg-gold hover:text-black transition animate-pulse-gold ${goldPress ? "bg-gold/28 text-gold-bright shadow-[0_0_18px_rgba(212,175,55,0.52)]" : ""}`}
         >
           <span>acceder</span>
         </button>

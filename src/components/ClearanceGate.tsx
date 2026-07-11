@@ -52,7 +52,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
 
     window.setTimeout(() => {
       onComplete();
-    }, 780);
+    }, 390);
   };
 
   useEffect(() => {
@@ -131,15 +131,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
 
         </div>
 
-        <div className={`noir-panel gold-corners relative overflow-hidden p-6 min-h-[280px] transition-all duration-700 ${accessBurst ? "border-gold/80 shadow-[0_0_0_1px_rgba(214,173,74,0.38)_inset,0_0_42px_rgba(214,173,74,0.34)] bg-[linear-gradient(180deg,rgba(44,31,8,0.94),rgba(11,9,4,0.98))]" : ""}`}>
-
-          {accessBurst && (
-            <>
-              <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(214,173,74,0.24),transparent_56%)] opacity-100" />
-              <div aria-hidden className="pointer-events-none absolute inset-x-[-30%] top-[-18%] h-[150%] bg-[linear-gradient(115deg,transparent_36%,rgba(255,232,150,0.22)_46%,rgba(255,211,107,0.88)_50%,rgba(255,232,150,0.22)_54%,transparent_64%)] animate-[comm-line-scan_0.85s_linear_1]" />
-              <div aria-hidden className="pointer-events-none absolute inset-0 border border-gold/70 shadow-[0_0_32px_rgba(214,173,74,0.36)]" />
-            </>
-          )}
+        <div className="noir-panel gold-corners relative overflow-hidden p-6 min-h-[280px]">
 
           <div className="flex items-center justify-between mb-4 text-[10px] tracking-[0.3em] text-gold-dim uppercase">
 
@@ -199,7 +191,7 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
           <div className="mt-6 h-1 bg-secondary border border-gold-dim">
 
             <div
-              className={`h-full animate-progress-alert bg-[linear-gradient(90deg,oklch(0.55_0.08_80)_0%,oklch(0.78_0.13_85)_24%,oklch(0.9_0.1_88_/_0.55)_40%,oklch(0.88_0.16_88)_50%,oklch(0.9_0.1_88_/_0.55)_60%,oklch(0.78_0.13_85)_76%,oklch(0.55_0.08_80)_100%)] bg-[length:220%_100%] shadow-[0_0_8px_oklch(0.88_0.16_88_/_0.45)] transition-all ${accessBurst ? "shadow-[0_0_14px_rgba(214,173,74,0.76),0_0_26px_rgba(214,173,74,0.32)]" : ""}`}
+              className="h-full animate-progress-alert bg-[linear-gradient(90deg,oklch(0.55_0.08_80)_0%,oklch(0.78_0.13_85)_24%,oklch(0.9_0.1_88_/_0.55)_40%,oklch(0.88_0.16_88)_50%,oklch(0.9_0.1_88_/_0.55)_60%,oklch(0.78_0.13_85)_76%,oklch(0.55_0.08_80)_100%)] bg-[length:220%_100%] shadow-[0_0_8px_oklch(0.88_0.16_88_/_0.45)] transition-all"
               style={{ width: `${progress}%` }}
             />
 
@@ -219,12 +211,12 @@ export function ClearanceGate({ onComplete }: { onComplete: () => void }) {
                   handleAccess();
                 }}
                 disabled={isProcessing}
-                className={`relative mx-auto flex flex-col items-center overflow-hidden border px-10 py-4 font-mono tracking-[0.3em] uppercase text-center transition duration-500 disabled:cursor-not-allowed ${accessBurst ? "border-gold-bright bg-gold text-black scale-[1.01] shadow-[0_0_0_1px_rgba(255,237,170,0.46)_inset,0_0_26px_rgba(214,173,74,0.82),0_0_62px_rgba(214,173,74,0.32)]" : "border-gold bg-black text-gold hover:bg-gold hover:text-black"} ${accessBurst && isIPhone ? "shadow-[0_0_0_1px_rgba(255,237,170,0.56)_inset,0_0_34px_rgba(214,173,74,0.96),0_0_92px_rgba(214,173,74,0.5)]" : ""} ${isProcessing ? "opacity-100" : ""}`}
+                className={`relative mx-auto flex flex-col items-center overflow-hidden border px-10 py-4 font-mono tracking-[0.3em] uppercase text-center transition duration-300 disabled:cursor-not-allowed ${accessBurst ? "border-gold-bright bg-gold text-black scale-[1.015] shadow-[0_0_0_1px_rgba(255,237,170,0.56)_inset,0_0_26px_rgba(214,173,74,0.82),0_0_56px_rgba(214,173,74,0.28)]" : "border-gold bg-black text-gold hover:bg-gold hover:text-black"} ${accessBurst && isIPhone ? "shadow-[0_0_0_1px_rgba(255,237,170,0.64)_inset,0_0_34px_rgba(214,173,74,0.96),0_0_78px_rgba(214,173,74,0.42)]" : ""} ${isProcessing ? "opacity-100" : ""}`}
               >
                 {accessBurst && (
-                  <span aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_34%,rgba(255,248,214,0.35)_46%,rgba(255,231,159,0.95)_50%,rgba(255,248,214,0.35)_54%,transparent_66%)] animate-[comm-line-scan_0.9s_linear_1]" />
+                  <span aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_34%,rgba(255,248,214,0.45)_46%,rgba(255,231,159,1)_50%,rgba(255,248,214,0.45)_54%,transparent_66%)] animate-[comm-line-scan_0.55s_linear_1]" />
                 )}
-                <span aria-hidden className={`pointer-events-none absolute inset-0 ${accessBurst ? "bg-[radial-gradient(circle_at_center,rgba(255,236,176,0.34),transparent_72%)]" : ""}`} />
+                <span aria-hidden className={`pointer-events-none absolute inset-0 ${accessBurst ? "bg-[radial-gradient(circle_at_center,rgba(255,236,176,0.42),transparent_72%)]" : ""}`} />
                 <span>ACCEDER</span>
               </button>
             </div>

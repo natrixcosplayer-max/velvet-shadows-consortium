@@ -84,18 +84,18 @@ function Atrium() {
     };
 
     addTimeout(() => setShowComunicado(true), 700);
-    addTimeout(() => setShowAgent(true), 4200);
+    addTimeout(() => setShowAgent(true), 3200);
 
     ORDER_BLOCKS.forEach((line, index) => {
       addTimeout(() => {
         setVisibleOrderCount(index + 1);
-      }, 6200 + index * 2800);
+      }, 4400 + index * 1450);
     });
 
     addTimeout(() => {
       playSfx("/sounds/luxbeep2.mp3", 0.2);
       window.dispatchEvent(new CustomEvent("operativo-attention"));
-    }, 17600);
+    }, 9800);
 
     return () => {
       cancelled = true;
@@ -105,7 +105,6 @@ function Atrium() {
 
   const movingScanlineTopClass = isIPhone ? "top-[13%]" : "top-[18%]";
   const movingScanlineOpacityClass = isIPhone ? "opacity-[0.46]" : "opacity-[0.32]";
-  const panelGridOpacityClass = isIPhone ? "opacity-[0.18]" : "opacity-[0.12]";
 
   const renderParagraph = (text: string, line: number) => {
     const marker = "OPERATIVO";
@@ -169,16 +168,23 @@ function Atrium() {
       </div>
 
       <section className="relative mb-16 overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.11] [background-image:linear-gradient(oklch(0.78_0.13_85_/_13%)_1px,transparent_1px),linear-gradient(90deg,oklch(0.78_0.13_85_/_13%)_1px,transparent_1px)] [background-size:32px_32px]" />
+        <div className="pointer-events-none absolute inset-0 z-0 grid-bg opacity-[0.72] mix-blend-screen animate-comm-terminal-drift" />
         <div
-          className="relative mx-auto max-w-[680px] space-y-10 px-4 text-left md:px-4"
+          className="relative z-10 mx-auto max-w-[680px] space-y-10 px-4 text-left md:px-4"
         >
-          <div className={`relative overflow-hidden rounded-[24px] border border-gold/20 bg-[linear-gradient(180deg,oklch(0.05_0.003_60_/_0.98),oklch(0.075_0.003_60_/_0.985))] px-5 py-6 shadow-[0_0_0_1px_rgba(214,173,74,0.06)_inset,0_0_42px_rgba(214,173,74,0.09)] md:px-8 md:py-8 ${isIPhone ? "comm-iphone" : ""}`}>
-            <div className={`pointer-events-none absolute inset-0 grid-bg mix-blend-soft-light ${panelGridOpacityClass}`} />
+          <div className={`relative overflow-hidden rounded-[24px] border border-gold/55 bg-[linear-gradient(180deg,oklch(0.1_0.004_60_/_0.76),oklch(0.08_0.004_60_/_0.84))] px-5 py-5 shadow-[0_0_0_1px_rgba(214,173,74,0.2)_inset,0_0_34px_rgba(214,173,74,0.18),0_0_72px_rgba(214,173,74,0.08)] md:px-8 md:py-6 ${isIPhone ? "comm-iphone" : ""} scanlines animate-comm-terminal-pulse`}>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-[24px] border border-gold/28 shadow-[inset_0_0_0_1px_rgba(214,173,74,0.14),inset_0_0_32px_rgba(214,173,74,0.1),0_0_46px_rgba(214,173,74,0.2)]"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-[8px] rounded-[18px] border border-gold/14 bg-[radial-gradient(circle_at_top,rgba(214,173,74,0.11),transparent_62%)] opacity-90"
+            />
             <div className={`pointer-events-none absolute inset-x-0 ${movingScanlineTopClass} z-[40] h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.24),rgba(214,173,74,0.58),rgba(214,173,74,0.24),transparent)] ${movingScanlineOpacityClass} [animation:comm-line-scan_7.4s_linear_infinite]`} />
             <div className={`pointer-events-none absolute inset-0 border border-gold/10 transition-opacity duration-500 ${showComunicado ? "opacity-100" : "opacity-0"}`} />
 
-            <div className="relative space-y-7 md:space-y-8">
+            <div className="relative z-10 space-y-5 md:space-y-6">
               <div className="space-y-3">
                 <p className={`font-mono text-[10px] uppercase tracking-[0.34em] text-gold-dim/76 ${showComunicado ? "opacity-100" : "opacity-0"}`}>
                   CANAL CLASIFICADO
@@ -200,7 +206,8 @@ function Atrium() {
                   return (
                     <p
                       key={`comm-order-${index}`}
-                      className={`font-display leading-[2] tracking-[0.035em] text-gold/78 text-[14px] md:text-[16px] ${isVisible ? "opacity-100" : "opacity-0"}`}
+                      className={`font-display leading-[2] tracking-[0.035em] text-gold/78 text-[14px] md:text-[16px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0 animate-fade-up" : "opacity-0 translate-y-1"}`}
+                      style={isVisible ? ({ animationDelay: `${index * 120}ms` } as React.CSSProperties) : undefined}
                     >
                       {renderParagraph(paragraph, index + 1)}
                     </p>
@@ -208,13 +215,14 @@ function Atrium() {
                 })}
 
                 <p
-                  className={`font-display uppercase tracking-[0.17em] text-gold-bright text-[20px] md:text-[24px] ${visibleOrderCount >= ORDER_BLOCKS.length ? "opacity-100" : "opacity-0"}`}
+                  className={`font-display uppercase tracking-[0.17em] text-gold-bright text-[20px] md:text-[24px] transition-all duration-500 ${visibleOrderCount >= ORDER_BLOCKS.length ? "opacity-100 translate-y-0 animate-fade-up" : "opacity-0 translate-y-1"}`}
+                  style={visibleOrderCount >= ORDER_BLOCKS.length ? ({ animationDelay: "90ms" } as React.CSSProperties) : undefined}
                 >
                   EJECUTE SUS ÓRDENES.
                 </p>
               </div>
 
-              <p className={`pt-3 font-mono text-[9px] uppercase tracking-[0.32em] text-gold-dim/70 ${showFinalOrder ? "opacity-100" : "opacity-0"}`}>
+              <p className={`pt-1 font-mono text-[9px] uppercase tracking-[0.32em] text-gold-dim/70 ${showFinalOrder ? "opacity-100" : "opacity-0"}`}>
                 EX COMMISSIONE ALTA MESA
               </p>
             </div>

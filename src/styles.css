@@ -219,7 +219,7 @@
   &::after {
     content: "";
     position: absolute; inset: 0;
-    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, oklch(0.88 0.16 88 / 3%) 2px, oklch(0.88 0.16 88 / 3%) 3px);
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, oklch(0.88 0.16 88 / 6%) 2px, oklch(0.88 0.16 88 / 6%) 3px);
     pointer-events: none;
     mix-blend-mode: overlay;
   }
@@ -227,8 +227,8 @@
 
 @utility grid-bg {
   background-image:
-    linear-gradient(oklch(0.78 0.13 85 / 6%) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.78 0.13 85 / 6%) 1px, transparent 1px);
+    linear-gradient(oklch(0.78 0.13 85 / 14%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.78 0.13 85 / 14%) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
@@ -259,6 +259,30 @@
 @keyframes pulse-gold {
   0%, 100% { box-shadow: 0 0 0 0 oklch(0.78 0.13 85 / 62%); }
   50% { box-shadow: 0 0 0 10px oklch(0.78 0.13 85 / 0%); }
+}
+@keyframes comm-terminal-pulse {
+  0% {
+    box-shadow:
+      0 0 0 1px rgba(214, 173, 74, 0.16) inset,
+      0 0 20px rgba(214, 173, 74, 0.08),
+      0 0 42px rgba(214, 173, 74, 0.04);
+  }
+  45% {
+    box-shadow:
+      0 0 0 1px rgba(214, 173, 74, 0.28) inset,
+      0 0 28px rgba(214, 173, 74, 0.18),
+      0 0 62px rgba(214, 173, 74, 0.1);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(214, 173, 74, 0.2) inset,
+      0 0 24px rgba(214, 173, 74, 0.12),
+      0 0 52px rgba(214, 173, 74, 0.05);
+  }
+}
+@keyframes comm-terminal-drift {
+  0% { background-position: 0 0, 0 0, 0 0; }
+  100% { background-position: 28px 28px, -28px 28px, 0 0; }
 }
 @keyframes glitch {
   0%, 100% { transform: translate(0); }
@@ -1146,6 +1170,8 @@
 @utility animate-surveillance-pan { animation: surveillance-pan 7s ease-in-out infinite; }
 @utility animate-blink { animation: blink 1s infinite; }
 @utility animate-pulse-gold { animation: pulse-gold 2s infinite; }
+@utility animate-comm-terminal-pulse { animation: comm-terminal-pulse 3.2s ease-in-out infinite; }
+@utility animate-comm-terminal-drift { animation: comm-terminal-drift 30s linear infinite; }
 @utility animate-fade-up { animation: fade-up 0.6s ease-out both; }
 @utility animate-glitch { animation: glitch 2.5s steps(2, end) infinite; }
 @utility animate-progress-flow { animation: progress-flow 1.2s linear infinite; }
