@@ -191,7 +191,7 @@ function Atrium() {
         <StatBlock label="Estatus" value="In Bonis" sub="Sin deudas pendientes" />
       </div>
 
-      <section className="relative mb-16 overflow-hidden">
+      <section className="relative mb-10 overflow-hidden">
         <div className="pointer-events-none absolute inset-0 z-0 grid-bg opacity-[0.72] mix-blend-screen animate-comm-terminal-drift" />
         <div
           className="relative z-10 mx-auto max-w-[680px] space-y-10 px-4 text-left md:px-4"
@@ -208,7 +208,7 @@ function Atrium() {
             <div className={`pointer-events-none absolute inset-x-0 ${movingScanlineTopClass} z-[40] h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.24),rgba(214,173,74,0.58),rgba(214,173,74,0.24),transparent)] ${movingScanlineOpacityClass} [animation:comm-line-scan_7.4s_linear_infinite]`} />
             <div className={`pointer-events-none absolute inset-0 border border-gold/10 transition-opacity duration-500 ${showComunicado ? "opacity-100" : "opacity-0"}`} />
 
-            <div className="relative z-10 space-y-5 md:space-y-6">
+            <div className="relative z-10 space-y-6 md:space-y-7">
               <div className="space-y-3">
                 <p className={`font-mono text-[10px] uppercase tracking-[0.34em] text-gold-dim/76 transition-all duration-500 ${visibleCommuniqueStep >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                   CANAL CLASIFICADO
@@ -230,7 +230,7 @@ function Atrium() {
                   return (
                     <p
                       key={`comm-order-${index}`}
-                      className={`font-display leading-[2] tracking-[0.035em] text-gold/78 text-[14px] md:text-[16px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
+                      className={`font-display leading-[2.15] tracking-[0.035em] text-gold/78 text-[14px] md:text-[16px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                     >
                       {renderParagraph(paragraph, index + 1)}
                     </p>
@@ -244,7 +244,7 @@ function Atrium() {
                 </p>
               </div>
 
-              <p className={`pt-1 font-mono text-[9px] uppercase tracking-[0.32em] text-gold-dim/70 transition-all duration-500 ${isIPhone ? "comm-final-signoff" : ""} ${visibleCommuniqueStep >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
+              <p className={`pt-3 font-mono text-[9px] uppercase tracking-[0.32em] text-gold-dim/70 transition-all duration-500 ${isIPhone ? "comm-final-signoff" : ""} ${visibleCommuniqueStep >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                 EX COMMISSIONE ALTA MESA
               </p>
             </div>

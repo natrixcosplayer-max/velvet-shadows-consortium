@@ -83,11 +83,11 @@ export function EntryGate({ onEnter }: Props) {
           />
         </div>
 
-        <h1 className="relative z-10 font-display text-5xl text-gold">
+        <h1 className="relative z-10 whitespace-nowrap font-display leading-none text-[clamp(2rem,6vw,3.75rem)] text-gold">
           EX COMMISSIO
         </h1>
 
-        <h2 className="relative z-10 font-display text-3xl text-gold mb-10">
+        <h2 className="relative z-10 font-display leading-none text-[clamp(1.45rem,4.2vw,2.35rem)] text-gold mb-10">
           ALTA MESA
         </h2>
 
