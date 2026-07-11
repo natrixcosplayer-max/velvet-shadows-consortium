@@ -113,6 +113,7 @@ function Atrium() {
     addTimeout(() => {
       playSfx("/sounds/luxbeep2.mp3", 0.2);
       window.dispatchEvent(new CustomEvent("operativo-attention"));
+    }, 17600);
 
     return () => {
       cancelled = true;
