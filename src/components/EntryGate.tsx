@@ -43,7 +43,7 @@ export function EntryGate({ onEnter }: Props) {
       {/* Rejilla digital de fondo */}
       <div
         aria-hidden
-        className="absolute inset-0 pointer-events-none grid-bg opacity-60 [mask-image:radial-gradient(circle_at_center,black_58%,transparent_100%)]"
+        className="absolute inset-0 pointer-events-none grid-bg opacity-50 [mask-image:radial-gradient(circle_at_center,black_58%,transparent_100%)]"
       />
 
       {/* Línea de escaneo que recorre la pantalla */}

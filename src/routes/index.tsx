@@ -239,6 +239,8 @@ function Atrium() {
                   );
                 })}
 
+                <div aria-hidden className="comm-final-preline" />
+
                 <p
                   className={`comm-final-order-frame font-display font-bold uppercase tracking-[0.17em] text-gold-bright text-[23px] md:text-[28px] transition-all duration-500 ${isIPhone ? "comm-final-order" : ""} ${visibleCommuniqueStep >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                 >

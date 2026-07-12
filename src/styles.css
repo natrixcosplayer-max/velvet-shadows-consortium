@@ -1069,36 +1069,37 @@
 }
 
 @keyframes comm-border-tour {
-  0% {
-    opacity: 0;
-    transform: rotate(-135deg);
+  0%, 100% {
+    opacity: 0.54;
+    filter: brightness(0.99);
+    background-position: 0% 0%, 100% 100%, 50% 100%, 50% 100%;
   }
-  12% {
-    opacity: 0.9;
-  }
-  82% {
-    opacity: 0.74;
-  }
-  100% {
-    opacity: 0;
-    transform: rotate(225deg);
+  50% {
+    opacity: 0.58;
+    filter: brightness(1.01);
+    background-position: 3% 0%, 97% 100%, 48% 100%, 52% 100%;
   }
 }
 
 @keyframes comm-border-patrol {
-  0%, 82%, 100% {
-    opacity: 0;
-    transform: rotate(-135deg);
+  0%, 100% {
+    opacity: 0.78;
+    filter: brightness(1);
   }
-  8% {
+  50% {
+    opacity: 0.8;
+    filter: brightness(1.015);
+  }
+}
+
+@keyframes comm-corner-micro-pulse {
+  0%, 100% {
+    opacity: 0.56;
+    filter: brightness(0.99);
+  }
+  50% {
     opacity: 0.58;
-  }
-  52% {
-    opacity: 0.44;
-  }
-  76% {
-    opacity: 0;
-    transform: rotate(225deg);
+    filter: brightness(1.02);
   }
 }
 
@@ -1179,48 +1180,112 @@
   }
 }
 
+@keyframes comm-final-corners-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.965);
+    filter: brightness(0.9);
+  }
+  46% {
+    opacity: 0.98;
+    transform: scale(1);
+    filter: brightness(1.08);
+  }
+  100% {
+    opacity: 0.88;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes comm-final-lines-in {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 50% 0 50%);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes comm-final-center-sweep {
+  0% {
+    background-position: 12% 50%, 88% 50%, -120% 50%;
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.72;
+  }
+  70% {
+    opacity: 0.42;
+  }
+  100% {
+    background-position: 12% 50%, 88% 50%, 220% 50%;
+    opacity: 0;
+  }
+}
+
+@keyframes comm-final-frame-pulse {
+  0%, 100% {
+    opacity: 0.84;
+    filter: brightness(0.98);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.08);
+  }
+}
+
 .communique-premium-panel {
   position: relative;
   isolation: isolate;
-  border-color: oklch(0.79 0.12 84 / 58%);
+  border-color: transparent;
   box-shadow:
-    inset 0 0 0 1px oklch(0.83 0.13 86 / 28%),
-    inset 0 12px 22px oklch(0.88 0.16 88 / 4%),
-    inset 0 -14px 20px oklch(0 0 0 / 34%),
-    0 0 0 1px oklch(0.8 0.11 84 / 20%),
+    inset 0 0 0 1px oklch(0.82 0.12 86 / 14%),
+    inset 0 12px 22px oklch(0.88 0.16 88 / 3%),
+    inset 0 -14px 20px oklch(0 0 0 / 36%),
+    0 0 0 1px oklch(0.8 0.11 84 / 14%),
     0 18px 46px oklch(0 0 0 / 52%),
-    0 0 56px oklch(0.86 0.14 86 / 12%);
+    0 0 56px oklch(0.86 0.14 86 / 8%);
 }
 
 .communique-premium-panel::before,
 .communique-premium-panel::after {
   content: "";
   position: absolute;
-  inset: -2px;
-  border-radius: 26px;
   pointer-events: none;
-  z-index: 12;
-  background: conic-gradient(
-    from -135deg,
-    transparent 0deg,
-    transparent 306deg,
-    oklch(0.92 0.16 90 / 0.95) 324deg,
-    oklch(0.84 0.14 86 / 0.5) 338deg,
-    transparent 360deg
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  padding: 1.35px;
 }
 
 .communique-premium-panel::before {
-  animation: comm-border-tour 1.5s linear 1 both;
+  inset: -1px;
+  border-radius: 24px;
+  z-index: 11;
+  background:
+    linear-gradient(90deg, oklch(0.88 0.14 88 / 62%) 0 18px, transparent 18px calc(100% - 18px), oklch(0.88 0.14 88 / 62%) calc(100% - 18px) 100%) top/100% 1px no-repeat,
+    linear-gradient(90deg, oklch(0.88 0.14 88 / 62%) 0 18px, transparent 18px calc(100% - 18px), oklch(0.88 0.14 88 / 62%) calc(100% - 18px) 100%) bottom/100% 1px no-repeat,
+    linear-gradient(180deg, oklch(0.88 0.14 88 / 62%) 0 18px, transparent 18px calc(100% - 18px), oklch(0.88 0.14 88 / 62%) calc(100% - 18px) 100%) left/1px 100% no-repeat,
+    linear-gradient(180deg, oklch(0.88 0.14 88 / 62%) 0 18px, transparent 18px calc(100% - 18px), oklch(0.88 0.14 88 / 62%) calc(100% - 18px) 100%) right/1px 100% no-repeat,
+    linear-gradient(90deg, transparent 0 11%, oklch(0.9 0.15 90 / 26%) 11% 14%, transparent 14% 86%, oklch(0.9 0.15 90 / 26%) 86% 89%, transparent 89%) bottom 2px left/100% 1px no-repeat,
+    radial-gradient(circle at top left, oklch(0.92 0.16 90 / 24%) 0 3px, transparent 4px),
+    radial-gradient(circle at top right, oklch(0.92 0.16 90 / 24%) 0 3px, transparent 4px),
+    radial-gradient(circle at bottom left, oklch(0.92 0.16 90 / 24%) 0 3px, transparent 4px),
+    radial-gradient(circle at bottom right, oklch(0.92 0.16 90 / 24%) 0 3px, transparent 4px);
+  animation: comm-border-patrol 28s linear infinite;
 }
 
 .communique-premium-panel::after {
-  opacity: 0;
-  animation: comm-border-patrol 13.5s linear 1.5s infinite;
+  display: none;
+}
+
+.communique-premium-panel .comm-hud-corners::before,
+.communique-premium-panel .comm-hud-corners::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 12;
 }
 
 .communique-premium-panel .comm-content::before {
@@ -1250,42 +1315,54 @@
   animation: comm-noise-shift 6.2s steps(2, end) infinite;
 }
 
-.communique-premium-panel .comm-hud-corners::before,
-.communique-premium-panel .comm-hud-corners::after {
-  content: "";
-  position: absolute;
-  inset: 10px;
-  border-radius: 20px;
-  pointer-events: none;
-}
-
 .communique-premium-panel .comm-hud-corners::before {
   background:
-    linear-gradient(90deg, oklch(0.84 0.13 86 / 56%) 0 24px, transparent 24px calc(100% - 24px), oklch(0.84 0.13 86 / 56%) calc(100% - 24px) 100%) top/100% 1px no-repeat,
-    linear-gradient(90deg, oklch(0.84 0.13 86 / 56%) 0 24px, transparent 24px calc(100% - 24px), oklch(0.84 0.13 86 / 56%) calc(100% - 24px) 100%) bottom/100% 1px no-repeat,
-    linear-gradient(180deg, oklch(0.84 0.13 86 / 56%) 0 24px, transparent 24px calc(100% - 24px), oklch(0.84 0.13 86 / 56%) calc(100% - 24px) 100%) left/1px 100% no-repeat,
-    linear-gradient(180deg, oklch(0.84 0.13 86 / 56%) 0 24px, transparent 24px calc(100% - 24px), oklch(0.84 0.13 86 / 56%) calc(100% - 24px) 100%) right/1px 100% no-repeat;
-  opacity: 0.36;
+    linear-gradient(90deg, oklch(0.91 0.15 90 / 68%) 0 20px, transparent 20px) top 0 left 0/100% 1px no-repeat,
+    linear-gradient(180deg, oklch(0.91 0.15 90 / 68%) 0 14px, transparent 14px) top 0 left 0/1px 100% no-repeat,
+    linear-gradient(90deg, transparent calc(100% - 20px), oklch(0.91 0.15 90 / 68%) calc(100% - 20px) 100%) top 0 left 0/100% 1px no-repeat,
+    linear-gradient(180deg, oklch(0.91 0.15 90 / 68%) 0 14px, transparent 14px) top 0 right 0/1px 100% no-repeat,
+    linear-gradient(90deg, oklch(0.91 0.15 90 / 68%) 0 20px, transparent 20px) bottom 0 left 0/100% 1px no-repeat,
+    linear-gradient(180deg, transparent calc(100% - 14px), oklch(0.91 0.15 90 / 68%) calc(100% - 14px) 100%) top 0 left 0/1px 100% no-repeat,
+    linear-gradient(90deg, transparent calc(100% - 20px), oklch(0.91 0.15 90 / 68%) calc(100% - 20px) 100%) bottom 0 left 0/100% 1px no-repeat,
+    linear-gradient(180deg, transparent calc(100% - 14px), oklch(0.91 0.15 90 / 68%) calc(100% - 14px) 100%) top 0 right 0/1px 100% no-repeat,
+    linear-gradient(90deg, oklch(0.83 0.12 86 / 66%) 0 9px, transparent 9px) top 4px left 4px/17px 1px no-repeat,
+    linear-gradient(180deg, oklch(0.83 0.12 86 / 66%) 0 6px, transparent 6px) top 4px left 4px/1px 12px no-repeat,
+    linear-gradient(90deg, transparent calc(100% - 9px), oklch(0.83 0.12 86 / 66%) calc(100% - 9px) 100%) top 4px left calc(100% - 4px)/17px 1px no-repeat,
+    linear-gradient(180deg, oklch(0.83 0.12 86 / 66%) 0 6px, transparent 6px) top 4px right 4px/1px 12px no-repeat,
+    linear-gradient(90deg, oklch(0.83 0.12 86 / 66%) 0 9px, transparent 9px) bottom 4px left 4px/17px 1px no-repeat,
+    linear-gradient(180deg, transparent calc(100% - 6px), oklch(0.83 0.12 86 / 66%) calc(100% - 6px) 100%) top calc(100% - 4px) left 4px/1px 12px no-repeat,
+    linear-gradient(90deg, transparent calc(100% - 9px), oklch(0.83 0.12 86 / 66%) calc(100% - 9px) 100%) bottom 4px left calc(100% - 4px)/17px 1px no-repeat,
+    linear-gradient(180deg, transparent calc(100% - 6px), oklch(0.83 0.12 86 / 66%) calc(100% - 6px) 100%) top calc(100% - 4px) right 4px/1px 12px no-repeat;
+  opacity: 0.56;
+  animation: comm-corner-micro-pulse 18s ease-in-out infinite;
 }
 
 .communique-premium-panel .comm-hud-corners::after {
   background:
-    radial-gradient(circle at top left, oklch(0.86 0.14 88 / 34%) 0 1.5px, transparent 2px),
-    radial-gradient(circle at top right, oklch(0.86 0.14 88 / 34%) 0 1.5px, transparent 2px),
-    radial-gradient(circle at bottom left, oklch(0.86 0.14 88 / 34%) 0 1.5px, transparent 2px),
-    radial-gradient(circle at bottom right, oklch(0.86 0.14 88 / 34%) 0 1.5px, transparent 2px);
-  opacity: 0.4;
+    linear-gradient(90deg, transparent 0 14%, oklch(0.85 0.13 87 / 24%) 14% 16%, transparent 16% 84%, oklch(0.85 0.13 87 / 24%) 84% 86%, transparent 86%) top 2px left/100% 1px no-repeat,
+    linear-gradient(90deg, transparent 0 14%, oklch(0.85 0.13 87 / 24%) 14% 16%, transparent 16% 84%, oklch(0.85 0.13 87 / 24%) 84% 86%, transparent 86%) bottom 2px left/100% 1px no-repeat,
+    linear-gradient(180deg, transparent 0 14%, oklch(0.85 0.13 87 / 24%) 14% 16%, transparent 16% 84%, oklch(0.85 0.13 87 / 24%) 84% 86%, transparent 86%) top left 2px/1px 100% no-repeat,
+    linear-gradient(180deg, transparent 0 14%, oklch(0.85 0.13 87 / 24%) 14% 16%, transparent 16% 84%, oklch(0.85 0.13 87 / 24%) 84% 86%, transparent 86%) top right 2px/1px 100% no-repeat,
+    radial-gradient(circle at top left, oklch(0.9 0.15 89 / 30%) 0 1.2px, transparent 1.6px),
+    radial-gradient(circle at top right, oklch(0.9 0.15 89 / 30%) 0 1.2px, transparent 1.6px),
+    radial-gradient(circle at bottom left, oklch(0.9 0.15 89 / 30%) 0 1.2px, transparent 1.6px),
+    radial-gradient(circle at bottom right, oklch(0.9 0.15 89 / 30%) 0 1.2px, transparent 1.6px),
+    linear-gradient(90deg, transparent 0 46%, oklch(0.9 0.15 90 / 38%) 46% 54%, transparent 54%) bottom 1px left/100% 1px no-repeat,
+    radial-gradient(circle at 50% calc(100% - 1px), oklch(0.92 0.16 90 / 56%) 0 1px, transparent 1.4px);
+  opacity: 0.44;
+  animation: comm-corner-micro-pulse 22s ease-in-out infinite reverse;
 }
 
 .communique-premium-panel .comm-hud-siders::before,
 .communique-premium-panel .comm-hud-siders::after {
   content: "";
   position: absolute;
-  top: 5%;
-  bottom: 5%;
+  top: 7%;
+  bottom: 7%;
   width: 18px;
   background:
-    linear-gradient(180deg, transparent 0 8%, oklch(0.85 0.13 87 / 20%) 8% 9%, transparent 9% 31%, oklch(0.85 0.13 87 / 20%) 31% 32%, transparent 32% 55%, oklch(0.85 0.13 87 / 20%) 55% 56%, transparent 56% 100%);
+    linear-gradient(180deg, transparent 0 9%, oklch(0.85 0.13 87 / 22%) 9% 10%, transparent 10% 30%, oklch(0.85 0.13 87 / 22%) 30% 31%, transparent 31% 54%, oklch(0.85 0.13 87 / 22%) 54% 55%, transparent 55% 76%, oklch(0.85 0.13 87 / 22%) 76% 77%, transparent 77% 100%),
+    linear-gradient(180deg, transparent 0 18%, oklch(0.9 0.15 90 / 26%) 18% 18.6%, transparent 18.6% 82%, oklch(0.9 0.15 90 / 26%) 82% 82.6%, transparent 82.6% 100%);
   opacity: 0.3;
 }
 
@@ -1360,41 +1437,82 @@
 .communique-premium-panel .comm-final-order-frame {
   position: relative;
   display: inline-block;
-  margin-top: 2rem;
-  margin-bottom: 2.6rem;
+  transform-origin: center;
+  margin-top: 3.1rem;
+  margin-bottom: 1.2rem;
   padding: 0.92rem 1.08rem;
   font-size: clamp(1.62rem, 2.4vw, 2.02rem);
   letter-spacing: 0.19em;
   line-height: 1.1;
-  border-top: 1px solid oklch(0.87 0.14 88 / 34%);
-  border-bottom: 1px solid oklch(0.87 0.14 88 / 34%);
-  box-shadow: inset 0 0 0 1px oklch(0.87 0.14 88 / 10%);
-  animation: comm-final-arrival 520ms ease-out 6.2s 1 both;
+  box-shadow:
+    inset 0 1px 0 oklch(0.88 0.15 89 / 10%),
+    inset 0 -1px 0 oklch(0.88 0.15 89 / 10%);
+  background:
+    linear-gradient(90deg, transparent 8%, oklch(0.89 0.15 89 / 24%) 8% 38%, transparent 38% 62%, oklch(0.89 0.15 89 / 24%) 62% 92%, transparent 92%) top 0.25rem left/100% 1px no-repeat,
+    linear-gradient(90deg, transparent 8%, oklch(0.89 0.15 89 / 22%) 8% 38%, transparent 38% 62%, oklch(0.89 0.15 89 / 22%) 62% 92%, transparent 92%) bottom 0.25rem left/100% 1px no-repeat;
+  animation: none;
+}
+
+.communique-premium-panel .comm-final-preline {
+  height: 1px;
+  width: min(92%, 560px);
+  margin-top: 0.7rem;
+  margin-bottom: 1.1rem;
+  margin-left: 0;
+  background: linear-gradient(90deg, oklch(0.84 0.13 87 / 38%), oklch(0.84 0.13 87 / 9%));
 }
 
 .communique-premium-panel .comm-final-order-frame::before,
 .communique-premium-panel .comm-final-order-frame::after {
   content: "";
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 18px;
+  inset: 0;
   pointer-events: none;
-  background:
-    linear-gradient(180deg, oklch(0.9 0.15 89 / 58%) 0 8px, transparent 8px calc(100% - 8px), oklch(0.9 0.15 89 / 58%) calc(100% - 8px) 100%);
 }
 
 .communique-premium-panel .comm-final-order-frame::before {
-  left: -1px;
+  background:
+    linear-gradient(90deg, oklch(0.93 0.17 90 / 84%) 0 22px, transparent 22px) top 0 left 0/100% 1px no-repeat,
+    linear-gradient(90deg, transparent calc(100% - 22px), oklch(0.93 0.17 90 / 84%) calc(100% - 22px) 100%) top 0 left 0/100% 1px no-repeat,
+    linear-gradient(90deg, oklch(0.93 0.17 90 / 84%) 0 22px, transparent 22px) bottom 0 left 0/100% 1px no-repeat,
+    linear-gradient(90deg, transparent calc(100% - 22px), oklch(0.93 0.17 90 / 84%) calc(100% - 22px) 100%) bottom 0 left 0/100% 1px no-repeat,
+    linear-gradient(180deg, oklch(0.93 0.17 90 / 84%) 0 12px, transparent 12px) top 0 left 0/1px 100% no-repeat,
+    linear-gradient(180deg, oklch(0.93 0.17 90 / 84%) 0 12px, transparent 12px) top 0 right 0/1px 100% no-repeat,
+    linear-gradient(180deg, transparent calc(100% - 12px), oklch(0.93 0.17 90 / 84%) calc(100% - 12px) 100%) top 0 left 0/1px 100% no-repeat,
+    linear-gradient(180deg, transparent calc(100% - 12px), oklch(0.93 0.17 90 / 84%) calc(100% - 12px) 100%) top 0 right 0/1px 100% no-repeat,
+    linear-gradient(90deg, oklch(0.84 0.13 87 / 62%) 0 12px, transparent 12px) top 4px left 4px/22px 1px no-repeat,
+    linear-gradient(180deg, oklch(0.84 0.13 87 / 62%) 0 7px, transparent 7px) top 4px left 4px/1px 14px no-repeat,
+    linear-gradient(90deg, transparent calc(100% - 12px), oklch(0.84 0.13 87 / 62%) calc(100% - 12px) 100%) top 4px left calc(100% - 4px)/22px 1px no-repeat,
+    linear-gradient(180deg, oklch(0.84 0.13 87 / 62%) 0 7px, transparent 7px) top 4px right 4px/1px 14px no-repeat,
+    linear-gradient(90deg, oklch(0.84 0.13 87 / 62%) 0 12px, transparent 12px) bottom 4px left 4px/22px 1px no-repeat,
+    linear-gradient(180deg, transparent calc(100% - 7px), oklch(0.84 0.13 87 / 62%) calc(100% - 7px) 100%) top calc(100% - 4px) left 4px/1px 14px no-repeat,
+    linear-gradient(90deg, transparent calc(100% - 12px), oklch(0.84 0.13 87 / 62%) calc(100% - 12px) 100%) bottom 4px left calc(100% - 4px)/22px 1px no-repeat,
+    linear-gradient(180deg, transparent calc(100% - 7px), oklch(0.84 0.13 87 / 62%) calc(100% - 7px) 100%) top calc(100% - 4px) right 4px/1px 14px no-repeat,
+    radial-gradient(circle at 0 0, oklch(0.89 0.15 89 / 46%) 0 1.15px, transparent 1.5px),
+    radial-gradient(circle at 100% 0, oklch(0.89 0.15 89 / 46%) 0 1.15px, transparent 1.5px),
+    radial-gradient(circle at 0 100%, oklch(0.89 0.15 89 / 46%) 0 1.15px, transparent 1.5px),
+    radial-gradient(circle at 100% 100%, oklch(0.89 0.15 89 / 46%) 0 1.15px, transparent 1.5px),
+    linear-gradient(90deg, transparent 0 13%, oklch(0.86 0.14 87 / 28%) 13% 16%, transparent 16% 84%, oklch(0.86 0.14 87 / 28%) 84% 87%, transparent 87%) top 0.37rem left/100% 1px no-repeat,
+    linear-gradient(90deg, transparent 0 13%, oklch(0.86 0.14 87 / 28%) 13% 16%, transparent 16% 84%, oklch(0.86 0.14 87 / 28%) 84% 87%, transparent 87%) bottom 0.37rem left/100% 1px no-repeat;
+  opacity: 0;
+  animation: none;
+  opacity: 0.92;
 }
 
 .communique-premium-panel .comm-final-order-frame::after {
-  right: -1px;
+  background:
+    radial-gradient(circle at 12% 50%, oklch(0.88 0.14 88 / 40%) 0 1.2px, transparent 1.5px),
+    radial-gradient(circle at 88% 50%, oklch(0.88 0.14 88 / 40%) 0 1.2px, transparent 1.5px),
+    linear-gradient(90deg, transparent, oklch(0.93 0.17 91 / 56%), transparent) center/56% 1px no-repeat;
+  background-position: 12% 50%, 88% 50%, -120% 50%;
+  mix-blend-mode: screen;
+  opacity: 0.24;
+  animation: none;
 }
 
 .communique-premium-panel .comm-signoff {
   position: relative;
-  margin-top: 3.7rem;
+  margin-top: 1.7rem;
   padding-top: 0.3rem;
   padding-bottom: 1.65rem;
   font-size: 0.57rem;
@@ -1545,15 +1663,21 @@
     white-space: normal;
     line-height: 1.18;
     letter-spacing: 0.1em;
-    margin-top: 1.85rem;
-    margin-bottom: 2.25rem;
+    margin-top: 2.55rem;
+    margin-bottom: 1.05rem;
     padding-left: 0.8rem;
     padding-right: 0.8rem;
   }
 
+  .comm-iphone .comm-final-preline {
+    width: 100%;
+    margin-top: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
   .comm-iphone .comm-final-signoff,
   .comm-iphone .comm-signoff {
-    margin-top: 3.2rem;
+    margin-top: 1.55rem;
     margin-bottom: 0.9rem;
     padding-bottom: 1.3rem;
     letter-spacing: 0.34em;
