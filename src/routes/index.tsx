@@ -226,7 +226,14 @@ function Atrium() {
                 <p
                   className={`mt-4 md:mt-5 font-display font-bold uppercase tracking-[0.17em] text-gold text-[23px] md:text-[28px] transition-all duration-500 ${isIPhone ? "comm-final-order" : ""} ${visibleCommuniqueStep >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                 >
-                  EJECUTE SUS ÓRDENES.
+                  {isIPhone ? (
+                    <>
+                      <span className="comm-final-order-line block">EJECUTE SUS</span>
+                      <span className="comm-final-order-line block">ÓRDENES.</span>
+                    </>
+                  ) : (
+                    "EJECUTE SUS ÓRDENES."
+                  )}
                 </p>
               </div>
 

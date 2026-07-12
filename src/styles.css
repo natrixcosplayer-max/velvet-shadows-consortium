@@ -1705,10 +1705,16 @@
     white-space: normal;
     line-height: 1.18;
     letter-spacing: 0.1em;
+    font-size: 1.8125rem;
+    text-align: left;
     margin-top: 2.55rem;
     margin-bottom: 1.05rem;
     padding-left: 0.8rem;
     padding-right: 0.8rem;
+  }
+
+  .comm-iphone .comm-final-order .comm-final-order-line + .comm-final-order-line {
+    margin-top: 0.36rem;
   }
 
   .comm-iphone .comm-final-preline {
