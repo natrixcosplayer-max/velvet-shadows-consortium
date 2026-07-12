@@ -127,9 +127,6 @@ function Atrium() {
     };
   }, []);
 
-  const movingScanlineTopClass = isIPhone ? "top-[13%]" : "top-[18%]";
-  const movingScanlineOpacityClass = isIPhone ? "opacity-[0.46]" : "opacity-[0.32]";
-
   const renderParagraph = (text: string, line: number) => {
     const marker = "OPERATIVO";
 
@@ -192,37 +189,24 @@ function Atrium() {
       </div>
 
       <section className="relative mb-10 overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 z-0 grid-bg opacity-[0.72] mix-blend-screen animate-comm-terminal-drift" />
+        <div className="pointer-events-none absolute inset-0 z-0 grid-bg opacity-[0.72]" />
         <div
           className="relative z-10 mx-auto max-w-[680px] space-y-10 px-4 text-left md:px-4"
         >
-          <div className={`communique-premium-panel relative overflow-hidden rounded-[24px] border border-gold/55 ${isIPhone ? "bg-[linear-gradient(180deg,oklch(0.055_0.002_60_/_0.95),oklch(0.038_0.002_60_/_0.985))]" : "bg-[linear-gradient(180deg,oklch(0.08_0.004_60_/_0.88),oklch(0.055_0.004_60_/_0.94))]"} px-5 py-5 shadow-[0_0_0_1px_rgba(214,173,74,0.2)_inset,0_0_34px_rgba(214,173,74,0.18),0_0_72px_rgba(214,173,74,0.08)] md:px-8 md:py-6 ${isIPhone ? "comm-iphone" : ""} scanlines animate-comm-terminal-pulse`}>
-            <div aria-hidden className="comm-hud-siders pointer-events-none absolute inset-y-5 left-0 right-0 z-[8]" />
-            <div aria-hidden className="comm-hud-corners pointer-events-none absolute inset-0 z-[9]" />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-[24px] border border-gold/28 shadow-[inset_0_0_0_1px_rgba(214,173,74,0.14),inset_0_0_32px_rgba(214,173,74,0.1),0_0_46px_rgba(214,173,74,0.2)]"
-            />
-            <div
-              aria-hidden
-              className={`pointer-events-none absolute inset-[8px] rounded-[18px] border ${isIPhone ? "border-gold/8 bg-[radial-gradient(circle_at_top,rgba(214,173,74,0.045),transparent_62%)] opacity-65" : "border-gold/14 bg-[radial-gradient(circle_at_top,rgba(214,173,74,0.11),transparent_62%)] opacity-90"}`}
-            />
-            <div className={`pointer-events-none absolute inset-x-0 ${movingScanlineTopClass} z-[40] h-px bg-[linear-gradient(90deg,transparent,rgba(214,173,74,0.24),rgba(214,173,74,0.58),rgba(214,173,74,0.24),transparent)] ${movingScanlineOpacityClass} [animation:comm-line-scan_7.4s_linear_infinite]`} />
-            <div className={`pointer-events-none absolute inset-0 border border-gold/10 transition-opacity duration-500 ${showComunicado ? "opacity-100" : "opacity-0"}`} />
-
-            <div className="comm-content relative z-10 space-y-6 md:space-y-7">
+          <div className={`comm-outer-shine relative overflow-hidden border-2 border-gold/80 bg-background/40 px-5 py-5 shadow-[0_0_34px_rgba(214,173,74,0.5),0_0_72px_rgba(214,173,74,0.27)] md:px-8 md:py-6 [animation:pulse-gold_1.05s_infinite] ${isIPhone ? "comm-iphone" : ""}`}>
+            <div className="relative z-10 space-y-6 md:space-y-7">
               <div className="space-y-3">
-                <p className={`font-mono text-[12px] uppercase tracking-[0.34em] text-gold-dim/76 transition-all duration-500 ${visibleCommuniqueStep >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
+                <p className={`font-mono text-[12px] uppercase tracking-[0.34em] text-gold-dim transition-all duration-500 ${visibleCommuniqueStep >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                   CANAL CLASIFICADO
                 </p>
-                <p className={`comm-official-title font-display text-[21px] uppercase tracking-[0.2em] text-gold-dim/84 transition-all duration-500 ${visibleCommuniqueStep >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
+                <p className={`font-display text-[21px] uppercase tracking-[0.2em] text-gold transition-all duration-500 ${visibleCommuniqueStep >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                   COMUNICADO OFICIAL
                 </p>
               </div>
 
-              <div className={`comm-orders ${isIPhone ? "space-y-6" : "space-y-4"}`}>
+              <div className={`space-y-4 ${isIPhone ? "space-y-6" : ""}`}>
                 <h2
-                  className={`comm-agent-title font-display tracking-[0.12em] text-gold text-[41px] md:text-[55px] transition-all duration-500 ${visibleCommuniqueStep >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
+                  className={`font-display tracking-[0.12em] text-gold text-[41px] md:text-[55px] transition-all duration-500 ${visibleCommuniqueStep >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                 >
                   AGENTE MANDARIN
                 </h2>
@@ -232,23 +216,21 @@ function Atrium() {
                   return (
                     <p
                       key={`comm-order-${index}`}
-                      className={`comm-order-block font-display ${isIPhone ? "leading-[2.4]" : "leading-[2.15]"} tracking-[0.035em] text-gold/78 text-[16px] md:text-[18px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
+                      className={`border border-gold-dim/55 px-3 py-2 font-display ${isIPhone ? "leading-[2.3]" : "leading-[2.1]"} tracking-[0.035em] text-gold text-[16px] md:text-[18px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                     >
                       {renderParagraph(paragraph, index + 1)}
                     </p>
                   );
                 })}
 
-                <div aria-hidden className="comm-final-preline" />
-
                 <p
-                  className={`comm-final-order-frame font-display font-bold uppercase tracking-[0.17em] text-gold-bright text-[23px] md:text-[28px] transition-all duration-500 ${isIPhone ? "comm-final-order" : ""} ${visibleCommuniqueStep >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
+                  className={`mt-4 md:mt-5 font-display font-bold uppercase tracking-[0.17em] text-gold text-[23px] md:text-[28px] transition-all duration-500 ${isIPhone ? "comm-final-order" : ""} ${visibleCommuniqueStep >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                 >
                   EJECUTE SUS ÓRDENES.
                 </p>
               </div>
 
-              <p className={`comm-signoff pt-3 font-mono text-[10px] uppercase tracking-[0.32em] text-gold-dim/70 transition-all duration-500 ${isIPhone ? "comm-final-signoff" : ""} ${visibleCommuniqueStep >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
+              <p className={`pt-3 font-mono text-[10px] uppercase tracking-[0.32em] text-gold-dim/70 transition-all duration-500 ${isIPhone ? "comm-final-signoff" : ""} ${visibleCommuniqueStep >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}>
                 EX COMMISSIONE ALTA MESA
               </p>
             </div>

@@ -1237,6 +1237,48 @@
   }
 }
 
+@keyframes comm-outer-shine-sweep {
+  0% {
+    background-position: -180% -180%;
+    opacity: 0;
+  }
+  16% {
+    opacity: 0.95;
+  }
+  84% {
+    opacity: 0.92;
+  }
+  100% {
+    background-position: 220% 220%;
+    opacity: 0;
+  }
+}
+
+.comm-outer-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 0;
+  border: 2px solid transparent;
+  background: linear-gradient(
+    120deg,
+    rgba(118, 88, 20, 0) 16%,
+    rgba(160, 122, 32, 0.72) 34%,
+    rgba(255, 255, 255, 0.74) 50%,
+    rgba(170, 128, 38, 0.72) 66%,
+    rgba(118, 88, 20, 0) 84%
+  ) border-box;
+  background-size: 250% 250%;
+  background-repeat: no-repeat;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 4px rgba(255, 243, 207, 0.28));
+  animation: comm-outer-shine-sweep 3.4s linear infinite;
+  z-index: 2;
+}
+
 .communique-premium-panel {
   position: relative;
   isolation: isolate;
