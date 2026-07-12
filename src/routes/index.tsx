@@ -216,7 +216,7 @@ function Atrium() {
                   return (
                     <p
                       key={`comm-order-${index}`}
-                      className={`border border-gold-dim/55 px-3 py-2 font-display ${isIPhone ? "leading-[2.3]" : "leading-[2.1]"} tracking-[0.035em] text-gold text-[16px] md:text-[18px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
+                      className={`border border-gold-dim/30 px-3 py-2 font-display ${isIPhone ? "leading-[2.3]" : "leading-[2.1]"} tracking-[0.035em] text-gold text-[16px] md:text-[18px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"}`}
                     >
                       {renderParagraph(paragraph, index + 1)}
                     </p>
